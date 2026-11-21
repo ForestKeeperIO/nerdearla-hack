@@ -134,17 +134,18 @@
       "en_demo": false
     },
     {
-      "id": "me-cuidan-mientras-aprendo",
-      "nombre": "Me cuidan mientras aprendo",
+      "id": "me-cuido-mientras-aprendo",
+      "nombre": "Me cuido mientras Aprendo",
       "clase": "iniciativa",
-      "descripcion": "",
+      "descripcion": "Iniciativa educativa; incluye el podcast ConoSenos. Página propia en eiraac.org/mecuido.html.",
       "tipos_de_registro": [
         "participacion"
       ],
       "rol_por_defecto": "participante",
       "estado": "por_confirmar",
-      "nota": "La mencionó el equipo; no aparece en la guía. Falta saber qué registra y a quién atiende.",
+      "nota": "El nombre correcto, según el sitio de EIRA, es \"Me cuido mientras Aprendo\". Qué registra (asistentes, episodios) es inferencia: falta confirmarlo con EIRA.",
       "en_demo": false
     }
-  ]
+  ],
+  "_por_agregar": "La investigación del 21 nov encontró más iniciativas mencionadas por EIRA sin ficha pública: Mayo Rosa en tu Comunidad, Paso Firme, Mundo Rosa, Juguetón, Educación continua e Investigación. No se agregan al catálogo hasta confirmarlas con EIRA; ver docs/contexto/iniciativas-eira.md."
 }
