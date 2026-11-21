@@ -54,6 +54,22 @@ main.contenido:has(.archivo-eira) { max-width: 88rem; }
 .registro .asiento:first-child { grid-column: span 8; background: var(--vino-oscuro); color: var(--superficie); }
 .asiento:first-child :is(h2,p,span) { color: inherit; }
 .registro .abrir { margin-top: auto; }
+.historial-reportes { display:grid; grid-template-columns:repeat(auto-fit,minmax(min(100%,24rem),1fr)); gap:var(--bento-gap); }
+.edicion,.archivo-vacio { background:var(--superficie); padding:24px; border-radius:var(--bento-radio); }
+.archivo-vacio,.edicion header,.cifra-edicion { display:flex; gap:1rem; align-items:center; }
+.archivo-vacio > svg { color:var(--vino); }
+.edicion header,.edicion p,.archivo-vacio p { color:var(--tinta-suave); font-size:.9rem; }
+.edicion time { margin-inline-start:auto; }
+.edicion h2 { margin-block:1rem .4rem; font-size:1.65rem; }
+.edicion h2 a { text-decoration:none; }
+.cifra-edicion { margin-block:1rem; color:var(--vino-oscuro); }
+.cifra-edicion strong { font-size:3.5rem; line-height:1; }
+.edicion .acciones-lectura { margin-top:1rem; }
+.edicion .acciones-lectura a { background:var(--papel-2); }
+.edicion .acciones-lectura a:first-child { color:var(--superficie); background:var(--vino-oscuro); }
+.aviso-edicion { padding:.45rem .8rem; margin-block:.7rem; background:var(--papel-2); border-radius:var(--bento-interno); }
+.archivo-eira .apertura-plantillas h2 { font-size:2rem; }
+.tapa:not(.tapa-mapa) .acciones-lectura button { background:var(--papel); color:var(--vino-oscuro); }
 .expediente-carga .cab-carga { padding: .8rem 1.25rem; background: var(--superficie); border: 0; border-radius: var(--bento-radio); }
 .pasos__item { padding: .45rem .75rem; background: var(--bento-lienzo); }
 .pasos__item--actual { background: var(--rubor); }
