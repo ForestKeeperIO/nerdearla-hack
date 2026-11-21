@@ -160,9 +160,20 @@ def migrar_sufijos(mb: Metabase, colecciones: dict) -> None:
 
 
 def asegurar_base(mb: Metabase, nombre: str, ruta_db: str) -> int:
-    """Devuelve el id de la conexión a SQLite llamada `nombre`; la crea si falta."""
+    """Devuelve el id de la conexión a SQLite llamada `nombre`; la crea si falta.
+    La conexión «Impacto EIRA» de la primera pasada se renombra a
+    «Impacto EIRA (real)» en lugar de duplicarla."""
     dbs = mb.api("GET", "/database")
-    for db in dbs.get("data", dbs) if isinstance(dbs, dict) else dbs:
+    dbs = dbs.get("data", dbs) if isinstance(dbs, dict) else dbs
+    if nombre == "Impacto EIRA (real)":
+        for db in dbs:
+            if db["name"] == "Impacto EIRA":
+                mb.api("PUT", f"/database/{db['id']}", json={
+                    "name": nombre, "engine": "sqlite",
+                    "details": {"db": ruta_db}, "auto_run_queries": True,
+                })
+                return db["id"]
+    for db in dbs:
         if db["name"] == nombre:
             detalles = db.get("details") or {}
             if detalles.get("db") != ruta_db:
