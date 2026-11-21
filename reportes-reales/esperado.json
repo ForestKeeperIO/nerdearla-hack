@@ -1,0 +1,35 @@
+{
+  "defunciones_mujeres_jalisco_c50_c53_2024.csv": {
+    "filas": 900,
+    "totales_control": {
+      "defunciones_c50": 646,
+      "defunciones_c53": 254,
+      "municipios_distintos": 89
+    }
+  },
+  "defunciones_jalisco_mujeres_c50_c53_mensual_2024.csv": {
+    "filas": 24,
+    "totales_control": {
+      "suma_c50": 646,
+      "suma_c53": 254,
+      "meses_con_datos": 12
+    }
+  },
+  "egresos_hospitalarios_jalisco_c50_c53_2024.csv": {
+    "filas": 1429,
+    "totales_control": {
+      "egresos_c50": 1181,
+      "egresos_c53": 248,
+      "egresos_mujeres_sexo2": 1411,
+      "unidades_clues_distintas": 24
+    }
+  },
+  "clues_unidades_salud_jalisco_2026.csv": {
+    "filas": 2596,
+    "totales_control": {
+      "instituciones_distintas": 17,
+      "municipios_distintos": 125,
+      "unidades_hospitalarias": 348
+    }
+  }
+}
