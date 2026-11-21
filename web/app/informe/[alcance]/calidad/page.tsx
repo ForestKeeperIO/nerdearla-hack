@@ -112,7 +112,9 @@ export default async function PaginaCalidad({ params }: { params: Promise<{ alca
       )}
 
       {!esGlobal && (
-        <section aria-label="Por archivo">
+        <details className="calidad-archivos" open={paresPendientes.length===0}>
+          <summary>Revisar archivos y observaciones ({detalles.length})</summary>
+          <section aria-label="Por archivo">
           {detalles.map(({ fuente: f, anomalias, omitidas }) => {
             const planas = Object.values(anomalias.valor).flat();
             const mapeo = trabajos.valor.find(t => t.fuente === f.id && t.estado === 'listo')?.mapeo;
@@ -163,7 +165,8 @@ export default async function PaginaCalidad({ params }: { params: Promise<{ alca
               </Card>
             );
           })}
-        </section>
+          </section>
+        </details>
       )}
 
       <CalidadCliente

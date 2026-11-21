@@ -43,6 +43,9 @@ main.contenido:has(.archivo-eira) { max-width: 77rem; padding-block-start: 0; }
 .expediente-carga section[aria-label="Subir archivos"] > div:first-child :is(svg,.etiqueta,button) { color: var(--papel) !important; }
 .expediente-carga .banda-cifras { background: var(--papel-2); }
 .expediente-carga .cifra { color: var(--vino-oscuro); }
+.calidad-archivos { padding-block: 1rem; margin-block-end: 1rem; border-block: var(--border); }
+.calidad-archivos > summary { color: var(--vino); cursor: pointer; font-weight: 550; padding-block: .4rem; }
+.calidad-archivos[open] > summary { margin-block-end: 1rem; }
 @media (prefers-reduced-motion: no-preference) { .archivo-eira { animation: abrir-pliego .4s cubic-bezier(.32,.72,0,1); } @keyframes abrir-pliego { from { transform: translateY(5px); opacity: .8; } } }
 @media (max-width: 767px) {
   .eira-cabecera { margin-top: .4rem; }

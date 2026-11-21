@@ -1,10 +1,6 @@
 'use client';
 
-// Calidad, parte interactiva: las decisiones "¿es la misma persona?" y el pie
-// comparten el conteo de pendientes EN ESTA SESIÓN. Las decisiones viajan al
-// Stream eira:decisiones y las aplica el procesador, así que el servidor no
-// sabe cuántas ya decidió la usuaria; el estado vive aquí (defecto conocido:
-// el pie quedaba diciendo "Continuar con 3 por decidir" tras decidir todo).
+// Los pendientes vienen del hash que escribe el procesador, no de los clics.
 import { ParesMasa } from './pares-masa';
 import { PieDePaso } from './pie-de-paso';
 import type { Par } from '@/lib/comun';

@@ -18,7 +18,7 @@ export function PieDePaso({
   const anterior = i > 0 ? pasos[i - 1] : null;
   const volver = anterior
     ? { href: rutaPaso(estado.alcance, anterior), texto: 'Volver' }
-    : { href: '/informe', texto: 'Volver a los informes' };
+    : { href: '/subir', texto: 'Cambiar programa' };
 
   return (
     <footer

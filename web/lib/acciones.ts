@@ -70,7 +70,7 @@ export async function aprobarCifras(alcance: string) {
   if (!esAlcance(alcance)) return;
   await escribirInforme(alcance as Alcance, { cifras_aprobadas: '1' });
   revalidatePath(base(alcance), 'layout');
-  redirect(`${base(alcance)}/exportar`);
+  redirect('/subir');
 }
 
 /** Fecha de corte del informe, la primera vez que se entra. */

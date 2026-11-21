@@ -9,7 +9,7 @@ import {
 } from '@/lib/recorrido';
 
 export function IndicadorPasos({ estado, actual }: { estado: EstadoRecorrido; actual: Paso }) {
-  const pasos = pasosDe(estado.alcance);
+  const pasos = pasosDe(estado.alcance).filter(p => p !== 'exportar');
   const iActual = indicePaso(estado.alcance, actual);
   const proximoBloqueado = pasos.find(p => !puedeEntrar(estado,p));
 

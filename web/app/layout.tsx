@@ -2,6 +2,7 @@ import type { Metadata } from "next";
 import Link from "next/link";
 import { Montserrat, IBM_Plex_Mono, Rosarivo } from "next/font/google";
 import "./globals.css";
+import "./expediente.css";
 import { TooltipProvider } from "@/components/ui/tooltip";
 import { NavPrincipal } from "@/components/nav-principal";
 
@@ -21,24 +22,16 @@ export default async function RootLayout({ children }: LayoutProps<"/">) {
     <html lang="es" className={`${montserrat.variable} ${plexMono.variable} ${rosarivo.variable} h-full antialiased`}>
       <body className="min-h-full">
         <TooltipProvider>
-          <header
-            className="no-imprimir sticky top-0 z-20"
-            style={{
-              borderBottom: "var(--border)",
-              background: "color-mix(in oklab, var(--papel) 92%, transparent)",
-              backdropFilter: "blur(6px)",
-            }}
-          >
-            <div className="container mastil" style={{ minHeight: 56 }}>
+          <header className="no-imprimir eira-cabecera">
+            <div className="eira-mastil">
               <Link
                 href="/"
-                className="no-underline"
-                style={{ fontFamily: "var(--font-display)", fontSize: 16, color: "var(--tinta)", letterSpacing: "-0.01em", whiteSpace: "nowrap" }}
+                className="eira-firma"
               >
-                EIRA <span className="mastil-marca">Movimiento Rosa</span>
+                EIRA <span>Movimiento Rosa A.C.</span>
               </Link>
               <NavPrincipal />
-              <span className="mono etiqueta ml-auto hidden sm:inline" title="Entorno de demostración">
+              <span className="eira-entorno">
                 {entorno}
               </span>
             </div>
