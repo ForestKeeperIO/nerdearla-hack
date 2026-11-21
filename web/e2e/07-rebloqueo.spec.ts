@@ -33,7 +33,7 @@ test('un archivo nuevo rebloquea Vista previa y Exportar del programa y del Glob
     buffer: xlsxMinimo([['Nombre', 'Edad'], ['D E F', '35']]),
   });
   await page.getByRole('button', { name: /Subir 1 archivo/ }).click();
-  await expect(page.getByText('Recibido')).toBeVisible();
+  await expect(page.getByText('Recibido', { exact: true })).toBeVisible();
 
   // Vista previa y Exportar del programa vuelven a bloquearse (redirigen).
   await page.goto('/informe/tamizaje-rosa/vista-previa');
