@@ -50,6 +50,18 @@ export const perPrograma = (programa: string) => `${P}per:programa:${programa}`;
 export const perImpactadas = (programa: string) => `${P}per:impactadas:${programa}`;
 export const perDonantes = (programa: string) => `${P}per:donantes:${programa}`;
 
+export function motorActivo(valor = process.env.EIRA_MOTOR) {
+  if (valor === undefined || valor === 'motor') return 'motor';
+  if (valor === 'selma') return 'selma';
+  throw new Error('EIRA_MOTOR debe ser motor o selma');
+}
+
+export function clavesRoles(programa: string, motor = motorActivo()) {
+  return motor === 'selma'
+    ? { impactadas: perPrograma(programa), donantes: `${P}don:programa:${programa}` }
+    : { impactadas: perImpactadas(programa), donantes: perDonantes(programa) };
+}
+
 /** Set: personas por ciudad. */
 export const perCiudad = (ciudad: string) => `${P}per:ciudad:${ciudad}`;
 
