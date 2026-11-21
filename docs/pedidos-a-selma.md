@@ -34,3 +34,15 @@ Publicar por cada lado de `eira:pares` `fecha` (fecha del evento ISO, no el cort
 Publicar también un `persona_id` opaco por lado, nunca iniciales más nacimiento en claro. Hoy ninguno de los dos proyecta el folio de persona en el par. A/B muestran el localizador único `fuente:fila` y, cuando existe en `eira:huellas:fila`, la huella completa del registro. No se etiqueta una huella de fila como identificador de persona. Edad, iniciales y municipio proceden de `etiqueta`; no se reconstruye el nacimiento.
 
 Verificado en código: `py/motor/worker.py::_decidir_par` fusiona identidades con `misma` sin descontar actividades; `origin/soe_python` (`13a806d`), `py/procesador/trabajos.py::aplicar_decision`, rechaza decisiones distintas de `misma` y `distinta` y reproyecta personas. La interfaz advierte esta limitación antes de enviar el caso de mismo evento.
+
+## Archivo cargado en el programa equivocado (21 nov, carga en vivo)
+
+Reproducción con `13a806d`: `datos-de-prueba/prueba-mapeo-excel01.xlsx` es de Melenas en Movimiento (columna «Tipo de movimiento» con «Donación de cabello» y «Peluca entregada»). Subido con `programa=tamizaje-rosa` y `unidad=atencion` termina en `listo` con 30 atenciones. Las 30 filas reciben la anomalía «Tipo de registro no reconocido para este programa: se usó el del archivo» (`analizar.py:187-196`) y la fuente queda con 1 estrella. Después, en Melenas en Movimiento, el mismo archivo termina en `duplicado` («Este archivo ya se cargó… No se vuelve a cargar», `importar.py:57-62`) y no hay forma de corregirlo.
+
+Un archivo que termina en `error` no queda registrado: el `sha256` se guarda en la misma transacción que la fuente (`importar.py:174-178`), así que se puede volver a subir. El bloqueo solo ocurre cuando la primera carga terminó en `listo`.
+
+| Prioridad | Dónde | Qué necesitamos y cómo comprobarlo |
+|---|---|---|
+| Evita cifras falsas | `analizar.py:187-196`, `trabajos.py:67-69` | Si la columna de tipo de registro trae valores del catálogo que el programa elegido no admite, terminar en `error` con el programa que sí los admite («Este archivo trae donaciones y pelucas: corresponde a Melenas en Movimiento»), sin guardar la fuente. Comprobar: el archivo anterior en Tamizaje Rosa da `error` y luego entra en Melenas con 30 filas. |
+| Corrección | `trabajos.py::aplicar_decision` | Una decisión `tipo=retirar_fuente` que borre la fuente, sus filas y su `sha256`, y reproyecte. Hoy un archivo cargado por error solo se quita reiniciando el estado. |
+| Mensaje | `importar.py:57-74` | Incluir el programa de la fuente original en los avisos `identico` y `mismo_contenido`. Mientras tanto la web lo añade al leer el trabajo (`web/lib/duplicado-otro-programa.ts`). |

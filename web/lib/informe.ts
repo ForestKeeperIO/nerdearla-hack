@@ -3,6 +3,7 @@ import { valkey } from './valkey';
 import { informe as claveInforme } from './claves';
 import { listarFuentes, listarPares, listarTrabajos } from './datos';
 import { informesActivos, nombrePrograma, programasDemo, tiposDe, valoresPrograma } from './catalogo';
+import { avisarOtroPrograma } from './duplicado-otro-programa';
 import type { Alcance, EstadoRecorrido } from './recorrido';
 
 /** Los informes que se muestran: los del catálogo para este entorno, más el Global. */
@@ -51,7 +52,13 @@ export async function fuentesDe(alcance: Alcance) {
 
 /** Trabajos del alcance (para Subir y para saber si hay algo procesándose). */
 export async function trabajosDe(alcance: Alcance) {
-  const todos = await listarTrabajos();
+  const leidos = await listarTrabajos();
+  const hayDuplicados = leidos.valor.some((t) => t.estado === 'duplicado' && t.fuente_original);
+  const programaDe = new Map(hayDuplicados ? (await listarFuentes()).valor.map((f) => [f.id, f.programa]) : []);
+  const todos = {
+    ...leidos,
+    valor: leidos.valor.map((t) => avisarOtroPrograma(t, (f) => programaDe.get(f), nombrePrograma)),
+  };
   if (alcance === 'global') return todos;
   return { ...todos, valor: todos.valor.filter((t) => esPrograma(t.programa, alcance)) };
 }
