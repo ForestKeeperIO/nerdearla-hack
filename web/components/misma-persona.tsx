@@ -54,13 +54,25 @@ export function MismaPersona({
         <p className="etiqueta">Faltan {pendientes.length} por decidir</p>
       </div>
       {actual.motivo && <p className="etiqueta" style={{ marginTop: 'var(--sp-1)' }}>{actual.motivo}</p>}
-      <div className="mt-4 flex flex-col gap-3 sm:flex-row">
+      <div className="mt-4 flex flex-col gap-3 sm:flex-row sm:items-stretch">
         <Lado
           titulo="Registro A"
           etiqueta={actual.a.etiqueta}
           fuente={nombreFuente[actual.a.fuente] ?? actual.a.fuente}
           fila={actual.a.fila}
         />
+        <div className="flex items-center justify-center" aria-hidden="true">
+          <span
+            className="mono"
+            style={{
+              fontSize: 'var(--fs-meta)', letterSpacing: '0.12em', textTransform: 'uppercase',
+              color: 'var(--tinta-tenue)', border: 'var(--border)', borderRadius: 'var(--r-sm)',
+              padding: 'var(--sp-1) var(--sp-3)', background: 'var(--superficie)',
+            }}
+          >
+            vs
+          </span>
+        </div>
         <Lado
           titulo="Registro B"
           etiqueta={actual.b.etiqueta}
