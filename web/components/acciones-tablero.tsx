@@ -26,6 +26,6 @@ export function AccionesTablero() {
       onClick={() => start(() => router.refresh())}><RefreshCw size={16} strokeWidth={1.5} aria-hidden /></button>
     <a className="bento-csv" href={`/tablero/cifras.csv${destino}`} download title="Descargar esta selección en CSV" aria-label="Exportar">
       <Download size={16} strokeWidth={1.5} aria-hidden /><span>Exportar</span></a>
-    <Link className="atlas-accion" href={`/reportes${destino}`} prefetch={false}>Sacar reporte <ArrowUpRight size={16} aria-hidden /></Link>
+    <Link className="atlas-accion" href={`/reportes${destino || '?origen=tablero'}`} prefetch={false}>Sacar reporte <ArrowUpRight size={16} aria-hidden /></Link>
   </div>;
 }
