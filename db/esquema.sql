@@ -20,6 +20,7 @@ CREATE TABLE IF NOT EXISTS personas (
 CREATE TABLE IF NOT EXISTS identidades (
   clave TEXT NOT NULL, nombre_clave TEXT NOT NULL,
   persona_id TEXT NOT NULL REFERENCES personas(id), etiqueta TEXT,
+  fuente TEXT, fila INTEGER, nacimiento TEXT,
   PRIMARY KEY (clave, nombre_clave));
 
 CREATE TABLE IF NOT EXISTS registros (

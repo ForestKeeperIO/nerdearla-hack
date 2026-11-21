@@ -112,7 +112,7 @@ def construir():
         ("D2a", "Ana María Sosa", date(1971, 7, 25)),
         ("V1a", "Carmen Alicia Vega", date(1988, 5, 4)),
         ("V2a", "Rosa Isela Mora", date(1965, 9, 19)),
-        ("V3a", "Leticia Anaya", date(1979, 1, 30)),
+        ("V3a", "Leticia Anaya Ruiz", date(1979, 1, 30)),
     ]
     ids_especiales = {}
     for clave, nombre, nac in esp:
@@ -166,7 +166,7 @@ def construir():
     variantes = [
         ("V1b", "Carmen Alisia Vega", "V1a"),
         ("V2b", "Rosa Izela Mora", "V2a"),
-        ("V3b", "Leticia Anaia", "V3a"),
+        ("V3b", "Leticia Anaia Ruiz", "V3a"),
     ]
     for clave, nombre, otro in variantes:
         p_orig = personas[otro]
