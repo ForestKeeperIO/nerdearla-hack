@@ -111,3 +111,7 @@ export const den = (dimension: string) => `${P}den:${dimension}`;
 
 /** Hash: estado de cada informe (`fecha_corte`, `creado_en`, `calidad_resuelta`, `cifras_aprobadas`). */
 export const informe = (alcance: string) => `${P}informe:${alcance}`;
+
+// Archivo de ediciones publicadas por el frontend; no es el estado del recorrido.
+export const reportesGenerados = () => `${P}reportes`;
+export const reporteGuardado = (id: string) => `${P}reporte:${id}`;
