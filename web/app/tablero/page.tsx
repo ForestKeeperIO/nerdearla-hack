@@ -59,6 +59,10 @@ export default async function Tablero({ searchParams }: { searchParams: Promise<
     <section aria-label="Filtros" className="mesa-filtros">
       <FiltrosBarra base={base} activos={f} corte={corte} />
     </section>
+    {(pendientes.length > 0 || sinId.valor > 0) && <aside className="aviso-banda">
+      <Info aria-hidden size={16} /><span>{pendientes.length} pares por revisar · {sinId.valor} registros sin identificar</span>
+      <a className="aviso-banda__accion" href="#pares">Revisar pares</a>
+    </aside>}
     <section aria-label="Indicadores" className="mesa-indicadores">
       <Indicador nombre="Personas impactadas" valor={roles.totalImpactadas ? personasTxt(roles.totalImpactadas) : '0'} unidad={alcance}
         regla="Cada persona identificada cuenta una vez por programa donde recibió atención o participó." origen={origen} />
@@ -77,10 +81,6 @@ export default async function Tablero({ searchParams }: { searchParams: Promise<
         {(f.estado.length > 0 || Object.values(f).some(v => v.length > 1)) && ' Metabase no aplica estado ni selecciones múltiples.'}</p>
       <iframe title="Tablero público de impacto en Metabase" src={metabase} className="mesa-marco" />
     </section>}
-    {(pendientes.length > 0 || sinId.valor > 0) && <aside className="aviso-banda">
-      <Info aria-hidden size={16} /><span>{pendientes.length} pares por revisar · {sinId.valor} registros sin identificar</span>
-      <a className="aviso-banda__accion" href="#pares">Revisar pares</a>
-    </aside>}
     <section className="mesa-columna"><h2>Servicios por unidad</h2>
       <p className="mesa-nota">Cada unidad se informa por separado.</p>
       <dl>{unidades.filter((u) => u.cantidad > 0).map((u) => <div key={u.nombre}><dt>{u.nombre}</dt><dd>{u.cantidad.toLocaleString('es-MX')}</dd></div>)}</dl>

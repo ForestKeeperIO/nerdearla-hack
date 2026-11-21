@@ -231,6 +231,7 @@ function aTrabajo(id: string, h: Record<string, string>): Trabajo {
   return {
     id,
     mapeo,
+    estado_clave: h.estado_clave,
     estado: h.estado ?? 'pendiente',
     nombre: h.nombre ?? '',
     programa: h.programa ?? '',

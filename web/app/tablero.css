@@ -1,3 +1,5 @@
+/* Hallmark · shape: app screen · theme: Pliego de impacto EIRA · nav: top tabs · signature: statistical plate · v2.0.0 */
+/* Critique: a single ruled plate replaces four stacked cards; each figure retains its source. */
 .container.mastil, .container:has(.mesa), footer.container { max-width: 1408px; }
 .mastil { display: flex; align-items: center; gap: var(--sp-8); }
 .mastil > a { display: inline-flex; align-items: baseline; gap: var(--sp-2); font-size: 22px !important; }
@@ -18,6 +20,7 @@
 }
 .mesa-boton { color: var(--superficie); background: var(--vino); padding-inline: var(--sp-4); text-decoration: none; }
 .mesa-boton:hover { background: var(--vino-oscuro); }
+.mesa-boton:active, .abrir-filtros:active { transform: translateY(1px); }
 .mesa-actualizar { gap: var(--sp-1); }
 .mesa-actualizar button { width: 44px; border: var(--border); color: var(--vino); }
 .mesa-actualizar button:hover { background: var(--papel-2); }
@@ -63,6 +66,7 @@ iframe:focus-visible { outline: 3px solid var(--vino); outline-offset: 2px; }
 .selector-campo { position: relative; cursor: text; }
 .selector-campo input { width: 100%; min-height: 44px; padding: 0 var(--sp-8) 0 var(--sp-3); border: 1px solid var(--linea-fuerte); border-radius: var(--r-sm); background: var(--superficie); color: var(--tinta); font-size: var(--fs-small); text-overflow: ellipsis; }
 .selector-campo input::placeholder { color: var(--tinta-suave); opacity: 1; }
+.selector-campo input { border-color: var(--tinta-tenue); }
 .selector-campo svg { position: absolute; right: var(--sp-3); top: 50%; transform: translateY(-50%); pointer-events: none; color: var(--vino); }
 .selector-lista { position: absolute; z-index: 12; top: 100%; left: 0; min-width: 100%; width: max-content; max-width: min(320px,100% + 80px); max-height: 320px; overflow: auto; padding: var(--sp-1); border: var(--border); border-radius: var(--r-sm); background: var(--superficie); box-shadow: var(--shadow-modal); }
 .selector:last-child .selector-lista { right: 0; left: auto; }
