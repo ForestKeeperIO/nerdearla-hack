@@ -410,6 +410,65 @@ def aplicar_decision(v, db, campos: dict) -> None:
 
 # --- Ciclo principal -----------------------------------------------------------
 
+MAX_ENTREGAS = 3
+_ENTREGAS: dict[str, int] = {}
+
+
+def _manejar(v, db, stream: str, msg_id: str, campos: dict, vb=None) -> None:
+    """Procesa un mensaje del grupo. XACK solo tras exito o tras
+    MAX_ENTREGAS intentos (en ese caso el trabajo queda en error)."""
+    try:
+        if stream == "eira:trabajos":
+            procesar_trabajo(v, db, campos["id"], campos, vb=vb)
+        else:
+            aplicar_decision(v, db, campos)
+    except Exception as e:  # noqa: BLE001 - se reintenta o se rinde
+        n = _ENTREGAS[msg_id] = _ENTREGAS.get(msg_id, 0) + 1
+        print(f"[worker] error en {stream} {msg_id} (entrega {n}): {e}",
+              file=sys.stderr)
+        if n >= MAX_ENTREGAS:
+            if stream == "eira:trabajos":
+                v.hset(f"eira:trabajo:{campos['id']}", mapping={
+                    "estado": "error",
+                    "mensaje": "No pude procesarlo tras varios intentos. "
+                               "Avísanos para revisarlo.",
+                    "terminado_en": escribir.ahora()})
+                v.publish("eira:eventos", json.dumps(
+                    {"tipo": "trabajo", "id": campos["id"]}))
+            _ENTREGAS.pop(msg_id, None)
+            v.xack(stream, GRUPO, msg_id)
+        return
+    _ENTREGAS.pop(msg_id, None)
+    v.xack(stream, GRUPO, msg_id)
+
+
+def reclamar_pendientes(v, db, vb=None, min_idle_ms: int = 0) -> int:
+    """XAUTOCLAIM de los pendientes del grupo y los procesa.
+
+    Se llama al arrancar (un consumidor que murio deja sus mensajes
+    pendientes) y de vez en cuando en el ciclo. Devuelve cuantos tomo.
+    """
+    tomados = 0
+    for stream in ("eira:trabajos", "eira:decisiones"):
+        inicio = "0-0"
+        while True:
+            try:
+                inicio, mensajes, _ = v.xautoclaim(
+                    stream, GRUPO, CONSUMIDOR, min_idle_time=min_idle_ms,
+                    start_id=inicio, count=20)
+            except (TimeoutError, valkey.exceptions.TimeoutError):
+                break
+            for msg_id, campos in mensajes:
+                if campos is None:  # entrada hueca: el mensaje ya no existe
+                    v.xack(stream, GRUPO, msg_id)
+                    continue
+                tomados += 1
+                _manejar(v, db, stream, msg_id, campos, vb=vb)
+            if inicio == "0-0" or not mensajes:
+                break
+    return tomados
+
+
 def ciclo(v, db, bloque_ms: int = 5000, vb=None) -> None:
     vb = vb or conectar(texto=False)
     try:
@@ -420,26 +479,25 @@ def ciclo(v, db, bloque_ms: int = 5000, vb=None) -> None:
         return  # sin mensajes en el bloqueo: vuelve a intentar
     for stream, mensajes in resp or []:
         for msg_id, campos in mensajes:
-            try:
-                if stream == "eira:trabajos":
-                    procesar_trabajo(v, db, campos["id"], campos, vb=vb)
-                else:
-                    aplicar_decision(v, db, campos)
-            except Exception as e:  # noqa: BLE001
-                print(f"[worker] error en {stream} {msg_id}: {e}", file=sys.stderr)
-            finally:
-                v.xack(stream, GRUPO, msg_id)
+            _manejar(v, db, stream, msg_id, campos, vb=vb)
 
 
 def main() -> None:
+    try:
+        huellas.clave_hmac()
+    except RuntimeError as e:
+        print(f"[worker] {e}", file=sys.stderr)
+        sys.exit(2)
     v = conectar()
     db = crear(os.environ.get("IMPACTO_DB", "data/impacto.sqlite"))
     db.row_factory = None
     asegurar_grupos(v)
     vb = conectar(texto=False)
+    reclamar_pendientes(v, db, vb=vb, min_idle_ms=0)
     print("[worker] escuchando eira:trabajos y eira:decisiones …", flush=True)
     while True:
         ciclo(v, db, vb=vb)
+        reclamar_pendientes(v, db, vb=vb, min_idle_ms=30_000)
 
 
 if __name__ == "__main__":
