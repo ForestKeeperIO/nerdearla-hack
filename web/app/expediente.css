@@ -1,0 +1,61 @@
+/* Hallmark: EIRA / expediente municipal. Theme: custom. Vibe: sala de lectura de presidencia.
+   Signature: pliegos con membrete, registro de entregas y cartografía del INEGI.
+   Posture: committed. Type: Rosarivo / Montserrat. Motion: una entrada al abrir el expediente. */
+.eira-cabecera { margin: 1rem auto 0; padding-inline: var(--gutter); max-width: 78rem; }
+.eira-mastil { display: flex; gap: 2rem; align-items: center; padding-block: .65rem; border-block: 1px solid var(--linea-fuerte); }
+.eira-firma { font: 2.15rem/1 var(--font-display); color: var(--vino-oscuro); display: inline-flex; align-items: center; gap: .7rem; text-decoration: none; }
+.eira-firma span { font: .74rem/1.25 var(--font-ui); max-width: 6rem; }
+.eira-nav { margin-inline: auto; padding: .2rem; display: flex; background: var(--papel-2); border-radius: var(--r-pill); }
+.eira-nav a { display: grid; place-items: center; min-height: 42px; text-decoration: none; border-radius: var(--r-pill); padding-inline: 1.1rem; font-size: .87rem; font-weight: 550; }
+.eira-nav a[aria-current] { color: var(--superficie); background: var(--vino-oscuro); }
+.eira-nav a:not([aria-current]):hover { color: var(--vino); text-decoration: underline; }
+.eira-entorno { font-size: .8rem; color: var(--tinta-suave); }
+main.contenido:has(.archivo-eira) { max-width: 77rem; padding-block-start: 0; }
+.archivo-eira { font-variant-numeric: tabular-nums; }
+.apertura { display: grid; grid-template-columns: 1.5fr 1fr; gap: 3rem; align-items: end; padding-block: clamp(3rem,7vw,6.2rem) 2.6rem; }
+.apertura h1, .hoja h1 { font: 400 clamp(2.8rem,5.8vw,5.3rem)/1.04 var(--font-display); color: var(--vino-oscuro); letter-spacing: -.035em; }
+.apertura p { color: var(--tinta-suave); max-width: 45ch; font-size: 1rem; margin: 0; }
+.registro { border-top: 2px solid var(--vino-oscuro); }
+.asiento { display: grid; grid-template-columns: minmax(0,1fr) auto auto; gap: 2rem; align-items: center; padding: 1.5rem .2rem; border-bottom: var(--border); text-decoration: none; }
+.asiento h2 { font-size: clamp(1.45rem,3vw,2rem); }
+.asiento p,.asiento > span,.pie-registro,.regreso { color: var(--tinta-suave); font-size: .85rem; }
+.asiento p { max-width: 65ch; margin-top: .4rem; }
+.asiento:hover h2 { color: var(--vino); text-decoration: underline; }
+.asiento .abrir { border: 1px solid var(--linea-fuerte); border-radius: var(--r-pill); padding: .48rem 1rem; color: var(--vino); }
+.catalogo-reportes { display: grid; grid-template-columns: 1.22fr 1fr; gap: 1.25rem; }
+.tapa { display: flex; flex-flow: column; align-items: start; justify-content: end; padding: clamp(1.3rem,4vw,3rem); min-height: 23rem; background: var(--vino-oscuro); color: var(--papel); text-decoration: none; border-radius: 0 1.4rem 1.4rem 0; box-shadow: inset 7px 0 var(--vino); }
+.tapa > span { margin-bottom: auto; padding-bottom: 2rem; font-size: .88rem; }
+.tapa h2 { font-size: clamp(2rem,4vw,3.5rem); line-height: 1.08; max-width: 12ch; }
+.tapa p { margin-block: .8rem 1.6rem; max-width: 32ch; }
+.tapa strong { display: inline-flex; align-items: center; gap: .7rem; border-radius: var(--r-pill); background: var(--papel); color: var(--vino); padding: .4rem .45rem .4rem .95rem; font-size: .87rem; }
+.tapa i { border-radius: 50%; padding: .2rem .55rem; background: var(--papel-2); font-style: normal; transition: transform .28s cubic-bezier(.32,.72,0,1); }
+.tapa:hover i { transform: translate(.1rem,-.1rem); }
+.tapa-mapa { background: var(--papel-2); color: var(--ciruela); box-shadow: inset 7px 0 var(--linea-fuerte); }
+.pie-registro,.cab-carga { display: flex; justify-content: space-between; gap: 1rem; flex-wrap: wrap; padding-block: 1rem; }
+.regreso { display: inline-flex; align-items: center; gap: .4rem; padding-block: 1rem; }
+.cab-carga { border-block: var(--border); align-items: center; }
+.cab-carga > p { font: 1.4rem var(--font-display); }
+.cab-carga .pasos { gap: 1.2rem; }
+.cab-carga .pasos-ayuda { display: none; }
+.expediente-carga .apertura { padding-block: 2.2rem .5rem; }
+.expediente-carga .tarjeta { box-shadow: none; }
+.expediente-carga section[aria-label="Subir archivos"] > div:first-child { border: 0 !important; border-radius: 1rem !important; background: var(--vino-oscuro) !important; color: var(--papel); min-height: 11rem !important; outline: 1px dashed var(--linea-fuerte); outline-offset: -9px; }
+.expediente-carga section[aria-label="Subir archivos"] > div:first-child :is(svg,.etiqueta,button) { color: var(--papel) !important; }
+.expediente-carga .banda-cifras { background: var(--papel-2); }
+.expediente-carga .cifra { color: var(--vino-oscuro); }
+@media (prefers-reduced-motion: no-preference) { .archivo-eira { animation: abrir-pliego .4s cubic-bezier(.32,.72,0,1); } @keyframes abrir-pliego { from { transform: translateY(5px); opacity: .8; } } }
+@media (max-width: 767px) {
+  .eira-cabecera { margin-top: .4rem; }
+  .eira-mastil { gap: .4rem; justify-content: space-between; }
+  .eira-firma { font-size: 1.6rem; }
+  .eira-firma span,.eira-entorno { display: none; }
+  .eira-nav { margin: 0; }
+  .eira-nav a { padding-inline: .65rem; font-size: .79rem; }
+  .apertura,.catalogo-reportes { grid-template-columns: minmax(0,1fr); gap: 1rem; }
+  .apertura { padding-block: 2.4rem 1.65rem; }
+  .tapa { min-height: 16rem; }
+  .asiento { grid-template-columns: 1fr auto; gap: .6rem; }
+  .asiento > div { grid-column: 1/-1; }
+  .cab-carga { gap: .5rem; }
+  .expediente-carga .pasos-compacto { min-width: 9rem; }
+}
