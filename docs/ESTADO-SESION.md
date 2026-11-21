@@ -49,3 +49,8 @@
 - Metabase listo (rama metabase, clon ../nerdearla-hack-metabase, :3200): falta quitar "[real]" de títulos, ancho completo, filtro por programa; reprovisionar sobre db/esquema.sql del motor.
 - Entrega (rama entrega): README/devpost/guion en borrador; sustituir capturas viejas.
 - Demo (rama demo): scripts en curso.
+
+## 2026-11-21 ~19:15 — merge total
+- Mergeadas a main y verificadas 0-ahead: fe, motor, fuentes-reales, referencias, valkey-base, entrega, metabase, demo. Conflictos resueltos: .gitignore (unión), NOTAS.md (concatenación por secciones).
+- sync-repo.sh v2: cada ciclo commitea pendientes en TODOS los worktrees/clones nerdearla-hack-*, pushea su rama, mergea origin/* a main (aborta si hay conflicto) y pushea main. Salta árboles con rutas sin resolver.
+- Ojo: clones separados (demo, entrega, metabase dirs) pushean por este mismo cron.
