@@ -1,0 +1,17 @@
+{
+  "entornos": {
+    "real": {
+      "impacto": "http://127.0.0.1:3200/public/dashboard/f62686a5-b630-4c72-948a-502228267c11",
+      "calidad": "http://127.0.0.1:3200/public/dashboard/f0b06799-74ef-4c7a-8485-ee1f4840c4a9",
+      "impacto_por_programa": "http://127.0.0.1:3200/public/dashboard/f62686a5-b630-4c72-948a-502228267c11?programa={programa}"
+    },
+    "blanco": {
+      "impacto": "http://127.0.0.1:3200/public/dashboard/886327d0-b72a-4442-84bf-f1e55eaf9255",
+      "calidad": "http://127.0.0.1:3200/public/dashboard/06ab8121-a7c5-499e-97f2-4d70fc4527b8",
+      "impacto_por_programa": "http://127.0.0.1:3200/public/dashboard/886327d0-b72a-4442-84bf-f1e55eaf9255?programa={programa}"
+    }
+  },
+  "impacto": "http://127.0.0.1:3200/public/dashboard/f62686a5-b630-4c72-948a-502228267c11",
+  "calidad": "http://127.0.0.1:3200/public/dashboard/f0b06799-74ef-4c7a-8485-ee1f4840c4a9",
+  "impacto_por_programa": "http://127.0.0.1:3200/public/dashboard/f62686a5-b630-4c72-948a-502228267c11?programa={programa}"
+}

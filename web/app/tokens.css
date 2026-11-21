@@ -1,0 +1,55 @@
+/* Sistema visual EIRA — paleta de eiraac.org, mejorada (docs/referencias/paleta-eira.md).
+   El vino manda; los rosas solo como matiz en superficies pequeñas. */
+:root {
+  color-scheme: light;
+
+  /* Paleta EIRA */
+  --papel:        #FDFAF9;
+  --superficie:   #FFFFFF;
+  --tinta:        #2E2E2E;
+  --tinta-suave:  #6B5C5C;
+  --linea:        #EADFDD;
+  --vino:         #7D3B3B;
+  --vino-oscuro:  #5F2B2B;
+  --ciruela:      #6A2B51;
+  --rubor:        #FFEBEE;
+  --rosa:         #FFA9B8;
+  --pizarra:      #7E8BA3;
+  --aviso:        #B0595A;
+  --error:        #843F3F;
+
+  /* Neutros derivados de la paleta (declarados aquí: los únicos fuera de ella) */
+  --papel-2:       #F5EFED;
+  --linea-fuerte:  #D9CBC7;
+  --tinta-tenue:   #7C6F6D;
+
+  /* Tipografía: Rosarivo para títulos y cifras, Montserrat para la interfaz,
+     IBM Plex Mono para identificadores. */
+  --font-display: var(--font-rosarivo), "Rosarivo", Georgia, serif;
+  --font-ui:      var(--font-montserrat), "Montserrat", ui-sans-serif, system-ui, sans-serif;
+  --font-mono:    var(--font-plex-mono), "IBM Plex Mono", ui-monospace, monospace;
+
+  /* Escala (px) */
+  --fs-hero: 30px; --fs-h2: 20px; --fs-stat: 40px; --fs-stat-sm: 28px;
+  --fs-body: 15px; --fs-small: 13px; --fs-meta: 12px;
+  --lh-body: 1.5; --lh-tight: 1.15;
+
+  /* Espaciado (4px base) */
+  --sp-1: 4px; --sp-2: 8px; --sp-3: 12px; --sp-4: 16px; --sp-5: 20px;
+  --sp-6: 24px; --sp-8: 32px; --sp-10: 40px; --sp-12: 48px; --sp-16: 64px;
+
+  /* Radios */
+  --r-sm: 6px; --r-md: 10px; --r-lg: 16px; --r-pill: 999px;
+
+  /* Bordes y sombras: hairline primero, sombra casi nula */
+  --border: 1px solid var(--linea);
+  --shadow-card: 0 1px 2px rgba(46, 46, 46, .05);
+  --shadow-modal: 0 8px 32px rgba(46, 46, 46, .14);
+
+  /* Duraciones */
+  --dur: 160ms;
+  --ease: cubic-bezier(0.16, 1, 0.3, 1);
+
+  --container: 880px;
+  --gutter: 32px;
+}

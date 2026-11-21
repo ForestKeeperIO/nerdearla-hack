@@ -1,0 +1,169 @@
+/* Capa visual EIRA: sobria, precisa. Vino como único color de acción;
+   los rosas de marca solo como matiz en superficies pequeñas. */
+@import url("./tokens.css");
+@import url("./base.css");
+@import "tailwindcss";
+@import "tw-animate-css";
+
+@theme inline {
+  --color-background: var(--papel);
+  --color-foreground: var(--tinta);
+  --color-card: var(--superficie);
+  --color-card-foreground: var(--tinta);
+  --color-popover: var(--superficie);
+  --color-popover-foreground: var(--tinta);
+  --color-primary: var(--vino);
+  --color-primary-foreground: var(--superficie);
+  --color-secondary: var(--papel-2);
+  --color-secondary-foreground: var(--tinta);
+  --color-muted: var(--papel-2);
+  --color-muted-foreground: var(--tinta-tenue);
+  --color-accent: var(--rubor);
+  --color-accent-foreground: var(--vino);
+  --color-destructive: var(--error);
+  --color-destructive-foreground: var(--superficie);
+  --color-border: var(--linea);
+  --color-input: var(--linea-fuerte);
+  --color-ring: var(--vino);
+  --font-sans: var(--font-ui);
+  --font-mono: var(--font-mono);
+  --font-heading: var(--font-display);
+  --radius: var(--r-md);
+  --radius-sm: var(--r-sm);
+  --radius-md: var(--r-md);
+  --radius-lg: var(--r-md);
+  --radius-xl: var(--r-lg);
+}
+
+@layer base {
+  button, [role="button"], select, input[type="checkbox"], input[type="radio"] { min-height: 40px; }
+  input:not([type="checkbox"]):not([type="radio"]), select { min-height: 40px; }
+  button:disabled, [aria-disabled="true"] { opacity: 0.5; cursor: not-allowed; }
+  button, a, [role="button"] { transition: background-color var(--dur) var(--ease), border-color var(--dur) var(--ease), color var(--dur) var(--ease); }
+}
+
+/* ---------- piezas del sistema ---------- */
+
+.etiqueta { color: var(--tinta-tenue); font-size: var(--fs-small); }
+.lead { font-size: 16px; line-height: 1.55; color: var(--tinta-suave); }
+
+/* Tarjeta blanca de borde fino (OhMD): ocupa lo que su contenido necesita. */
+.tarjeta {
+  background: var(--superficie);
+  border: var(--border);
+  border-radius: var(--r-lg);
+  box-shadow: var(--shadow-card);
+  padding: var(--sp-6);
+}
+
+/* Cifra grande con remates (Rosarivo): la combinación da el tono sobrio. */
+.cifra {
+  font-family: var(--font-display);
+  font-variant-numeric: tabular-nums;
+  font-size: var(--fs-stat);
+  font-weight: 400;
+  letter-spacing: -0.01em;
+  line-height: 1.05;
+  font-synthesis: none;
+}
+.cifra--sm { font-size: var(--fs-stat-sm); }
+
+/* Marca de estado: siempre palabras, además de color (la paleta no tiene verde). */
+.estado {
+  display: inline-flex; align-items: center; gap: var(--sp-2);
+  padding: 3px var(--sp-3);
+  border-radius: var(--r-pill);
+  font-size: var(--fs-small); font-weight: 500; line-height: 1.5;
+  white-space: nowrap;
+}
+.estado--listo { color: var(--tinta); background: var(--papel-2); }
+.estado--aviso { color: var(--aviso); background: var(--rubor); }
+.estado--error { color: var(--error); background: var(--rubor); }
+.estado--info { color: var(--tinta-suave); background: var(--papel-2); }
+
+/* Fila editorial (Revelatio): índice mono a la izquierda, título, dato a la derecha, hairline. */
+.fila {
+  display: flex; align-items: center; gap: var(--sp-6);
+  padding-block: var(--sp-5);
+  border-top: var(--border);
+}
+.fila:first-child { border-top: 0; }
+.fila__indice {
+  font-family: var(--font-mono); font-size: var(--fs-small); color: var(--tinta-tenue);
+  width: 2.5rem; flex-shrink: 0;
+}
+.fila__cuerpo { flex: 1; min-width: 0; }
+.fila__dato { flex-shrink: 0; text-align: right; }
+/* Superficie seleccionada pequeña: el único rosa de fondo permitido. */
+.fila--elegida { background: var(--rubor); }
+
+/* Indicador de pasos (Decimals): número en mono + título + conector hairline. */
+.pasos { display: flex; align-items: flex-start; }
+.pasos__paso { display: flex; align-items: flex-start; min-width: 0; }
+.pasos__item { display: flex; align-items: center; gap: var(--sp-3); }
+.pasos__num {
+  font-family: var(--font-mono); font-size: var(--fs-small);
+  display: inline-flex; align-items: center; justify-content: center;
+  width: 1.75rem; height: 1.75rem; border-radius: var(--r-pill);
+  border: 1px solid var(--linea-fuerte); color: var(--tinta-tenue); flex-shrink: 0;
+}
+.pasos__item--actual .pasos__num { border-color: var(--vino); color: var(--vino); }
+.pasos__item--hecho .pasos__num { border-color: var(--vino); background: var(--vino); color: var(--superficie); }
+.pasos__nombre { font-size: var(--fs-small); font-weight: 500; white-space: nowrap; }
+.pasos__item--actual .pasos__nombre { color: var(--tinta); }
+.pasos__item--hecho .pasos__nombre { color: var(--tinta-suave); }
+.pasos__item--bloqueado .pasos__nombre, .pasos__item--bloqueado .pasos__num { color: var(--tinta-tenue); }
+.pasos__linea { flex: 1; min-width: 16px; height: 1px; background: var(--linea); margin: 0.9rem var(--sp-3) 0; }
+.pasos__motivo { display: block; font-size: var(--fs-meta); color: var(--tinta-tenue); font-weight: 400; white-space: normal; margin-top: 2px; }
+
+/* Botones (Viru): primario píldora vino, secundario de borde fino. Un solo color de acción. */
+.btn {
+  display: inline-flex; align-items: center; justify-content: center; gap: var(--sp-2);
+  min-height: 44px; padding: 0 var(--sp-6);
+  border-radius: var(--r-pill);
+  font-size: var(--fs-body); font-weight: 500; line-height: 1;
+  cursor: pointer; text-decoration: none;
+  border: 1px solid transparent;
+}
+.btn--primario { background: var(--vino); color: var(--superficie); }
+.btn--primario:hover:not(:disabled) { background: var(--vino-oscuro); }
+.btn--secundario { background: var(--superficie); color: var(--tinta); border-color: var(--linea-fuerte); }
+.btn--secundario:hover:not(:disabled) { background: var(--papel-2); }
+.btn--quieto { background: transparent; color: var(--tinta-tenue); }
+.btn--quieto:hover:not(:disabled) { color: var(--tinta); background: var(--papel-2); }
+.btn--sm { min-height: 36px; padding: 0 var(--sp-4); font-size: var(--fs-small); }
+
+/* Desplegable "Cómo se calculó": discreto, el detalle técnico vive aquí. */
+details.calculo summary {
+  cursor: pointer; color: var(--tinta-tenue); font-size: var(--fs-small);
+  min-height: 40px; display: inline-flex; align-items: center; gap: var(--sp-2);
+  list-style: none;
+}
+details.calculo summary::before { content: "▸"; font-size: var(--fs-meta); }
+details.calculo[open] summary::before { content: "▾"; }
+details.calculo summary:hover { color: var(--vino); }
+details.calculo .calculo__cuerpo {
+  font-family: var(--font-mono); font-size: var(--fs-meta); color: var(--tinta-suave);
+  background: var(--papel-2); border: var(--border); border-radius: var(--r-sm);
+  padding: var(--sp-3) var(--sp-4); margin-top: var(--sp-1); overflow-wrap: anywhere;
+}
+
+/* Mosaico de presencia territorial: un cuadro por municipio, sin rótulos. */
+.mosaico { display: flex; flex-wrap: wrap; gap: 3px; }
+.mosaico__cuadro {
+  width: 9px; height: 9px; border-radius: 2px;
+  background: var(--linea);
+}
+.mosaico__cuadro--activo { background: var(--vino); }
+
+/* Impresión del informe. */
+.solo-imprimir { display: none; }
+@media print {
+  .no-imprimir { display: none !important; }
+  .solo-imprimir { display: block; }
+  body { background: var(--superficie); font-size: 12pt; }
+  main { max-width: none; padding: 0 !important; }
+  .tarjeta { box-shadow: none !important; border: 1px solid var(--linea-fuerte) !important; break-inside: avoid; }
+  a[href]::after { content: ""; }
+  @page { margin: 18mm; }
+}
