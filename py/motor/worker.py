@@ -440,8 +440,13 @@ def _decidir_par(v, db, par: str, decision: str, por: str) -> None:
             pipe.hset("eira:nac", a, nac_b)
     elif decision == "distinta":
         # b vuelve a contar como persona propia donde tenga filas.
+        # a deja de representarla donde no tiene filas propias (si no, el
+        # tablero cuenta una persona de mas en el otro programa).
+        sets_a = _membresias(db, a)
         for clave in sets_b:
             pipe.sadd(clave, b)
+            if clave not in sets_a:
+                pipe.srem(clave, a)
     pipe.xadd("eira:bitacora", {"en": en, "por": por or "presidencia",
                               "tipo": "decision",
                               "detalle": f"Par {par}: '{decision}'."})
