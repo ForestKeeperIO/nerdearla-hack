@@ -54,3 +54,11 @@ Un archivo que termina en `error` no queda registrado: el `sha256` se guarda en 
 | Evita cifras falsas | `analizar.py:187-196`, `trabajos.py:67-69` | Si la columna de tipo de registro trae valores del catálogo que el programa elegido no admite, terminar en `error` con el programa que sí los admite («Este archivo trae donaciones y pelucas: corresponde a Melenas en Movimiento»), sin guardar la fuente. Comprobar: el archivo anterior en Tamizaje Rosa da `error` y luego entra en Melenas con 30 filas. |
 | Corrección | `trabajos.py::aplicar_decision` | Una decisión `tipo=retirar_fuente` que borre la fuente, sus filas y su `sha256`, y reproyecte. Hoy un archivo cargado por error solo se quita reiniciando el estado. |
 | Mensaje | `importar.py:57-74` | Incluir el programa de la fuente original en los avisos `identico` y `mismo_contenido`. Mientras tanto la web lo añade al leer el trabajo (`web/lib/duplicado-otro-programa.ts`). |
+
+## Escala de Tamizaje Rosa
+
+**Pedido:** que detectar pares no requiera recorrer todas las filas por cada ID del archivo. En el release `13a806d`, `py/procesador/importar.py:191,198-205` lo hace dentro de la transacción de carga. Los índices de `py/procesador/estado.py:28-29` no cubren el filtro de identidad. Con 6.000 filas previas, sumar 10.000 llevó **43,02 s**, usó **42,63 s de CPU** y el lector de vistas salió por bloqueo de SQLite. [Resultados y método](escala-10k.md).
+
+Probar en una copia una migración idempotente que cree un índice parcial en `filas(id_h)` para `estado='contada' AND nombre_h!=''`, o una consulta por lote equivalente. No cambiar la regla de nombres, fusionar personas automáticamente ni perder el orden de `rid` para los pares.
+
+**Aceptación:** verificar con `EXPLAIN QUERY PLAN` que la consulta de `_detectar_pares` busca por índice y no hace `SCAN filas`; repetir la secuencia 1K → 5K → 10K → 50K y comparar tiempos, tiempo de bloqueo y conteos. En el corte de 10K deben seguir apareciendo **15.090 personas, 15.840 atenciones y 150 pares pendientes**, incluidos los 100 nuevos. Reportar el tiempo de la carga completa, no sólo el de la consulta. No se aplicó una migración al worker de la prueba.
