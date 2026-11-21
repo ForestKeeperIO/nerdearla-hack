@@ -1,19 +1,24 @@
 import type { Metadata } from "next";
-import { Geist, Geist_Mono } from "next/font/google";
+import { Inter, IBM_Plex_Mono } from "next/font/google";
 import "./globals.css";
-import { NavPasos } from "@/components/cabecera";
+import { AppSidebar } from "@/components/app-sidebar";
+import { PasosCabecera } from "@/components/pasos";
 import { cambiarRol } from "@/lib/acciones";
 import { rolActual } from "@/lib/rol";
 import { Button } from "@/components/ui/button";
+import { Separator } from "@/components/ui/separator";
+import { SidebarInset, SidebarProvider, SidebarTrigger } from "@/components/ui/sidebar";
+import { Toaster } from "@/components/ui/sonner";
 
-const geistSans = Geist({
-  variable: "--font-geist-sans",
+const inter = Inter({
+  variable: "--font-inter",
   subsets: ["latin"],
 });
 
-const geistMono = Geist_Mono({
-  variable: "--font-geist-mono",
+const plexMono = IBM_Plex_Mono({
+  variable: "--font-plex-mono",
   subsets: ["latin"],
+  weight: ["400", "500"],
 });
 
 export const metadata: Metadata = {
@@ -27,50 +32,47 @@ export default async function RootLayout({ children }: LayoutProps<"/">) {
   return (
     <html
       lang="es"
-      className={`${geistSans.variable} ${geistMono.variable} h-full antialiased`}
+      className={`${inter.variable} ${plexMono.variable} h-full antialiased`}
     >
-      <head>
-        <link
-          href="https://api.fontshare.com/v2/css?f[]=general-sans@400,500,600&display=swap"
-          rel="stylesheet"
-        />
-      </head>
-      <body className="min-h-full flex flex-col">
-        <header className="no-imprimir border-b border-[var(--color-rule)] bg-[var(--color-cotton)]">
-          <div className="container flex flex-wrap items-center justify-between gap-x-6 gap-y-2 py-3">
-            <div className="flex flex-wrap items-center gap-x-6 gap-y-2">
-              <span className="font-semibold tracking-tight">
-                Impacto <span className="text-[var(--color-accent-2)]">EIRA</span>
-              </span>
-              <NavPasos />
-            </div>
-            <form className="flex items-center gap-2">
-              <span className="etiqueta">Rol (simulado):</span>
-              <Button
-                type="submit"
-                variant={rol === 'coordinacion' ? 'default' : 'outline'}
-                formAction={cambiarRol.bind(null, 'coordinacion')}
-                aria-pressed={rol === 'coordinacion'}
-              >
-                Coordinación
-              </Button>
-              <Button
-                type="submit"
-                variant={rol === 'presidencia' ? 'default' : 'outline'}
-                formAction={cambiarRol.bind(null, 'presidencia')}
-                aria-pressed={rol === 'presidencia'}
-              >
-                Presidencia
-              </Button>
-            </form>
-          </div>
-        </header>
-        <main className="container flex-1 py-6">{children}</main>
-        <footer className="no-imprimir border-t border-[var(--color-rule)] py-4">
-          <div className="container etiqueta">
-            Datos ficticios de demostración. Los cálculos se hacen en Valkey, en el servidor; el navegador nunca habla con Valkey.
-          </div>
-        </footer>
+      <body className="min-h-full">
+        <SidebarProvider>
+          <AppSidebar />
+          <SidebarInset>
+            <header className="no-imprimir sticky top-0 z-10 flex flex-wrap items-center gap-x-4 gap-y-2 border-b border-border bg-background/95 px-4 py-2 backdrop-blur">
+              <SidebarTrigger aria-label="Mostrar u ocultar el menú" />
+              <Separator orientation="vertical" className="h-6!" />
+              <PasosCabecera />
+              <form className="ml-auto flex items-center gap-2">
+                <span className="etiqueta hidden md:inline">Rol (simulado):</span>
+                <Button
+                  type="submit"
+                  size="sm"
+                  variant={rol === 'coordinacion' ? 'default' : 'outline'}
+                  formAction={cambiarRol.bind(null, 'coordinacion')}
+                  aria-pressed={rol === 'coordinacion'}
+                >
+                  Coordinación
+                </Button>
+                <Button
+                  type="submit"
+                  size="sm"
+                  variant={rol === 'presidencia' ? 'default' : 'outline'}
+                  formAction={cambiarRol.bind(null, 'presidencia')}
+                  aria-pressed={rol === 'presidencia'}
+                >
+                  Presidencia
+                </Button>
+              </form>
+            </header>
+            <main className="container flex-1 py-6">{children}</main>
+            <footer className="no-imprimir border-t border-border py-4">
+              <div className="container etiqueta">
+                Datos ficticios de demostración. Los cálculos se hacen en Valkey, en el servidor; el navegador nunca habla con Valkey.
+              </div>
+            </footer>
+          </SidebarInset>
+        </SidebarProvider>
+        <Toaster position="bottom-right" />
       </body>
     </html>
   );

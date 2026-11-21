@@ -1,26 +1,38 @@
+/* Tema sobrio EIRA — neutro cálido (stone), tarjetas blancas, rosa solo como acento. */
 :root {
   color-scheme: light;
-  --space-3xs: 2px; --space-2xs: 4px; --space-xs: 8px; --space-sm: 12px; --space-md: 16px; --space-lg: 24px; --space-xl: 40px; --space-2xl: 64px; --space-3xl: 96px; --space-4xl: 144px;
-  --text-xs: 0.75rem; --text-sm: 0.875rem; --text-md: 1rem; --text-lg: 1.2rem; --text-xl: 1.44rem; --text-2xl: 1.728rem; --text-3xl: 2.074rem;
-  --text-display-s: 1.44rem; --text-display: 1.728rem; --text-section: 1.2rem; --text-title: 1rem; --text-lead: 1rem;
-  --ease-out: cubic-bezier(0.16, 1, 0.3, 1); --ease-in: cubic-bezier(0.7, 0, 0.84, 0); --ease-in-out: cubic-bezier(0.65, 0, 0.35, 1);
-  --dur-micro: 120ms; --dur-short: 220ms; --dur-long: 420ms;
-  --color-error: oklch(52% 0.19 27); --color-success: oklch(50% 0.12 150);
-  --container: 1440px; --gutter: 64px; --gap-columns: 32px; --section-gap-s: 120px; --section-gap: 144px; --section-gap-l: 176px;
-  --z-base: 1; --z-raised: 10; --z-dropdown: 100; --z-sticky: 200; --z-sticky-nav: 300; --z-modal: 400; --z-toast: 500; --z-tooltip: 600;
-  --color-paper: oklch(97% 0.006 55); --color-paper-2: oklch(94.5% 0.007 55); --color-paper-3: oklch(91.5% 0.009 55);
-  --color-ink: oklch(21% 0.012 38); --color-ink-2: oklch(29% 0.013 40); --color-muted: oklch(47% 0.013 45);
-  --color-rule: oklch(87% 0.009 55); --color-rule-2: oklch(81% 0.011 55);
-  --color-accent: oklch(74% 0.125 30); --color-accent-ink: oklch(21% 0.012 38); --color-accent-2: oklch(54% 0.165 29); --color-focus: oklch(54% 0.17 30);
-  --color-cotton: oklch(98.8% 0.0045 80); --color-desk: oklch(94.3% 0.008 64); --color-print: oklch(23% 0.012 38);
-  --color-board: oklch(22% 0.011 40); --color-board-type: oklch(96.5% 0.006 70); --color-paid: oklch(55.5% 0.15 33);
-  --shade: 32% 0.03 50; --lit: 100% 0.005 80; --deep: 7% 0.01 40;
-  --font-display: "General Sans", ui-sans-serif, system-ui, sans-serif; --font-body: var(--font-display);
-  --font-outlier: "Geist Mono", ui-monospace, monospace;
-  --radius-card: 8px; --radius-input: 6px; --radius-pill: 999px; --radius-stock: 8px; --rule-hair: 1px;
-  --shadow-card: 0 1px 2px oklch(20% 0.01 35 / 0.05);
-  --edge-stock: inset 0 1px 0 oklch(var(--lit) / 0.9), inset 0 -1px 0 oklch(var(--shade) / 0.07), 0 0 0 0.5px oklch(var(--shade) / 0.22), 0 1px 0 oklch(var(--shade) / 0.12);
-  --cast-stock: 6px 5px 10px -6px oklch(var(--shade) / 0.3); --cast-stock-lift: 12px 10px 18px -8px oklch(var(--shade) / 0.3);
-  --press-groove: inset 1px 1.5px 2px oklch(var(--shade) / 0.16), inset -1px -1px 0 oklch(var(--lit) / 0.9), 0 0 0 0.5px oklch(var(--shade) / 0.2);
-  --tracking-display: -0.03em; --display-weight: 600;
+
+  /* Espacio (escala de 4 px) y duraciones. */
+  --space-3xs: 2px; --space-2xs: 4px; --space-xs: 8px; --space-sm: 12px;
+  --space-md: 16px; --space-lg: 24px; --space-xl: 40px; --space-2xl: 64px;
+  --ease-out: cubic-bezier(0.16, 1, 0.3, 1);
+  --dur-micro: 120ms; --dur-short: 200ms;
+  --container: 1280px; --gutter: 32px;
+
+  /* Texto. */
+  --text-xs: 0.75rem; --text-sm: 0.875rem; --text-md: 1rem; --text-lg: 1.125rem;
+  --text-xl: 1.375rem; --text-2xl: 1.75rem; --text-3xl: 2.25rem;
+
+  /* Neutro cálido: fondo stone-50, tinta stone-900, reglas stone-200. */
+  --color-paper: #fafaf9;      /* fondo de la app */
+  --color-paper-2: #f5f5f4;    /* relleno suave (filtros, código) */
+  --color-cotton: #ffffff;     /* tarjetas */
+  --color-ink: #1c1917;        /* texto principal */
+  --color-ink-2: #44403c;      /* texto secundario */
+  --color-muted: #78716c;      /* texto terciario / etiquetas */
+  --color-rule: #e7e5e4;       /* bordes */
+  --color-rule-2: #d6d3d1;     /* bordes de inputs / dashed */
+
+  /* Rosa EIRA: acento único (botón primario, estrellas, barra activa). */
+  --color-accent: #fdf2f8;     /* rosa-50, fondos de acento */
+  --color-accent-ink: #9d174d; /* rosa-800, texto sobre rosa-50 */
+  --color-accent-2: #be185d;   /* rosa-700, acción primaria */
+  --color-accent-3: #9d174d;   /* rosa-800, hover de la acción */
+  --color-focus: #be185d;
+
+  --color-error: #b91c1c;
+  --radius-card: 10px;
+  --radius-input: 8px;
+  --radius-pill: 999px;
+  --shadow-card: 0 1px 2px rgb(28 25 23 / 0.04);
 }

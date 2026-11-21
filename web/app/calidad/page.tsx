@@ -1,6 +1,12 @@
-import { anomaliasDe, listarFuentes, listarPares, omitidasDe, type Med, type Anomalia } from '@/lib/datos';
+import { anomaliasDe, listarFuentes, listarPares, omitidasDe, type Anomalia } from '@/lib/datos';
 import { ComoSeCalculo } from '@/components/como';
 import { Button } from '@/components/ui/button';
+import { Alerta } from '@/components/ui/alert';
+import { Comparison } from '@/components/ui/comparison';
+import { StarRating } from '@/components/ui/star-rating';
+import { TablaAnomalias } from '@/components/tabla-anomalias';
+import { Empty, EmptyDescription, EmptyHeader, EmptyMedia, EmptyTitle } from '@/components/ui/empty';
+import { ClipboardCheck, Users } from 'lucide-react';
 import { decidirPar, restituirFila } from '@/lib/acciones';
 import { rolActual } from '@/lib/rol';
 
@@ -46,49 +52,53 @@ export default async function PaginaCalidad() {
       </div>
 
       {!esPresidencia && (
-        <p className="rounded-lg border border-[var(--color-rule)] bg-[var(--color-paper-2)] px-4 py-3 text-[var(--color-ink-2)]">
-          Estás viendo la pantalla como Coordinación: puedes revisar los problemas, pero solo
-          Presidencia puede tomar decisiones.
-        </p>
+        <Alerta variante="info" titulo="Vista de Coordinación">
+          Puedes revisar los problemas, pero solo Presidencia puede tomar decisiones.
+        </Alerta>
+      )}
+
+      {paresPendientes.length > 0 && (
+        <Alerta variante="aviso" titulo={`${paresPendientes.length} ${paresPendientes.length === 1 ? 'par' : 'pares'} de personas por decidir`}>
+          Mientras no se decidan, cada par cuenta como una sola persona en las cifras.
+        </Alerta>
       )}
 
       <section aria-labelledby="t-archivos" className="flex flex-col gap-4">
         <h2 id="t-archivos">Por archivo</h2>
         {detalles.length === 0 && (
-          <div className="tarjeta">
-            <p className="font-medium">Todavía no hay archivos importados.</p>
-            <p className="text-[var(--color-muted)]">Cuando un archivo termine de procesarse, sus problemas aparecerán aquí agrupados por regla.</p>
-          </div>
+          <Empty className="border border-dashed border-border bg-card">
+            <EmptyHeader>
+              <EmptyMedia variant="icon"><ClipboardCheck /></EmptyMedia>
+              <EmptyTitle>Todavía no hay archivos importados</EmptyTitle>
+              <EmptyDescription>
+                Cuando un archivo termine de procesarse, sus problemas aparecerán aquí.
+              </EmptyDescription>
+            </EmptyHeader>
+          </Empty>
         )}
         {detalles.map(({ fuente: f, anomalias, omitidas }) => {
-          const reglas = Object.entries(anomalias.valor);
-          const sinProblemas = reglas.length === 0 && omitidas.valor.length === 0;
+          const planas: Anomalia[] = Object.values(anomalias.valor).flat();
+          const sinProblemas = planas.length === 0 && omitidas.valor.length === 0;
           return (
             <article key={f.id} className="tarjeta">
-              <div className="flex flex-wrap items-baseline justify-between gap-2">
-                <h3 className="max-w-none">{f.nombre}</h3>
-                <span className="etiqueta">{f.programa}, corte {f.fecha_corte}</span>
+              <div className="flex flex-wrap items-center justify-between gap-2">
+                <div>
+                  <h3 className="max-w-none">{f.nombre}</h3>
+                  <p className="etiqueta mt-0.5">{f.programa}, corte {f.fecha_corte}</p>
+                </div>
+                <div className="flex items-center gap-3">
+                  {f.puntaje > 0 && (
+                    <span className="etiqueta tabular-nums">calidad {f.puntaje}/100</span>
+                  )}
+                  <StarRating valor={f.estrellas} etiqueta={`${f.estrellas} / 5`} />
+                </div>
               </div>
 
-              {sinProblemas && <p className="mt-2">Sin problemas detectados: todas las filas entraron.</p>}
+              {sinProblemas && <p className="mt-3">Sin problemas detectados: todas las filas entraron.</p>}
 
-              {reglas.length > 0 && (
-                <div className="mt-3 flex flex-col gap-3">
-                  {reglas.map(([regla, lista]: [string, Anomalia[]]) => (
-                    <div key={regla}>
-                      <p className="font-medium">
-                        {REGLAS[regla] ?? regla} <span className="etiqueta">({lista.length})</span>
-                      </p>
-                      <ul className="mt-1 flex flex-col gap-1">
-                        {lista.map((a, i) => (
-                          <li key={i} className="text-[var(--color-ink-2)]">
-                            <span className="mono">fila {a.fila}</span>
-                            {a.campo ? `, ${a.campo}` : ''}: {a.detalle}
-                          </li>
-                        ))}
-                      </ul>
-                    </div>
-                  ))}
+              {planas.length > 0 && (
+                <div className="mt-4">
+                  <TablaAnomalias anomalias={planas} reglas={REGLAS} />
                 </div>
               )}
 
@@ -101,14 +111,14 @@ export default async function PaginaCalidad() {
                   </summary>
                   <ul className="mt-1 flex flex-col gap-2">
                     {omitidas.valor.map((o, i) => (
-                      <li key={i} className="flex flex-wrap items-center justify-between gap-2 border-t border-[var(--color-rule)] pt-2">
+                      <li key={i} className="flex flex-wrap items-center justify-between gap-2 border-t border-border pt-2">
                         <span className="text-[var(--color-ink-2)]">
                           <span className="mono">fila {o.fila}</span>: ya estaba en «
                           {nombreFuente.get(o.ya_en_fuente) ?? o.ya_en_fuente}», fila {o.ya_en_fila}
                         </span>
                         {esPresidencia && (
                           <form action={restituirFila.bind(null, f.id, o.fila)}>
-                            <Button variant="outline" type="submit">Contar de todos modos</Button>
+                            <Button variant="outline" size="sm" type="submit">Contar de todos modos</Button>
                           </form>
                         )}
                       </li>
@@ -130,41 +140,45 @@ export default async function PaginaCalidad() {
           distintos, lo decide una persona. Hasta que alguien decida, cada par cuenta como una sola persona.
         </p>
         {paresPendientes.length === 0 && paresDecididos.length === 0 && (
-          <div className="tarjeta">
-            <p className="font-medium">No hay pares por decidir.</p>
-            <p className="text-[var(--color-muted)]">Si aparecen dos registros con el mismo ID y datos distintos, se mostrarán aquí lado a lado.</p>
-          </div>
+          <Empty className="border border-dashed border-border bg-card">
+            <EmptyHeader>
+              <EmptyMedia variant="icon"><Users /></EmptyMedia>
+              <EmptyTitle>No hay pares por decidir</EmptyTitle>
+              <EmptyDescription>
+                Si aparecen dos registros con el mismo ID y datos distintos, se mostrarán aquí lado a lado.
+              </EmptyDescription>
+            </EmptyHeader>
+          </Empty>
         )}
         {paresPendientes.length === 0 && paresDecididos.length > 0 && (
-          <p className="rounded-lg border border-[var(--color-rule)] bg-[var(--estado-listo-fondo)] px-4 py-3 text-[var(--estado-listo)]">
-            Todos los pares ya fueron decididos ({paresDecididos.length}).
-          </p>
+          <Alerta variante="listo" titulo={`Todos los pares ya fueron decididos (${paresDecididos.length}).`} />
         )}
         <div className="flex flex-col gap-4">
           {paresPendientes.map((p) => (
-            <article key={p.id} className="tarjeta">
-              <p className="etiqueta mb-2">{p.motivo}</p>
-              <div className="grid gap-3 sm:grid-cols-2">
-                {[p.a, p.b].map((lado, i) => (
-                  <div key={i} className="rounded-lg border border-[var(--color-rule)] bg-[var(--color-paper)] p-4">
-                    <p className="font-medium">{lado.etiqueta}</p>
-                    <p className="etiqueta mt-1">
-                      {nombreFuente.get(lado.fuente) ?? lado.fuente}, fila {lado.fila}
-                    </p>
-                  </div>
-                ))}
-              </div>
-              {esPresidencia && (
-                <div className="mt-3 flex flex-wrap gap-3">
-                  <form action={decidirPar.bind(null, p.id, 'misma')}>
-                    <Button type="submit">Es la misma persona</Button>
-                  </form>
-                  <form action={decidirPar.bind(null, p.id, 'distinta')}>
-                    <Button type="submit" variant="outline">Son dos personas</Button>
-                  </form>
-                </div>
-              )}
-            </article>
+            <Comparison
+              key={p.id}
+              motivo={p.motivo}
+              a={{
+                titulo: p.a.etiqueta,
+                subtitulo: `${nombreFuente.get(p.a.fuente) ?? p.a.fuente}, fila ${p.a.fila}`,
+              }}
+              b={{
+                titulo: p.b.etiqueta,
+                subtitulo: `${nombreFuente.get(p.b.fuente) ?? p.b.fuente}, fila ${p.b.fila}`,
+              }}
+              acciones={
+                esPresidencia ? (
+                  <>
+                    <form action={decidirPar.bind(null, p.id, 'misma')}>
+                      <Button type="submit">Es la misma persona</Button>
+                    </form>
+                    <form action={decidirPar.bind(null, p.id, 'distinta')}>
+                      <Button type="submit" variant="outline">Son dos personas</Button>
+                    </form>
+                  </>
+                ) : undefined
+              }
+            />
           ))}
         </div>
         <ComoSeCalculo med={pares} />

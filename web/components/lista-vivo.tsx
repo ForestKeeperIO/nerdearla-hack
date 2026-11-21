@@ -1,8 +1,17 @@
 'use client';
 
 import { useEffect, useState } from 'react';
+import { FileSpreadsheet, Inbox, ListChecks } from 'lucide-react';
 import type { Fuente, Trabajo } from '@/lib/comun';
 import { NOMBRE_UNIDAD, type Unidad } from '@/lib/comun';
+import { StarRating } from '@/components/ui/star-rating';
+import {
+  Empty,
+  EmptyDescription,
+  EmptyHeader,
+  EmptyMedia,
+  EmptyTitle,
+} from '@/components/ui/empty';
 
 type Datos = { trabajos: Trabajo[]; fuentes: Fuente[] };
 
@@ -20,16 +29,6 @@ function etiquetaEstado(t: Trabajo): { texto: string; clase: string } {
     return { texto: 'Listo', clase: 'estado--listo' };
   }
   return { texto: t.estado, clase: 'estado--info' };
-}
-
-function Estrellas({ n }: { n: number }) {
-  const llenas = Math.max(0, Math.min(5, Math.round(n)));
-  return (
-    <span aria-label={`${llenas} de 5 estrellas`} className="mono" role="img">
-      {'★'.repeat(llenas)}
-      {'☆'.repeat(5 - llenas)}
-    </span>
-  );
 }
 
 export function ListaVivo({ inicial }: { inicial: Datos }) {
@@ -60,18 +59,26 @@ export function ListaVivo({ inicial }: { inicial: Datos }) {
           <span className="etiqueta" role="status">{alDia ? 'Actualizándose cada 2 s' : 'Sin conexión; se reintenta solo'}</span>
         </div>
         {datos.trabajos.length === 0 ? (
-          <div className="rounded-lg border border-[var(--color-rule)] bg-[var(--color-cotton)] p-6">
-            <p className="font-medium">Todavía no hay trabajos.</p>
-            <p className="text-[var(--color-muted)]">Sube un Excel o CSV arriba y aquí verás su estado en cuanto el procesamiento lo tome.</p>
-          </div>
+          <Empty className="border border-dashed border-border bg-card">
+            <EmptyHeader>
+              <EmptyMedia variant="icon"><Inbox /></EmptyMedia>
+              <EmptyTitle>Todavía no hay trabajos</EmptyTitle>
+              <EmptyDescription>
+                Sube un Excel o CSV arriba y aquí verás su estado en cuanto el procesamiento lo tome.
+              </EmptyDescription>
+            </EmptyHeader>
+          </Empty>
         ) : (
           <ul className="flex flex-col gap-3">
             {datos.trabajos.map((t) => {
               const e = etiquetaEstado(t);
               return (
-                <li key={t.id} className="rounded-lg border border-[var(--color-rule)] bg-[var(--color-cotton)] p-4">
+                <li key={t.id} className="tarjeta">
                   <div className="flex flex-wrap items-center justify-between gap-2">
-                    <span className="font-medium">{t.nombre}</span>
+                    <span className="flex min-w-0 items-center gap-2 font-medium">
+                      <FileSpreadsheet className="size-4 shrink-0 text-muted-foreground" aria-hidden="true" />
+                      <span className="truncate">{t.nombre}</span>
+                    </span>
                     <span className={`estado ${e.clase}`}>{e.texto}</span>
                   </div>
                   <p className="etiqueta mt-1">
@@ -94,17 +101,22 @@ export function ListaVivo({ inicial }: { inicial: Datos }) {
       <section aria-labelledby="t-fuentes">
         <h2 id="t-fuentes" className="mb-3">Archivos ya cargados</h2>
         {datos.fuentes.length === 0 ? (
-          <div className="rounded-lg border border-[var(--color-rule)] bg-[var(--color-cotton)] p-6">
-            <p className="font-medium">Aún no hay archivos importados.</p>
-            <p className="text-[var(--color-muted)]">Cuando un trabajo termina bien, su archivo aparece aquí con su calificación.</p>
-          </div>
+          <Empty className="border border-dashed border-border bg-card">
+            <EmptyHeader>
+              <EmptyMedia variant="icon"><ListChecks /></EmptyMedia>
+              <EmptyTitle>Aún no hay archivos importados</EmptyTitle>
+              <EmptyDescription>
+                Cuando un trabajo termina bien, su archivo aparece aquí con su calificación.
+              </EmptyDescription>
+            </EmptyHeader>
+          </Empty>
         ) : (
           <ul className="flex flex-col gap-3">
             {datos.fuentes.map((f) => (
-              <li key={f.id} className="rounded-lg border border-[var(--color-rule)] bg-[var(--color-cotton)] p-4">
+              <li key={f.id} className="tarjeta">
                 <div className="flex flex-wrap items-center justify-between gap-2">
                   <span className="font-medium">{f.nombre}</span>
-                  <Estrellas n={f.estrellas} />
+                  <StarRating valor={f.estrellas} etiqueta={`${f.estrellas} / 5`} />
                 </div>
                 <p className="etiqueta mt-1">
                   {f.programa}, {NOMBRE_UNIDAD[f.unidad as Unidad] ?? f.unidad}, corte {f.fecha_corte}, {f.filas_nuevas} filas nuevas
