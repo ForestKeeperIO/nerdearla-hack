@@ -12,10 +12,17 @@ Reto 3 de la guía de EIRA para la Nerdearla Vibeathon by Devin (CDMX, 2026-11-2
 
 | Pantalla | Captura |
 |---|---|
+| Portada: los tres informes | `docs/capturas/portada-vacia.png` |
 | Subir archivos | `docs/capturas/subir.png` |
-| Informe | `docs/capturas/informe.png` |
+| Calidad | `docs/capturas/calidad.png` |
+| Vista previa (Tamizaje Rosa) | `docs/capturas/vista-previa.png` |
+| Vista previa (Melenas en Movimiento) | `docs/capturas/melenas-vista-previa.png` |
+| Global bloqueado / Global con datos | `docs/capturas/global-bloqueado.png` / `docs/capturas/global-vista-previa.png` |
+| Exportar | `docs/capturas/exportar.png` |
+| Tableros de Metabase | `docs/capturas/metabase-impacto.png`, `docs/capturas/metabase-calidad.png` |
 
-*(Capturas del frontend tal como está construido en la rama `fe`.)*
+*(Capturas del frontend tal como está construido en la rama `fe`; las de Metabase,
+de la rama `metabase`.)*
 
 ## Cómo levantarlo
 
@@ -31,9 +38,14 @@ VALKEY_URL=redis://127.0.0.1:6391 npm run semilla
 VALKEY_URL=redis://127.0.0.1:6391 npm run verificar
 npm run limpiar   # cuando se quiera vaciar
 
-# 3. Base de reporte SQLite y reportes de prueba (rama motor)
+# 3. Base de reporte SQLite y motor de procesamiento (rama motor)
+uv sync
 uv run python -m db.crear --con-denominadores   # escribe data/impacto.sqlite
-uv run pytest db scripts                        # 11 pruebas (esquema + reportes)
+uv run pytest                                    # 24 pruebas
+# worker en primer plano y, en otra terminal, procesar un Excel sin frontend:
+IMPACTO_HMAC_KEY=<clave> bash scripts/arrancar-motor.sh
+uv run python scripts/procesar_local.py reportes/tamizaje-rosa.xlsx \
+    --programa tamizaje-rosa --unidad atencion --fecha-corte 2026-09-30
 
 # 4. Metabase (rama metabase)
 bash metabase/arrancar.sh                        # descarga el JAR y arranca en :3200
@@ -46,34 +58,50 @@ VALKEY_URL=redis://127.0.0.1:6391 npm run dev     # http://localhost:3000
 ```
 
 Variables: `VALKEY_URL` (con número de base para separar entornos) y
-`VALKEY_PASSWORD`. Metabase genera su propia cuenta de administración en
+`VALKEY_PASSWORD`; el motor pide además `IMPACTO_DB` e `IMPACTO_HMAC_KEY`.
+Metabase genera su propia cuenta de administración en
 `.metabase/credenciales.json` (ignorado por git); no hay otros servicios ni
 credenciales.
 
-**Pendiente de integrar** (diseñado, sin código aún): el motor de procesamiento
-(`python -m motor.worker`) y el arranque de los dos entornos (`scripts/demo.sh`).
-La incrustación de los tableros de Metabase en el frontend también está
-pendiente (los enlaces públicos ya existen en `metabase/enlaces.json`).
+**Los dos entornos del demo** (`scripts/demo.sh`, rama `demo`; la operación está
+en [`docs/operacion-demo.md`](docs/operacion-demo.md)): `blanco` empieza vacío y
+`real` trae los reportes de datos abiertos ya procesados. La incrustación de los
+tableros de Metabase en el frontend está pendiente (los enlaces públicos ya
+existen en `metabase/enlaces.json`).
 
 ## El recorrido
 
-Hay un informe por programa y uno **Global**. La persona de Presidencia entra al
-informe que va a armar (por ejemplo, Tamizaje Rosa para socios estratégicos) y
-recorre cuatro pasos que no se pueden saltar:
+Hay un informe por programa y uno **Global**. El demo usa dos programas
+deliberadamente distintos —**Tamizaje Rosa** (atenciones a pacientes) y
+**Melenas en Movimiento** (donaciones de cabello y pelucas entregadas)— más el
+Global, para mostrar que la misma base sirve a programas de distinta naturaleza.
+En la versión con fuentes reales se agrega un tercer informe, "Datos públicos de
+salud (Jalisco)". La persona de Presidencia entra al informe que va a armar y
+recorre pasos que no se puede saltar:
 
 1. **Subir.** Arrastra los `.xlsx` o `.csv` de esa coordinación; cada archivo dice
    su estado en palabras ("Listo: 120 filas", "Ya se cargó como 'rosa.xlsx'").
+   El Global no tiene paso de Subir: usa lo que ya subió cada programa.
 2. **Calidad.** Cada archivo recibe de 1 a 5 estrellas con lo que le falta
    ("8 filas sin ID"), los problemas por tipo y los casos de "¿es la misma
    persona?", que decide una persona, no el programa.
 3. **Vista previa.** Las tres cifras que pidió EIRA primero —personas
    impactadas, edad promedio y desglose por ciudad— cada una con su nota de qué
-   archivos la producen y con qué fecha de corte.
+   archivos la producen y con qué fecha de corte. En Melenas en Movimiento las
+   donaciones de trenza y las entregas de peluca se muestran por separado y
+   nunca se suman.
 4. **Exportar.** El informe con notas al pie, para descargar en CSV o imprimir.
 
-El informe Global usa lo que ya subió cada programa: muestra las personas en
-más de un programa y las cuenta una sola vez, y después cada programa por
-separado.
+El informe Global está bloqueado hasta que los dos programas tengan al menos un
+archivo, y lo dice ("Falta subir archivos de Melenas en Movimiento"). Su total
+de personas es la **suma de las personas impactadas de cada programa**: quien
+aparece en dos programas cuenta dos veces ahí, y debajo se muestra aparte —
+como dato informativo, sin restarlo— cuántas se repiten. Quien dona una trenza
+es donante y **no** cuenta como persona impactada; quien recibe una peluca sí.
+
+Los programas que se muestran salen de
+[`catalogos/iniciativas.json`](catalogos/iniciativas.json): no hay nombres fijos
+en el código, y **agregar un programa es agregar una entrada al catálogo**.
 
 ## Cómo se omiten los duplicados
 
@@ -81,9 +109,21 @@ Tres capas independientes, para no contar dos veces lo mismo:
 
 | Capa | Qué se detecta | Ejemplo |
 |---|---|---|
-| Archivo | Huella de los bytes y huella canónica del contenido | `reporte_final_2.xlsx` es copia exacta y se rechaza; el mismo Excel vuelto a guardar, con columnas en otro orden o exportado a CSV se reconoce como `mismo_contenido`; una versión con filas nuevas solo agrega lo nuevo |
-| Fila | Huella de cada fila contra todas las ya contadas | Si Tamizaje Rosa y Nutrición registran la misma jornada, las filas repetidas se omiten y quedan listadas para restituirlas si fue un error |
-| Persona | Un solo identificador opaco por persona en Valkey | Quien aparece en Tamizaje Rosa y en Salud que Florece cuenta una vez en el Global. Mismo ID con nombres distintos **no** se une ni se separa solo: queda en `eira:pares` y lo decide una persona |
+| Archivo | Huella de los bytes; la huella de contenido se deriva de las de fila | `reporte_final_2.xlsx` es copia exacta y se rechaza; el mismo Excel vuelto a guardar, con columnas en otro orden o exportado a CSV se reconoce como `mismo_contenido`; una versión con filas nuevas solo agrega lo nuevo |
+| Fila | Huella de cada fila contra todas las ya contadas | Si dos coordinaciones registran la misma jornada, las filas repetidas se omiten y quedan listadas para restituirlas si fue un error |
+| Persona | Un solo identificador opaco por persona en Valkey | Quien aparece en Tamizaje Rosa y en Melenas en Movimiento aparece en los dos programas. Mismo ID con nombres distintos **no** se une ni se separa solo: queda en `eira:pares` y lo decide una persona |
+
+Las huellas que se guardan son dos: la del archivo (sha256 de los bytes) y la de
+cada fila (HMAC de la fila canónica, que no depende del orden de columnas ni del
+formato). La huella de contenido se deriva de las de fila —es el resumen
+ordenado de todas— y es la que reconoce el mismo archivo vuelto a guardar.
+
+La vinculación de personas usa **reglas exactas** (mismo ID y mismo nombre
+normalizado → misma persona) más **rapidfuzz** para proponer los pares dudosos
+que decide una persona. Splink está instalado y es la pieza prevista para
+escalar a decenas de miles de registros, pero **no es la vinculación activa del
+prototipo**: con el volumen del demo la regla exacta cubre todos los casos
+sembrados, y su modelo de comparación quedó sin tiempo de calibrar.
 
 Nada de esto usa conteos aproximados: la guía de EIRA prohíbe presentar una
 deduplicación estimada como cifra oficial. El diseño y los casos límite están en
@@ -104,11 +144,13 @@ Frontend Next.js (web/) ──────────►  Valkey
         │  PUB/SUB eira:eventos        eira:per:*          conjuntos de personas (SCARD/SINTERCARD)
         │                              eira:cnt:*          conteos por dimensión
         │                              eira:pares          casos que decide una persona
+        │                              eira:informe:*      avance del recorrido por informe
         │                                  ▲
         │                                  │ XREADGROUP
-        │                           Motor Python (pendiente de integrar)
-        │                           pandas lee el Excel, huellas omiten
-        │                           duplicados, Splink propone vínculos
+        │                           Motor Python
+        │                           lee el Excel, dos huellas guardadas
+        │                           (archivo y fila) omiten duplicados,
+        │                           reglas + rapidfuzz proponen pares
         │                                  │ escribe en una transacción
         ▼                                  ▼
 Metabase ◄────────── SQLite data/impacto.sqlite (base de reporte)
@@ -117,10 +159,15 @@ Metabase ◄────────── SQLite data/impacto.sqlite (base de r
 
 **Qué hace Valkey exactamente:** es la cola de trabajos (Stream con grupo de
 consumidores), la guarda temporal del archivo subido, la memoria de duplicados
-(huellas de archivo, contenido y fila), los conjuntos de personas que permiten
+(dos huellas guardadas: archivo y fila), los conjuntos de personas que permiten
 contar únicas y hacer cruces con `SCARD`/`SINTERCARD`, el estado en vivo de cada
-trabajo y el canal de avisos. No es un caché: el frontend y el motor **solo** se
-comunican por estas claves ([`docs/contrato-valkey.md`](docs/contrato-valkey.md)).
+trabajo, el avance del recorrido por informe y el canal de avisos. No es un
+caché: el frontend y el motor **solo** se comunican por estas claves
+([`docs/contrato-valkey.md`](docs/contrato-valkey.md)). Las claves
+`eira:huellas:{archivo,contenido,fila}` (motor) y `eira:informe:<alcance>`
+(frontend) ya las usa el código y falta asentarlas en el contrato;
+`eira:presencia:<alcance>` está propuesta en `docs/base-de-datos.md` y aún no
+la escribe el motor.
 
 **Si se pierde Valkey:** se pierden la cola, las huellas de duplicados y el estado
 en vivo. Los resultados consolidados están en SQLite y sobreviven; se puede
@@ -132,34 +179,42 @@ SQLite.
 
 El esquema completo (tablas, vistas y reglas) está en
 [`docs/base-de-datos.md`](docs/base-de-datos.md); los programas e iniciativas en
-[`catalogos/iniciativas.json`](catalogos/iniciativas.json). Dos decisiones
+[`catalogos/iniciativas.json`](catalogos/iniciativas.json). Tres decisiones
 importan:
 
-- **Unidades que no se suman:** una atención, un estudio, una participación y una
-  entrega de insumo son cosas distintas; el informe las muestra por separado.
-- **No toda persona en la base es "persona impactada":** EIRA tiene iniciativas
-  como Melenas en Movimiento, donde una donante de cabello no es una
-  beneficiaria. El catálogo distingue roles (`beneficiaria`, `participante`,
-  `donante`, `voluntaria`) y las vistas de personas solo cuentan los dos
-  primeros; donantes y voluntarias se reportan aparte. Si se contaran igual, la
-  cifra de personas impactadas saldría inflada.
+- **Todo es catálogo:** la base modela `iniciativas`, `tipos_de_registro` y
+  `roles_de_persona` como catálogos, no como listas fijas en el código. Ese es
+  el argumento de escalabilidad: agregar un programa —o un tipo de registro
+  nuevo, como "donación recibida"— es agregar una entrada al catálogo.
+- **No toda persona en la base es "persona impactada":** el catálogo distingue
+  roles (`beneficiaria`, `participante`, `donante`, `voluntaria`) y las vistas
+  de personas solo cuentan los dos primeros; donantes y voluntarias se reportan
+  aparte. Si se contaran igual, la cifra saldría inflada.
+- **Trazabilidad territorial:** cada registro guarda estado y municipio con las
+  claves oficiales de INEGI (catálogo nacional completo: 2,478 municipios en 32
+  entidades, en `publicos/municipios_mexico.json`) y se muestra como
+  **presencia** —"Presencia en N municipios de M estados"— nunca como faltante
+  ni como porcentaje de cobertura. Las vistas `v_presencia` y
+  `v_presencia_municipios` ya están en el esquema; el bloque visual del
+  frontend está pendiente.
 
 ## Implementado / Simulado / Para piloto
 
 | Pieza | Estado |
 |---|---|
 | Valkey local, semilla de demostración, verificador del contrato (`npm run valkey/semilla/verificar`) | **Implementado** en `main`/`valkey-base`; `verificar` reporta 9 comprobaciones OK |
-| Esquema SQLite de reporte con vistas y denominadores INEGI (`db/`) | **Implementado** en rama `motor`; 6 pruebas en verde |
-| Frontend: subida de Excel a Valkey, calidad con estrellas, tablero, informe y exportar CSV (`web/`) | **Implementado** en rama `fe` (versión con barra lateral); recorrido guiado de tres informes por verificar al integrar |
+| Esquema SQLite de reporte con vistas, denominadores INEGI y catálogos de iniciativas, tipos de registro, roles y municipios (`db/`) | **Implementado** en rama `motor` (`db/esquema.sql`); sus pruebas corren dentro de las 24 del motor |
+| Frontend: recorrido guiado por informe (Tamizaje Rosa, Melenas en Movimiento y Global), subida de Excel a Valkey, calidad con estrellas, vista previa y exportar CSV (`web/`) | **Implementado** en rama `fe`: los programas salen del catálogo, el Global suma programas y muestra las repetidas aparte. Ejercitado con la semilla de desarrollo (capturas en `docs/capturas/`); falta correrlo punta a punta con el motor en un entorno |
 | Catálogo de iniciativas y tipos de registro | **Implementado** (`catalogos/iniciativas.json`); una iniciativa marcada `por_confirmar` |
 | Reportes con datos públicos reales de Jalisco (`reportes-reales/`) | **Implementado** en rama `fuentes-reales` (4 CSV con fuente y fecha) |
-| Motor Python: leer Excel, huellas de archivo/fila, deduplicar personas con Splink, escribir Valkey + SQLite | **Pendiente**: diseñado en el plan, sin código (`py/` solo trae un ejemplo) |
-| Detección de "el mismo archivo con otro nombre" y "la misma persona" de punta a punta | **Pendiente**: definida en el contrato; sin motor que la ejecute |
+| Motor Python: leer Excel/CSV, huellas de archivo y fila, personas con reglas exactas + rapidfuzz, escribir Valkey + SQLite (`py/`) | **Implementado** en rama `motor`: 24 pruebas en verde y los 7 archivos del caso verificados con sus mensajes exactos (tabla en `NOTAS.md`). Splink quedó instalado como respaldo, no es la vinculación activa |
+| Detección de "el mismo archivo con otro nombre" y "la misma persona" | **Implementado** en el motor y verificado en local (niveles: idéntico, mismo contenido, versión nueva, traslape parcial, distinto); falta ejercitarla extremo a extremo desde el frontend |
 | Reportes de prueba del caso de la guía (7 archivos: 120 atenciones, 80 participaciones, traslapes y versiones) | **Implementado** en rama `motor` (`reportes/` + `esperado.json`); sus pruebas en verde |
 | Tableros de Metabase (Impacto y Calidad, con enlaces públicos e iframe verificado) | **Implementado** en rama `metabase` sobre un esquema provisional con datos ficticios; falta apuntarlo al esquema de `db/` e incrustarlo en el frontend |
-| Recorrido guiado por informe (dos programas + Global) | **Por verificar al integrar**: la especificación es posterior al frontend construido |
+| Trazabilidad territorial por estado y municipio INEGI | **Implementado** en el esquema (`v_presencia`, `v_presencia_municipios`, catálogo de 2,478 municipios); el bloque visual de "presencia" del frontend está **pendiente** y la clave `eira:presencia:*` solo está propuesta |
+| Paleta de EIRA (vino/ciruela, Rosarivo + Montserrat) | **Decidida y documentada** en `docs/referencias/paleta-eira.md`; **pendiente de aplicar** al frontend (aún trae el acento del rediseño anterior) |
 | Cuentas, contraseñas y permisos por rol | **Simulado**: el prototipo no tiene; es requisito de piloto |
-| Versión "con fuentes reales" ya procesada en línea | **Pendiente**: los archivos existen; falta el motor que los procese |
+| Dos versiones en línea (en blanco y con fuentes reales) | **Por verificar al integrar**: los scripts de operación existen (`scripts/demo.sh`, `docs/operacion-demo.md`, rama `demo`) y los datos reales están; al cierre de esta nota aún falta levantar ambas con el frontend actual y procesar las reales |
 | URL pública estable | **Por verificar al integrar**: hubo un túnel temporal de una versión anterior |
 | Autenticación, respaldo automático, HTTPS gestionado, aviso de privacidad | **Para piloto**: requisitos de la guía de EIRA y de la ley mexicana de datos personales |
 
