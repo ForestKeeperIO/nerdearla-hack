@@ -1,12 +1,14 @@
 import type { Metadata } from "next";
 import Link from "next/link";
-import { Montserrat, IBM_Plex_Mono, Rosarivo } from "next/font/google";
+import { Geist, Montserrat, IBM_Plex_Mono, Rosarivo } from "next/font/google";
 import "./globals.css";
 import "./expediente.css";
+import "./bento.css";
 import { TooltipProvider } from "@/components/ui/tooltip";
 import { NavPrincipal } from "@/components/nav-principal";
 
 const montserrat = Montserrat({ variable: "--font-montserrat", subsets: ["latin"] });
+const geist = Geist({ variable: "--font-eira-bento", subsets: ["latin"] });
 const plexMono = IBM_Plex_Mono({ variable: "--font-plex-mono", subsets: ["latin"], weight: ["400", "500"] });
 const rosarivo = Rosarivo({ variable: "--font-rosarivo", subsets: ["latin"], weight: "400" });
 
@@ -19,7 +21,7 @@ export const metadata: Metadata = {
 export default async function RootLayout({ children }: LayoutProps<"/">) {
   const entorno = process.env.NOMBRE_ENTORNO ?? "Demostración";
   return (
-    <html lang="es" className={`${montserrat.variable} ${plexMono.variable} ${rosarivo.variable} h-full antialiased`}>
+    <html lang="es" className={`${geist.variable} ${montserrat.variable} ${plexMono.variable} ${rosarivo.variable} h-full antialiased`}>
       <body className="min-h-full">
         <TooltipProvider>
           <header className="no-imprimir eira-cabecera">

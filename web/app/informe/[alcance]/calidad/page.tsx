@@ -15,6 +15,8 @@ import { Card, CardContent, CardHeader } from '@/components/ui/card';
 import { listarFuentes } from '@/lib/datos';
 import type { Par } from '@/lib/comun';
 import { fechaEs } from '@/lib/comun';
+import { AnilloDato } from '@/components/anillo-dato';
+import { valkey } from '@/lib/valkey';
 
 export const dynamic = 'force-dynamic';
 
@@ -65,6 +67,12 @@ export default async function PaginaCalidad({ params }: { params: Promise<{ alca
   const [fuentes, pares, todas, trabajos] = await Promise.all([fuentesDe(alcance), paresDe(alcance), listarFuentes(), trabajosDe(alcance)]);
   const nombreFuente = Object.fromEntries(todas.valor.map((f) => [f.id, f.nombre]));
   const paresPendientes: Par[] = pares.valor.filter((p) => p.estado === 'pendiente');
+  const idsFuente = new Set(fuentes.valor.map(f=>f.id));
+  const estadosPares = (await valkey().hvals('eira:pares')).flatMap(s=>{
+    try { const p=JSON.parse(s) as Par; return (esGlobal || idsFuente.has(p.a.fuente)) ? [p.estado] : []; }
+    catch { return []; }
+  });
+  const decididos = estadosPares.filter(s=>s==='misma' || s==='distinta').length;
 
   const detalles = await Promise.all(
     fuentes.valor.map(async (f) => ({
@@ -112,7 +120,10 @@ export default async function PaginaCalidad({ params }: { params: Promise<{ alca
       )}
 
       {!esGlobal && (
-        <details className="calidad-archivos" open={paresPendientes.length===0}>
+        <div className="calidad-bento"><div className="calidad-anillos">
+          <AnilloDato valor={estadosPares.length ? 100*decididos/estadosPares.length : null} etiqueta={`${decididos} de ${estadosPares.length} pares decididos`}/>
+          {fuentes.valor.map(f=><div key={f.id}><AnilloDato valor={f.puntaje} etiqueta={`Calidad de ${f.nombre}`}/><StarRating valor={f.estrellas} etiqueta={`${f.estrellas} / 5`}/></div>)}
+        </div><details className="calidad-archivos" open={paresPendientes.length===0}>
           <summary>Revisar archivos y observaciones ({detalles.length})</summary>
           <section aria-label="Por archivo">
           {detalles.map(({ fuente: f, anomalias, omitidas }) => {
@@ -166,7 +177,7 @@ export default async function PaginaCalidad({ params }: { params: Promise<{ alca
             );
           })}
           </section>
-        </details>
+        </details></div>
       )}
 
       <CalidadCliente
