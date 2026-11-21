@@ -2,6 +2,8 @@
 
 > **For agentic workers:** REQUIRED SUB-SKILL: Use superpowers:subagent-driven-development (recommended) or superpowers:executing-plans to implement this plan task-by-task. Steps use checkbox (`- [ ]`) syntax for tracking.
 
+> **Reparto actualizado (12:05):** el procesamiento de Excel y la deduplicación se hacen en Python; Valkey, frontend y tableros van aparte; la integración es solo por `docs/contrato-valkey.md`. De este plan siguen vigentes "Validado con EIRA", "Cómo se omiten los duplicados", "Global Constraints", "Alcance" y la Parte B. La arquitectura de servidor en TypeScript y las Tareas 1 a 5 quedaron sustituidas; sirven como referencia de pruebas y casos.
+
 **Goal:** Que Presidencia de EIRA arme un informe de impacto subiendo los Excel de cada coordinación, sin contar dos veces lo mismo: ni el mismo archivo con otro nombre, ni la misma fila en dos archivos, ni la misma persona con el ID repetido.
 
 **Architecture:** Un solo proceso Node con Hono que entrega páginas HTML ya armadas (sin aplicación de navegador aparte, sin API intermedia, sin compilación) y htmx para las acciones. Los Excel originales son la fuente de verdad en disco; Valkey es el motor: huellas de archivo y de fila para omitir duplicados, conjuntos de personas para conteos exactos, contadores por unidad y un flujo con cada decisión. Las decisiones humanas (misma persona, personas distintas, ligar folio) son un alias que se resuelve al leer; nunca se reescriben conjuntos.

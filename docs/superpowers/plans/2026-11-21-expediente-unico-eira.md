@@ -1,3 +1,5 @@
+> **OBSOLETO.** Este plan es de un reto que se descartó el 2026-11-21. Se conserva como historial. El trabajo vigente es el Reto 3: ver `AGENTS.md` y `docs/contrato-valkey.md`.
+
 # Expediente Único EIRA (Reto 1) Implementation Plan
 
 > **For agentic workers:** REQUIRED SUB-SKILL: Use superpowers:subagent-driven-development (recommended) or superpowers:executing-plans to implement this plan task-by-task. Steps use checkbox (`- [ ]`) syntax for tracking.
