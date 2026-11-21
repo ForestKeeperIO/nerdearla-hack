@@ -1,0 +1,131 @@
+Fecha,ID,Ciudad,Nombre,Edad,Estudio,Asistencia
+2026-02-01,MEL19610101,Zapotlán el Grande,María Elena López,65,Papanicolaou,Sí
+2026-02-14,AET19680612,Sayula,Ana Elena Torres,58,Ultrasonido de mama,Sí
+2026-02-27,JEV19751123,Gómez Farías,Juana Elena Vega,51,Exploración clínica,Sí
+2026-03-12,REM19820406,Tapalpa,Rosa Elena Mora,44,Papanicolaou,Sí
+2026-03-25,LEA19890917,Jocotepec,Leticia Elena Anaya,37,Ultrasonido de mama,Sí
+2026-04-07,CEG19960228,San Martín Hidalgo,Carmen Elena García,30,Exploración clínica,Sí
+2026-04-20,SEH19630711,Zapotlán el Grande,Silvia Elena Hernández,63,Papanicolaou,Sí
+2026-05-03,PEM19701222,Sayula,Paola Elena Martínez,55,Ultrasonido de mama,Sí
+2026-05-16,TER19770505,Gómez Farías,Teresa Elena Ramírez,49,Exploración clínica,Sí
+2026-05-29,EEF19841016,Tapalpa,Elena Elena Flores,42,Papanicolaou,Sí
+2026-06-11,BER19910327,Jocotepec,Beatriz Elena Rivera,35,Ultrasonido de mama,Sí
+2026-06-24,DEG19980810,San Martín Hidalgo,Dolores Elena Gómez,28,Exploración clínica,Sí
+2026-07-07,GED19650121,Zapotlán el Grande,Gloria Elena Díaz,61,Papanicolaou,Sí
+2026-07-20,HEC19720604,Sayula,Hilda Elena Cruz,54,Ultrasonido de mama,Sí
+2026-08-02,IER19791115,Gómez Farías,Irene Elena Reyes,47,Exploración clínica,Sí
+2026-08-15,JEM19860426,Tapalpa,Josefina Elena Morales,40,Papanicolaou,Sí
+2026-08-28,KEO19930909,Jocotepec,Karla Elena Ortiz,33,Ultrasonido de mama,Sí
+2026-09-10,LEG20000220,San Martín Hidalgo,Laura Elena Gutiérrez,26,Exploración clínica,Sí
+2026-09-23,NEC19670703,Zapotlán el Grande,Nadia Elena Chávez,59,Papanicolaou,Sí
+2026-02-08,OER19741214,Sayula,Ofelia Elena Ruiz,51,Ultrasonido de mama,Sí
+2026-02-21,PEM19810525,Gómez Farías,Patricia Elena Mendoza,45,Exploración clínica,Sí
+2026-03-06,QEA19881008,Tapalpa,Queta Elena Aguilar,38,Papanicolaou,Sí
+2026-03-19,REC19950319,Jocotepec,Ramona Elena Castillo,31,Ultrasonido de mama,Sí
+2026-04-01,SER19620802,San Martín Hidalgo,Sofía Elena Romero,64,Exploración clínica,Sí
+2026-04-14,ÚEÁ19690113,Zapotlán el Grande,Úrsula Elena Álvarez,57,Papanicolaou,Sí
+2026-04-27,VEV19760624,Sayula,Valeria Elena Vargas,50,Ultrasonido de mama,Sí
+2026-05-10,WES19831107,Gómez Farías,Wendy Elena Soto,43,Exploración clínica,Sí
+2026-05-23,XER19900418,Tapalpa,Ximena Elena Rojas,36,Papanicolaou,Sí
+2026-06-05,YEN19970901,Jocotepec,Yolanda Elena Navarro,29,Ultrasonido de mama,Sí
+2026-06-18,ZEP19640212,San Martín Hidalgo,Zoe Elena Paredes,62,Exploración clínica,Sí
+2026-07-01,MIL19710723,Zapotlán el Grande,María Isabel López,55,Papanicolaou,Sí
+2026-07-14,AIT19781206,Sayula,Ana Isabel Torres,47,Ultrasonido de mama,Sí
+2026-07-27,JIV19850517,Gómez Farías,Juana Isabel Vega,41,Exploración clínica,Sí
+32/13/2026,RIM19921028,Tapalpa,Rosa Isabel Mora,34,Papanicolaou,Sí
+2026-08-22,LIA19990311,Jocotepec,Leticia Isabel Anaya,27,Ultrasonido de mama,Sí
+2026-09-04,CIG19660822,San Martín Hidalgo,Carmen Isabel García,60,Exploración clínica,Sí
+2026-09-17,SIH19730105,Zapotlán el Grande,Silvia Isabel Hernández,53,Papanicolaou,Sí
+2026-02-02,PIM19800616,Sayula,Paola Isabel Martínez,46,Ultrasonido de mama,Sí
+2026-02-15,TIR19871127,Gómez Farías,Teresa Isabel Ramírez,39,Exploración clínica,Sí
+2026-02-28,EIF19940410,Tapalpa,Elena Isabel Flores,32,Papanicolaou,Sí
+2026-03-13,BIR19610921,Jocotepec,Beatriz Isabel Rivera,65,Ultrasonido de mama,Sí
+ayer,DIG19680204,San Martín Hidalgo,Dolores Isabel Gómez,58,Exploración clínica,Sí
+2026-04-08,GID19750715,Zapotlán el Grande,Gloria Isabel Díaz,51,Papanicolaou,Sí
+2026-04-21,HIC19821226,Sayula,Hilda Isabel Cruz,43,Ultrasonido de mama,Sí
+2026-05-04,IIR19890509,Gómez Farías,Irene Isabel Reyes,37,Exploración clínica,Sí
+2026-05-17,JIM19961020,Tapalpa,Josefina Isabel Morales,30,Papanicolaou,Sí
+2026-05-30,KIO19630303,Jocotepec,Karla Isabel Ortiz,63,Ultrasonido de mama,Sí
+2026-02-30,LIG19700814,San Martín Hidalgo,Laura Isabel Gutiérrez,56,Exploración clínica,Sí
+2026-06-25,NIC19770125,Zapotlán el Grande,Nadia Isabel Chávez,49,Papanicolaou,Sí
+2026-07-08,OIR19840608,Sayula,Ofelia Isabel Ruiz,42,Ultrasonido de mama,Sí
+2026-07-21,PIM19911119,Gómez Farías,Patricia Isabel Mendoza,35,Exploración clínica,Sí
+2026-08-03,QIA19980402,Villa Inventada,Queta Isabel Aguilar,28,Papanicolaou,Sí
+2026-08-16,RIC19650913,San Ficticio,Ramona Isabel Castillo,61,Ultrasonido de mama,Sí
+2026-08-29,XXX,San Martín Hidalgo,Sofía Isabel Romero,54,Exploración clínica,Sí
+2026-09-11,ABC123,Zapotlán el Grande,Úrsula Isabel Álvarez,47,Papanicolaou,Sí
+2026-09-24,ZZZ19921340,Sayula,Valeria Isabel Vargas,39,Ultrasonido de mama,Sí
+2026-02-09,WIS19930501,Gómez Farías,Wendy Isabel Soto,33,Exploración clínica,Sí
+2026-02-22,XIR20001012,Tapalpa,Ximena Isabel Rojas,26,Papanicolaou,Sí
+2026-03-07,YIN19670323,Jocotepec,Yolanda Isabel Navarro,59,Ultrasonido de mama,Sí
+2026-03-20,ZIP19740806,San Martín Hidalgo,Zoe Isabel Paredes,52,Exploración clínica,Sí
+2026-04-02,MLL19810117,Zapotlán el Grande,María Luz López,45,Papanicolaou,Sí
+2026-04-15,ALT19880628,Sayula,Ana Luz Torres,38,Ultrasonido de mama,Sí
+2026-04-28,JLV19951111,Gómez Farías,Juana Luz Vega,31,Exploración clínica,Sí
+2026-05-11,RLM19620422,Tapalpa,Rosa Luz Mora,64,Papanicolaou,Sí
+2026-05-24,LLA19690905,Jocotepec,Leticia Luz Anaya,57,Ultrasonido de mama,Sí
+2026-06-06,CLG19760216,San Martín Hidalgo,Carmen Luz García,50,Exploración clínica,Sí
+2026-06-19,SLH19830727,Zapotlán el Grande,Silvia Luz Hernández,43,Papanicolaou,Sí
+2026-07-02,PLM19901210,Sayula,Paola Luz Martínez,35,Ultrasonido de mama,Sí
+2026-07-15,TLR19970521,Gómez Farías,Teresa Luz Ramírez,29,Exploración clínica,Sí
+2026-07-28,ELF19641004,Tapalpa,Elena Luz Flores,62,Papanicolaou,Sí
+2026-08-10,BLR19710315,Jocotepec,Beatriz Luz Rivera,55,Ultrasonido de mama,Sí
+2026-08-23,DLG19780826,San Martín Hidalgo,Dolores Luz Gómez,48,Exploración clínica,Sí
+2026-09-05,GLD19850109,Zapotlán el Grande,Gloria Luz Díaz,41,Papanicolaou,Sí
+2026-09-18,HLC19920620,Sayula,Hilda Luz Cruz,34,Ultrasonido de mama,Sí
+2026-02-03,ILR19991103,Gómez Farías,Irene Luz Reyes,27,Exploración clínica,Sí
+2026-02-16,JLM19660414,Tapalpa,Josefina Luz Morales,60,Papanicolaou,Sí
+2026-03-01,KLO19730925,Jocotepec,Karla Luz Ortiz,53,Ultrasonido de mama,Sí
+2026-03-14,LLG19800208,San Martín Hidalgo,Laura Luz Gutiérrez,46,Exploración clínica,Sí
+2026-03-27,NLC19870719,Zapotlán el Grande,Nadia Luz Chávez,39,Papanicolaou,Sí
+2026-04-09,OLR19941202,Sayula,Ofelia Luz Ruiz,31,Ultrasonido de mama,Sí
+2026-04-22,PLM19610513,Gómez Farías,Patricia Luz Mendoza,65,Exploración clínica,Sí
+2026-05-05,QLA19681024,Tapalpa,Queta Luz Aguilar,58,Papanicolaou,Sí
+2026-05-18,RLC19750307,Jocotepec,Ramona Luz Castillo,51,Ultrasonido de mama,Sí
+2026-05-31,SLR19820818,San Martín Hidalgo,Sofía Luz Romero,44,Exploración clínica,Sí
+2026-06-13,ÚLÁ19890101,Zapotlán el Grande,Úrsula Luz Álvarez,37,Papanicolaou,Sí
+2026-06-26,MEL19840312,Sayula,María Elena López,42,Ultrasonido de mama,Sí
+2026-07-09,AMS19710725,Gómez Farías,Ana María Sosa,55,Exploración clínica,Sí
+2026-07-22,CAV19880504,Tapalpa,Carmen Alicia Vega,38,Papanicolaou,Sí
+2026-08-04,RIM19650919,Jocotepec,Rosa Isela Mora,61,Ultrasonido de mama,Sí
+2026-08-17,LAR19790130,San Martín Hidalgo,Leticia Anaya Ruiz,47,Exploración clínica,Sí
+2026-03-13,MIL19710723,Zapotlán el Grande,María Isabel López,55,Ultrasonido de mama,Sí
+2026-03-26,AIT19781206,Sayula,Ana Isabel Torres,47,Exploración clínica,Sí
+2026-04-08,JIV19850517,Gómez Farías,Juana Isabel Vega,41,Papanicolaou,Sí
+2026-04-21,RIM19921028,Tapalpa,Rosa Isabel Mora,34,Ultrasonido de mama,Sí
+2026-05-04,LIA19990311,Jocotepec,Leticia Isabel Anaya,27,Exploración clínica,Sí
+2026-05-17,CIG19660822,San Martín Hidalgo,Carmen Isabel García,60,Papanicolaou,Sí
+2026-05-30,SIH19730105,Zapotlán el Grande,Silvia Isabel Hernández,53,Ultrasonido de mama,Sí
+2026-06-12,PIM19800616,Sayula,Paola Isabel Martínez,46,Exploración clínica,Sí
+2026-06-25,TIR19871127,Gómez Farías,Teresa Isabel Ramírez,39,Papanicolaou,Sí
+2026-07-08,EIF19940410,Tapalpa,Elena Isabel Flores,32,Ultrasonido de mama,Sí
+2026-07-21,BIR19610921,Jocotepec,Beatriz Isabel Rivera,65,Exploración clínica,Sí
+2026-08-03,DIG19680204,San Martín Hidalgo,Dolores Isabel Gómez,58,Papanicolaou,Sí
+2026-08-16,GID19750715,Zapotlán el Grande,Gloria Isabel Díaz,51,Ultrasonido de mama,Sí
+2026-08-29,HIC19821226,Sayula,Hilda Isabel Cruz,43,Exploración clínica,Sí
+2026-09-11,IIR19890509,Gómez Farías,Irene Isabel Reyes,37,Papanicolaou,Sí
+2026-09-24,JIM19961020,Tapalpa,Josefina Isabel Morales,30,Ultrasonido de mama,Sí
+2026-10-07,KIO19630303,Jocotepec,Karla Isabel Ortiz,63,Exploración clínica,Sí
+2026-10-20,LIG19700814,San Martín Hidalgo,Laura Isabel Gutiérrez,56,Papanicolaou,Sí
+2026-11-02,NIC19770125,Zapotlán el Grande,Nadia Isabel Chávez,49,Ultrasonido de mama,Sí
+2026-03-20,OIR19840608,Sayula,Ofelia Isabel Ruiz,42,Exploración clínica,Sí
+2026-04-02,PIM19911119,Gómez Farías,Patricia Isabel Mendoza,35,Papanicolaou,Sí
+2026-04-15,QIA19980402,Tapalpa,Queta Isabel Aguilar,28,Ultrasonido de mama,Sí
+2026-04-02,,Zapotlán el Grande,María Mar López,35,Papanicolaou,Sí
+2026-04-15,,Sayula,Ana Mar Torres,27,Ultrasonido de mama,Sí
+2026-04-28,,Gómez Farías,Juana Mar Vega,61,Exploración clínica,Sí
+2026-05-11,,Tapalpa,Rosa Mar Mora,54,Papanicolaou,Sí
+2026-05-24,,Jocotepec,Leticia Mar Anaya,47,Ultrasonido de mama,Sí
+2026-06-06,,San Martín Hidalgo,Carmen Mar García,40,Exploración clínica,Sí
+2026-06-19,,Zapotlán el Grande,Silvia Mar Hernández,33,Papanicolaou,Sí
+2026-07-02,,Sayula,Paola Mar Martínez,26,Ultrasonido de mama,Sí
+2026-08-30,MLL19810117,Zapotlán el Grande,María Luz López,45,Papanicolaou,No
+2026-09-12,ALT19880628,Sayula,Ana Luz Torres,38,Ultrasonido de mama,No
+2026-09-25,JLV19951111,Gómez Farías,Juana Luz Vega,31,Exploración clínica,No
+2026-02-10,RLM19620422,Tapalpa,Rosa Luz Mora,64,Papanicolaou,No
+2026-02-23,LLA19690905,Jocotepec,Leticia Luz Anaya,57,Ultrasonido de mama,No
+2026-03-08,CLG19760216,San Martín Hidalgo,Carmen Luz García,50,Exploración clínica,No
+2026-02-01,MEL19610101,Zapotlán el Grande,María Elena López,65,Papanicolaou,Sí
+2026-02-14,AET19680612,Sayula,Ana Elena Torres,58,Ultrasonido de mama,Sí
+2026-02-27,JEV19751123,Gómez Farías,Juana Elena Vega,51,Exploración clínica,Sí
+2026-03-12,REM19820406,Tapalpa,Rosa Elena Mora,44,Papanicolaou,Sí
