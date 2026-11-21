@@ -18,6 +18,13 @@ Devuelve (DataFrame, anomalias). El DataFrame trae en attrs:
 
 Nunca sale de aqui el nombre ni el ID en claro: solo via huellas HMAC.
 """
+
+
+class ErrorVisible(Exception):
+    """Error que si se le muestra a la persona (archivo ilegible, formato
+    no aceptado, demasiado grande)."""
+
+
 import csv as _csv
 import io
 import re
@@ -132,12 +139,51 @@ def _puntaje_encabezados(fila) -> int:
                {h for hs in CAMPOS.values() for h in hs})
 
 
+MAX_BYTES = 10 * 1024 * 1024
+MAX_FILAS = 20_000
+
+
+def _decodificar_csv(contenido: bytes) -> str:
+    """UTF-8 con o sin BOM; si no, Latin-1 (nunca falla)."""
+    try:
+        return contenido.decode("utf-8-sig")
+    except UnicodeDecodeError:
+        return contenido.decode("latin-1")
+
+
+def _delimitador(texto: str) -> str:
+    """Coma, punto y coma o tabulador: lo que mas se repita en la primera
+    linea con contenido (los CSV es-MX de Excel suelen venir con ';')."""
+    for linea in texto.splitlines():
+        if not linea.strip():
+            continue
+        try:
+            return _csv.Sniffer().sniff(
+                texto[:8192], delimiters=",;\t").delimiter
+        except _csv.Error:
+            pass
+        cuentas = {d: linea.count(d) for d in (",", ";", "\t")}
+        return max(cuentas, key=cuentas.get) if any(cuentas.values()) else ","
+    return ","
+
+
 def _leer_tabla(contenido: bytes, nombre: str) -> tuple[pd.DataFrame, str]:
     """Tabla cruda (sin encabezado aplicado) y nombre de hoja."""
-    if nombre.lower().endswith(".csv"):
-        texto = contenido.decode("utf-8-sig", errors="replace")
-        return pd.read_csv(io.StringIO(texto), header=None, dtype=object), "csv"
-    libro = pd.ExcelFile(io.BytesIO(contenido), engine="openpyxl")
+    low = nombre.lower()
+    if low.endswith(".xlsm"):
+        raise ErrorVisible(
+            "No acepto archivos .xlsm (llevan macros): guárdalo como .xlsx "
+            "o expórtalo a CSV y súbelo de nuevo.")
+    if low.endswith(".csv"):
+        texto = _decodificar_csv(contenido)
+        return pd.read_csv(io.StringIO(texto), sep=_delimitador(texto),
+                           header=None, dtype=object), "csv"
+    try:
+        libro = pd.ExcelFile(io.BytesIO(contenido), engine="openpyxl")
+    except Exception:
+        raise ErrorVisible(
+            "No pude leerlo: no parece un Excel (.xlsx) ni un CSV. "
+            "Revisa que el archivo no esté dañado.")
     mejor, mejor_hoja, mejor_score = None, libro.sheet_names[0], -1
     for hoja in libro.sheet_names:
         t = pd.read_excel(libro, sheet_name=hoja, header=None, dtype=object)
@@ -150,6 +196,10 @@ def _leer_tabla(contenido: bytes, nombre: str) -> tuple[pd.DataFrame, str]:
 
 def leer_reporte(contenido: bytes, nombre: str,
                  estado_clave: str = "14") -> tuple[pd.DataFrame, list[dict]]:
+    if len(contenido) > MAX_BYTES:
+        raise ErrorVisible(
+            "El archivo pesa más de 10 MB: no lo puedo procesar. "
+            "Divídelo por coordinación o por periodo.")
     tabla, hoja = _leer_tabla(contenido, nombre)
 
     # Fila de encabezados: la de mayor puntaje entre las primeras 10.
@@ -161,7 +211,18 @@ def leer_reporte(contenido: bytes, nombre: str,
 
     encabezados = [str(c).strip() if not pd.isna(c) else f"col{j}"
                    for j, c in enumerate(tabla.iloc[i_enc])]
+    # Encabezados repetidos no se pisan: se renombran con sufijo.
+    vistos: dict[str, int] = {}
+    for j, e in enumerate(encabezados):
+        n = vistos.get(e, 0)
+        vistos[e] = n + 1
+        if n:
+            encabezados[j] = f"{e}__{n}"
     datos = tabla.iloc[i_enc + 1:].reset_index(drop=True)
+    if len(datos) > MAX_FILAS:
+        raise ErrorVisible(
+            f"El archivo trae más de {MAX_FILAS:,} filas: no lo puedo "
+            "procesar. Divídelo por coordinación o por periodo.")
     datos.columns = encabezados
 
     mapeo, col_campo = [], {}
@@ -176,6 +237,13 @@ def leer_reporte(contenido: bytes, nombre: str,
 
     sin_personas = "id" not in usados and "nombre" not in usados
     trae_ciudad = "ciudad" in usados
+
+    # Celdas combinadas: el valor vacio hereda el de la fila de arriba
+    # (Ciudad, Asistencia, Fecha combinadas en Excel). NUNCA en id ni
+    # nombre: son por persona; una fila sin ID es faltante, no combinada.
+    for enc, campo in col_campo.items():
+        if campo and campo not in ("id", "nombre"):
+            datos[enc] = datos[enc].ffill()
 
     anomalias, filas = [], []
     for idx, raw in datos.iterrows():
