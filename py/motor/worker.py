@@ -68,7 +68,10 @@ def encolar(v, contenido: bytes, nombre: str, programa: str, unidad: str,
 
 def _calidad(anomalias: list[dict], filas: int, omitidas: int, inasistencias: int,
              sin_id: int) -> tuple[int, float, list[str]]:
-    puntaje = 100.0 - sum(PESOS_ANOMALIA.get(a["regla"], 1) for a in anomalias)
+    # Una fila que ya estaba cargada (versión nueva del mismo archivo, o lo que
+    # otra coordinación ya registró) no es un defecto del archivo: no resta.
+    propias = [a for a in anomalias if a["regla"] != "fila_ya_cargada"]
+    puntaje = 100.0 - sum(PESOS_ANOMALIA.get(a["regla"], 1) for a in propias)
     puntaje = max(0.0, puntaje)
     estrellas = max(1, min(5, round(puntaje / 20)))
     motivos = []
@@ -76,7 +79,7 @@ def _calidad(anomalias: list[dict], filas: int, omitidas: int, inasistencias: in
         motivos.append(f"{sin_id} registros sin ID de EIRA (quedan sin identificar)")
     if omitidas:
         motivos.append(f"{omitidas} filas omitidas porque ya estaban registradas")
-    n = len(anomalias)
+    n = len(propias)
     if n:
         motivos.append(f"{n} anotaciones de calidad")
     if inasistencias:
