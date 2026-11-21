@@ -9,5 +9,6 @@
 .par-tabla tr[data-difiere="true"] td { background: var(--rubor); }
 .par-tabla small { display: block; color: var(--vino); }
 .par-acciones { margin-top: 1rem; }
-.par-boton { border: 1px solid var(--linea-fuerte); padding: .45rem .85rem; min-height: 44px; border-radius: var(--r-pill); color: var(--vino); cursor: pointer; }
+.par-boton { border: 1px solid var(--vino); padding: .65rem 1rem; min-height: 48px; font-weight: 550; white-space: normal; border-radius: var(--r-pill); color: var(--vino); cursor: pointer; }
+.par-acciones .par-boton { flex: 1 1 12rem; }
 .par-boton:hover:not(:disabled) { background: var(--papel-2); }

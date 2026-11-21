@@ -92,8 +92,8 @@ export function ParesMasa({
               ] as const).map(([campo,a,b]) => <tr key={campo} data-difiere={a !== b}><th scope="row">{campo}{a !== b && <small>Difiere</small>}</th><td>{a || 'No disponible'}</td><td>{b || 'No disponible'}</td></tr>)}
             </tbody></table>
             <p className="etiqueta">Si falta la fecha o el servicio, consulta las filas de origen antes de decidir.</p>
-            <div className="par-acciones">{(Object.keys(opcionesPar) as IntencionPar[]).map(k => <button key={k} className="par-boton" disabled={cargando || sinConfirmar} onClick={() => decidir(k,[p.id])}>{opcionesPar[k]}</button>)}</div>
           </details>
+          <div className="par-acciones" role="group" aria-label={`Decidir par ${i+1}`}>{(Object.keys(opcionesPar) as IntencionPar[]).map(k => <button key={k} className="par-boton" disabled={cargando || sinConfirmar} onClick={() => decidir(k,[p.id])}>{opcionesPar[k]}</button>)}</div>
         </article>
       ))}
       <p className="etiqueta" style={{ marginTop: 'var(--sp-2)' }}>
