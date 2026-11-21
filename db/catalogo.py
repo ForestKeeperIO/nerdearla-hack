@@ -147,9 +147,13 @@ def resolver_lugar(ciudad: str, estado_clave: str,
            "municipio": "", "resuelto": False}
     por_clave = municipio_por_clave()
 
-    clave = (municipio_clave or "").strip().zfill(5)
+    def _num(v) -> str:
+        s = str(v or "").strip()
+        return s[:-2] if re.fullmatch(r"\d+\.0", s) else s
+
+    clave = _num(municipio_clave).zfill(5)
     if not clave.strip("0") and entidad_clave and municipio_corto:
-        clave = f"{str(entidad_clave).strip().zfill(2)}{str(municipio_corto).strip().zfill(3)}"
+        clave = f"{_num(entidad_clave).zfill(2)}{_num(municipio_corto).zfill(3)}"
     m = por_clave.get(clave)
     if m:
         res.update(estado_clave=m["estado_clave"], estado=m["estado"],
