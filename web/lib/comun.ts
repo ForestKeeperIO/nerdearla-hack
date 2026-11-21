@@ -67,7 +67,7 @@ export type Fuente = {
 
 export type Anomalia = { fila: number; regla: string; campo: string; detalle: string };
 export type Omitida = { fila: number; ya_en_fuente: string; ya_en_fila: number };
-type LadoPar = { fuente: string; fila: number; etiqueta: string; fecha?: string; servicio?: string; programa?: string };
+type LadoPar = { fuente: string; fila: number; etiqueta: string; fecha?: string; servicio?: string; programa?: string; huellaFila?: string };
 export type Par = {
   id: string;
   estado: string;

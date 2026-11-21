@@ -4,6 +4,11 @@
 .par-elegir input { accent-color: var(--vino); }
 .par-aviso { color: var(--vino-oscuro); max-width: 68ch; }
 .par-caso summary { padding-block: .55rem; cursor: pointer; font-weight: 600; }
+.par-ids { display: grid; grid-template-columns: repeat(2,minmax(0,1fr)); gap: .8rem; }
+.par-ids > div { background: var(--papel-2); padding: .65rem; overflow-wrap: anywhere; }
+.par-ids span,.par-ids code { display: block; }
+.par-ids span { color: var(--tinta-suave); font-size: .8rem; }
+.par-ids code { font-family: var(--font-mono); color: var(--vino-oscuro); }
 .par-tabla { margin-block: .8rem; width: 100%; table-layout: fixed; border-collapse: collapse; text-align: left; font-size: .875rem; }
 .par-tabla td, .par-tabla th { border-block-end: var(--border); padding: .55rem; overflow-wrap: anywhere; vertical-align: top; }
 .par-tabla tr[data-difiere="true"] td { background: var(--rubor); }

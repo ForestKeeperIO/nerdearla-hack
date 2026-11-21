@@ -10,6 +10,11 @@ import { decidirPares } from '@/lib/acciones';
 import { opcionesPar, type IntencionPar } from '@/lib/decision-par';
 import './pares.css';
 
+function leerEtiqueta(s: string) {
+  const [iniciales,...partes] = s.split(/\s*·\s*/);
+  return { iniciales, edad: partes.find(x=>/años/i.test(x)), municipio: partes.find(x=>!(/años/i.test(x))) };
+}
+
 export function ParesMasa({
   alcance,
   pares,
@@ -80,11 +85,17 @@ export function ParesMasa({
       {pendientes.map((p, i) => (
         <article className="par-caso" key={p.id}>
           <label className="par-elegir"><input type="checkbox" checked={elegidos.has(p.id)} onChange={e => alterna(p.id, e.target.checked)} />Elegir par {i + 1}</label>
+          <div className="par-ids">{[p.a,p.b].map((l,j)=><div key={j}><span>Registro {j?'B':'A'}</span><code>{l.fuente}:{l.fila}</code></div>)}</div>
+          <div className="par-acciones" role="group" aria-label={`Decidir par ${i+1}`}>{(Object.keys(opcionesPar) as IntencionPar[]).map(k => <button key={k} className="par-boton" disabled={cargando || sinConfirmar} onClick={() => decidir(k,[p.id])}>{opcionesPar[k]}</button>)}</div>
           <details open={i === 0}><summary>Comparar registros</summary>
             <p>{p.motivo}</p>
             <table className="par-tabla"><thead><tr><th scope="col">Campo</th><th scope="col">Registro A</th><th scope="col">Registro B</th></tr></thead><tbody>
               {([
-                ['Referencia', p.a.etiqueta, p.b.etiqueta],
+                ['ID de registro (huella)', p.a.huellaFila, p.b.huellaFila],
+                ['Folio de persona', undefined, undefined],
+                ['Iniciales', leerEtiqueta(p.a.etiqueta).iniciales, leerEtiqueta(p.b.etiqueta).iniciales],
+                ['Edad', leerEtiqueta(p.a.etiqueta).edad, leerEtiqueta(p.b.etiqueta).edad],
+                ['Municipio registrado', leerEtiqueta(p.a.etiqueta).municipio, leerEtiqueta(p.b.etiqueta).municipio],
                 ['Fecha del evento', p.a.fecha, p.b.fecha], ['Servicio', p.a.servicio, p.b.servicio],
                 ['Programa', p.a.programa, p.b.programa],
                 ['Archivo', nombreFuente[p.a.fuente] || p.a.fuente, nombreFuente[p.b.fuente] || p.b.fuente],
@@ -93,7 +104,6 @@ export function ParesMasa({
             </tbody></table>
             <p className="etiqueta">Si falta la fecha o el servicio, consulta las filas de origen antes de decidir.</p>
           </details>
-          <div className="par-acciones" role="group" aria-label={`Decidir par ${i+1}`}>{(Object.keys(opcionesPar) as IntencionPar[]).map(k => <button key={k} className="par-boton" disabled={cargando || sinConfirmar} onClick={() => decidir(k,[p.id])}>{opcionesPar[k]}</button>)}</div>
         </article>
       ))}
       <p className="etiqueta" style={{ marginTop: 'var(--sp-2)' }}>
