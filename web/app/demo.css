@@ -1,0 +1,45 @@
+/* Recorrido guiado de /demo: foco sobre la pantalla y globo de texto. Dirección B (tokens.css, Geist). */
+.demo-guia { position: fixed; inset: 0; z-index: 90; pointer-events: none; font-family: var(--bento-fuente, var(--font-eira-bento), var(--font-ui)); }
+.demo-foco {
+  position: fixed; border-radius: 18px; border: 2px solid var(--vino);
+  box-shadow: 0 0 0 200vmax color-mix(in srgb,var(--tinta) 36%,transparent), 0 0 0 6px color-mix(in srgb,var(--rosa) 45%,transparent);
+  transition: top .45s var(--ease), left .45s var(--ease), width .45s var(--ease), height .45s var(--ease);
+}
+.demo-velo { position: fixed; inset: 0; background: color-mix(in srgb,var(--tinta) 36%,transparent); }
+.demo-globo {
+  position: fixed; pointer-events: auto; box-sizing: border-box;
+  background: var(--superficie); color: var(--tinta);
+  border: 1px solid var(--bento-borde); border-radius: 20px; padding: 16px 18px 14px;
+  box-shadow: var(--shadow-modal);
+  transition: top .45s var(--ease), left .45s var(--ease);
+  animation: demo-entra .35s var(--ease);
+}
+@keyframes demo-entra { from { opacity: 0; transform: translateY(8px); } }
+.demo-globo header { display: flex; align-items: center; justify-content: space-between; gap: 8px; }
+.demo-globo header span { font-size: 12px; font-weight: 600; letter-spacing: .02em; color: var(--vino); }
+.demo-globo header button { display: grid; place-items: center; width: 28px; height: 28px; border-radius: 999px; color: var(--tinta-tenue); }
+.demo-globo header button:hover { background: var(--papel-2); color: var(--tinta); }
+.demo-globo h2 { font-family: inherit; font-size: 19px; font-weight: 600; line-height: 1.2; letter-spacing: -.01em; margin: 6px 0 6px; }
+.demo-globo p { font-size: 14px; line-height: 1.45; color: var(--tinta-suave); margin: 0; }
+.demo-globo .demo-nota { margin-top: 10px; padding: 8px 10px; border-radius: 10px; background: var(--rubor); color: var(--vino-oscuro); font-weight: 500; }
+.demo-fases { display: grid; grid-template-columns: repeat(4, 1fr); gap: 5px; margin-top: 14px; }
+.demo-fases i { height: 4px; border-radius: 999px; background: var(--linea); }
+.demo-fases i[data-estado="hecho"] { background: var(--vino); }
+.demo-fases i[data-estado="actual"] { background: var(--rosa); }
+.demo-avance { height: 2px; margin-top: 6px; background: transparent; }
+.demo-avance i { display: block; height: 100%; border-radius: 999px; background: var(--pizarra); transition: width .1s linear; }
+.demo-globo footer { display: flex; flex-wrap: wrap; align-items: center; gap: 6px; margin-top: 12px; }
+.demo-globo footer .btn { display: inline-flex; align-items: center; gap: 4px; min-height: 36px; padding: 0 12px; }
+.demo-globo footer small { margin-left: auto; font-size: 12px; color: var(--tinta-tenue); font-variant-numeric: tabular-nums; }
+
+.demo-portada { max-width: 620px; }
+.demo-portada ol { list-style: none; padding: 0; margin: var(--sp-6) 0; display: grid; gap: 8px; }
+.demo-portada li { display: flex; align-items: center; gap: 14px; padding: 14px 16px; background: var(--superficie); border: 1px solid var(--linea); border-radius: 16px; font-weight: 500; }
+.demo-portada li b { display: grid; place-items: center; width: 30px; height: 30px; border-radius: 999px; background: var(--rubor); color: var(--vino); font-variant-numeric: tabular-nums; }
+.demo-portada-pie { display: flex; flex-wrap: wrap; align-items: center; gap: 14px; }
+.demo-portada-pie span { font-size: 13px; color: var(--tinta-tenue); }
+
+@media (prefers-reduced-motion: reduce) {
+  .demo-foco, .demo-globo { transition: none; animation: none; }
+}
+@media print { .demo-guia { display: none !important; } }
