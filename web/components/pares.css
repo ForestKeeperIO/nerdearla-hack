@@ -1,0 +1,19 @@
+.par-caso { padding-block: 1rem; border-block-start: var(--border); }
+.par-elegir, .par-acciones { display: flex; align-items: center; flex-wrap: wrap; gap: .65rem; }
+.par-elegir { color: var(--tinta-suave); font-size: .875rem; }
+.par-elegir input { accent-color: var(--vino); }
+.par-aviso { color: var(--vino-oscuro); max-width: 68ch; }
+.par-caso summary { padding-block: .55rem; cursor: pointer; font-weight: 600; }
+.par-ids { display: grid; grid-template-columns: repeat(2,minmax(0,1fr)); gap: .8rem; }
+.par-ids > div { background: var(--papel-2); padding: .65rem; overflow-wrap: anywhere; }
+.par-ids span,.par-ids code { display: block; }
+.par-ids span { color: var(--tinta-suave); font-size: .8rem; }
+.par-ids code { font-family: var(--font-mono); color: var(--vino-oscuro); }
+.par-tabla { margin-block: .8rem; width: 100%; table-layout: fixed; border-collapse: collapse; text-align: left; font-size: .875rem; }
+.par-tabla td, .par-tabla th { border-block-end: var(--border); padding: .55rem; overflow-wrap: anywhere; vertical-align: top; }
+.par-tabla tr[data-difiere="true"] td { background: var(--rubor); }
+.par-tabla small { display: block; color: var(--vino); }
+.par-acciones { margin-top: 1rem; }
+.par-boton { border: 1px solid var(--vino); padding: .65rem 1rem; min-height: 48px; font-weight: 550; white-space: normal; border-radius: var(--r-pill); color: var(--vino); cursor: pointer; }
+.par-acciones .par-boton { flex: 1 1 12rem; }
+.par-boton:hover:not(:disabled) { background: var(--papel-2); }

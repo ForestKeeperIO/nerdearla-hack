@@ -15,6 +15,8 @@ import { Card, CardContent, CardHeader } from '@/components/ui/card';
 import { listarFuentes } from '@/lib/datos';
 import type { Par } from '@/lib/comun';
 import { fechaEs } from '@/lib/comun';
+import { AnilloDato } from '@/components/anillo-dato';
+import { valkey } from '@/lib/valkey';
 
 export const dynamic = 'force-dynamic';
 
@@ -65,6 +67,12 @@ export default async function PaginaCalidad({ params }: { params: Promise<{ alca
   const [fuentes, pares, todas, trabajos] = await Promise.all([fuentesDe(alcance), paresDe(alcance), listarFuentes(), trabajosDe(alcance)]);
   const nombreFuente = Object.fromEntries(todas.valor.map((f) => [f.id, f.nombre]));
   const paresPendientes: Par[] = pares.valor.filter((p) => p.estado === 'pendiente');
+  const idsFuente = new Set(fuentes.valor.map(f=>f.id));
+  const estadosPares = (await valkey().hvals('eira:pares')).flatMap(s=>{
+    try { const p=JSON.parse(s) as Par; return (esGlobal || idsFuente.has(p.a.fuente)) ? [p.estado] : []; }
+    catch { return []; }
+  });
+  const decididos = estadosPares.filter(s=>s==='misma' || s==='distinta').length;
 
   const detalles = await Promise.all(
     fuentes.valor.map(async (f) => ({
@@ -112,7 +120,12 @@ export default async function PaginaCalidad({ params }: { params: Promise<{ alca
       )}
 
       {!esGlobal && (
-        <section aria-label="Por archivo">
+        <div className="calidad-bento"><div className="calidad-anillos">
+          <AnilloDato valor={estadosPares.length ? 100*decididos/estadosPares.length : null} etiqueta={`${decididos} de ${estadosPares.length} pares decididos`}/>
+          {fuentes.valor.map(f=><div key={f.id}><AnilloDato valor={f.puntaje} etiqueta={`Calidad de ${f.nombre}`}/><StarRating valor={f.estrellas} etiqueta={`${f.estrellas} / 5`}/></div>)}
+        </div><details className="calidad-archivos" open={paresPendientes.length===0}>
+          <summary>Revisar archivos y observaciones ({detalles.length})</summary>
+          <section aria-label="Por archivo">
           {detalles.map(({ fuente: f, anomalias, omitidas }) => {
             const planas = Object.values(anomalias.valor).flat();
             const mapeo = trabajos.valor.find(t => t.fuente === f.id && t.estado === 'listo')?.mapeo;
@@ -148,7 +161,7 @@ export default async function PaginaCalidad({ params }: { params: Promise<{ alca
                             <span className="mono" style={{ color: 'var(--tinta-tenue)' }}>fila {o.fila}</span> — ya estaba en «{nombreFuente[o.ya_en_fuente] ?? o.ya_en_fuente}», fila {o.ya_en_fila}
                           </span>
                           <form action={restituirFila.bind(null, alcance, f.id, o.fila)}>
-                            <button type="submit" className="btn btn--secundario btn--sm">Contar de todos modos</button>
+                            <button type="submit" disabled={process.env.EIRA_VISTA_LECTURA === '1'} className="btn btn--secundario btn--sm">Contar de todos modos</button>
                           </form>
                         </li>
                       ))}
@@ -163,7 +176,8 @@ export default async function PaginaCalidad({ params }: { params: Promise<{ alca
               </Card>
             );
           })}
-        </section>
+          </section>
+        </details></div>
       )}
 
       <CalidadCliente

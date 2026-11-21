@@ -1,4 +1,3 @@
-import { impactoPublico } from '@/lib/metabase';
 import { exigirPaso } from '@/lib/guardia';
 import { fechaCorteDe, fuentesDe } from '@/lib/informe';
 import {
@@ -82,14 +81,13 @@ export default async function PaginaVistaPrevia({ params }: { params: Promise<{ 
   const rango = sinId.valor > 0
     ? `${personasTxt(totalImpactadas)} – ${personasTxt(totalImpactadas + sinId.valor)}`
     : personasTxt(totalImpactadas);
-  const metabase = impactoPublico({ programa: esGlobal ? [] : [alcance] });
 
   return (
     <MarcoInforme
       estado={estado}
       paso="vista-previa"
-      titulo="Vista previa del informe"
-      bajada={`Las cifras tal como saldrán. De: ${nombresFuentes || 'sin archivos'} · datos al corte del ${fechaEs(corte)}.`}
+      titulo="Vista previa"
+      bajada={`Revisa las cifras de los archivos procesados al ${fechaEs(corte)}. Fuentes: ${nombresFuentes || 'sin archivos'}.`}
     >
       {/* Las tres cifras que pidió EIRA */}
       <div className="tarjeta" style={{ padding: 0, overflow: 'hidden' }}>
@@ -156,16 +154,6 @@ export default async function PaginaVistaPrevia({ params }: { params: Promise<{ 
         </div>
       )}
 
-      {metabase && (
-        <div style={{ marginTop: 'var(--sp-6)' }}>
-          <h2 style={{ fontSize: 15, marginBottom: 'var(--sp-3)' }}>Para mirar más a fondo</h2>
-          <iframe
-            src={metabase}
-            title="Tablero de impacto"
-            style={{ width: '100%', height: 560, border: 'var(--border)', borderRadius: 'var(--r-lg)', background: 'var(--superficie)' }}
-          />
-        </div>
-      )}
 
       {presencia && (
         <div className="tarjeta" style={{ marginTop: 'var(--sp-4)' }}>
@@ -175,7 +163,7 @@ export default async function PaginaVistaPrevia({ params }: { params: Promise<{ 
 
       <PieDePaso estado={estado} paso="vista-previa">
         <form action={aprobarCifras.bind(null, alcance)}>
-          <button type="submit" className="btn btn--primario">Las cifras son correctas</button>
+          <button type="submit" className="btn btn--primario">{process.env.EIRA_VISTA_LECTURA === '1' ? 'Terminar la consulta' : 'Confirmar y terminar la carga'}</button>
         </form>
       </PieDePaso>
     </MarcoInforme>

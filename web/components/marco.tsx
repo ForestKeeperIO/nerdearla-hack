@@ -20,17 +20,17 @@ export function MarcoInforme({
   children: React.ReactNode;
 }) {
   return (
-    <div>
-      <Link href="/informe" className="etiqueta no-imprimir inline-flex items-center gap-1.5 no-underline hover:underline" style={{ color: 'var(--tinta-tenue)' }}>
-        <ArrowLeft className="size-3.5" aria-hidden="true" /> Todos los informes
+    <div className="archivo-eira expediente-carga">
+      <Link href="/subir" className="regreso no-imprimir">
+        <ArrowLeft className="size-3.5" aria-hidden="true" /> Cambiar programa
       </Link>
-      <div className="mt-6">
-        <p className="etiqueta mono">{tituloInforme(estado.alcance)}</p>
-        <div className="mt-4 no-imprimir">
+      <div className="cab-carga">
+        <p>{tituloInforme(estado.alcance)}</p>
+        <div className="no-imprimir">
           <IndicadorPasos estado={estado} actual={paso} />
         </div>
       </div>
-      <div className="mt-10">
+      <div className="apertura">
         <h1>{titulo}</h1>
         {bajada && <p className="lead mt-3" style={{ maxWidth: '58ch' }}>{bajada}</p>}
       </div>

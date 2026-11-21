@@ -60,7 +60,8 @@ export function leerTablero(f: Seleccion) {
         FROM positivas GROUP BY iniciativa_id),
       edades AS (SELECT e.edad FROM v_edad e WHERE e.persona IN
         (SELECT persona_ef FROM positivas WHERE impacto=1) AND e.edad IS NOT NULL) `;
-    const filas = <T,>(consulta: string) => db.prepare(base(sql) + consulta).all(...args) as T[];
+    // node:sqlite devuelve filas sin prototipo; React Flight requiere objetos planos.
+    const filas = <T,>(consulta: string) => db.prepare(base(sql) + consulta).all(...args).map(row => ({ ...row })) as T[];
     const indicadores = `SELECT (SELECT COUNT(*) FROM filas) registros,
       (SELECT COALESCE(SUM(personas),0) FROM por_programa) personas,
       (SELECT ROUND(AVG(edad),1) FROM edades) edad,
