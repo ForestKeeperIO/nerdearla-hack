@@ -41,7 +41,7 @@ export default async function PaginaSubir({ params }: { params: Promise<{ alcanc
               name="fecha_corte"
               required
               defaultValue={fechaCorte}
-              style={{ border: '1px solid var(--line-strong)', borderRadius: 'var(--r-sm)', padding: '0 var(--sp-3)', background: 'var(--white)', marginTop: 'var(--sp-2)' }}
+              style={{ border: '1px solid var(--linea-fuerte)', borderRadius: 'var(--r-sm)', padding: '0 var(--sp-3)', background: 'var(--superficie)', marginTop: 'var(--sp-2)' }}
             />
           </label>
           <button type="submit" className="btn btn--secundario btn--sm">Guardar fecha de corte</button>

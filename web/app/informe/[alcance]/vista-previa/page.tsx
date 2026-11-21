@@ -221,7 +221,7 @@ export default async function PaginaVistaPrevia({ params }: { params: Promise<{ 
           <iframe
             src={metabase}
             title="Tablero de impacto"
-            style={{ width: '100%', height: 560, border: 'var(--border)', borderRadius: 'var(--r-lg)', background: 'var(--white)' }}
+            style={{ width: '100%', height: 560, border: 'var(--border)', borderRadius: 'var(--r-lg)', background: 'var(--superficie)' }}
           />
         </div>
       )}

@@ -8,8 +8,8 @@ import { StarRating } from '@/components/ui/star-rating';
 type Datos = { trabajos: Trabajo[]; fuentes: Fuente[] };
 
 function estadoTrabajo(t: Trabajo): { texto: string; clase: string } {
-  if (t.estado === 'pendiente') return { texto: 'En espera', clase: 'estado--info' };
-  if (t.estado === 'procesando') return { texto: 'Leyendo…', clase: 'estado--info' };
+  if (t.estado === 'pendiente') return { texto: 'En espera', clase: 'estado--tinta-suave' };
+  if (t.estado === 'procesando') return { texto: 'Leyendo…', clase: 'estado--tinta-suave' };
   if (t.estado === 'error') return { texto: 'No se pudo leer', clase: 'estado--error' };
   if (t.estado === 'duplicado') {
     if (t.nivel_duplicado === 'mismo_contenido') return { texto: 'Ya se cargó (mismo contenido)', clase: 'estado--aviso' };
@@ -20,7 +20,7 @@ function estadoTrabajo(t: Trabajo): { texto: string; clase: string } {
     if (t.nivel_duplicado === 'traslape_parcial') return { texto: 'Listo, con filas ya contadas', clase: 'estado--aviso' };
     return { texto: 'Listo', clase: 'estado--listo' };
   }
-  return { texto: t.estado, clase: 'estado--info' };
+  return { texto: t.estado, clase: 'estado--tinta-suave' };
 }
 
 /** Lista en vivo de trabajos y archivos importados del informe (cada 2 s). */
@@ -62,7 +62,7 @@ export function ListaVivo({ alcance, inicial }: { alcance: string; inicial: Dato
             const e = estadoTrabajo(t);
             return (
               <li key={t.id} className="fila">
-                <FileSpreadsheet className="size-5" style={{ color: 'var(--gray)', flexShrink: 0 }} aria-hidden="true" />
+                <FileSpreadsheet className="size-5" style={{ color: 'var(--tinta-tenue)', flexShrink: 0 }} aria-hidden="true" />
                 <span className="fila__cuerpo">
                   <span style={{ display: 'block', fontWeight: 500 }}>{t.nombre}</span>
                   {t.mensaje && <span className="etiqueta" style={{ display: 'block' }}>{t.mensaje}</span>}
@@ -73,7 +73,7 @@ export function ListaVivo({ alcance, inicial }: { alcance: string; inicial: Dato
           })}
           {datos.fuentes.map((f) => (
             <li key={f.id} className="fila">
-              <FileSpreadsheet className="size-5" style={{ color: 'var(--gray)', flexShrink: 0 }} aria-hidden="true" />
+              <FileSpreadsheet className="size-5" style={{ color: 'var(--tinta-tenue)', flexShrink: 0 }} aria-hidden="true" />
               <span className="fila__cuerpo">
                 <span style={{ display: 'block', fontWeight: 500 }}>{f.nombre}</span>
                 <span className="etiqueta" style={{ display: 'block' }}>

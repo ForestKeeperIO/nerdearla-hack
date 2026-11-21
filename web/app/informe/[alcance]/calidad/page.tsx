@@ -35,14 +35,14 @@ function GrupoProblemas({ anomalias }: { anomalias: Record<string, Anomalia[]> }
     <div style={{ marginTop: 'var(--sp-4)' }}>
       {grupos.map(([regla, lista]) => (
         <details key={regla} className="calculo" open={lista.length <= 6}>
-          <summary style={{ color: 'var(--ink)', fontWeight: 500 }}>
+          <summary style={{ color: 'var(--tinta)', fontWeight: 500 }}>
             {REGLAS[regla] ?? regla} · {lista.length} {lista.length === 1 ? 'fila' : 'filas'}
           </summary>
           <ul style={{ listStyle: 'none', padding: 0, margin: 'var(--sp-1) 0 var(--sp-3)' }}>
             {lista.map((an, i) => (
               <li key={i} style={{ borderTop: 'var(--border)', padding: 'var(--sp-2) 0', display: 'flex', gap: 'var(--sp-4)', fontSize: 'var(--fs-small)' }}>
-                <span className="mono" style={{ color: 'var(--gray)', flexShrink: 0 }}>fila {an.fila}</span>
-                <span style={{ color: 'var(--ink-soft)' }}>{an.campo ? `${an.campo}: ` : ''}{an.detalle}</span>
+                <span className="mono" style={{ color: 'var(--tinta-tenue)', flexShrink: 0 }}>fila {an.fila}</span>
+                <span style={{ color: 'var(--tinta-suave)' }}>{an.campo ? `${an.campo}: ` : ''}{an.detalle}</span>
               </li>
             ))}
           </ul>
@@ -119,20 +119,20 @@ export default async function PaginaCalidad({ params }: { params: Promise<{ alca
                   </div>
                   <StarRating valor={f.estrellas} etiqueta={`${f.estrellas} / 5`} />
                 </div>
-                <p style={{ marginTop: 'var(--sp-3)', fontSize: 'var(--fs-small)', color: 'var(--ink-soft)' }}>
+                <p style={{ marginTop: 'var(--sp-3)', fontSize: 'var(--fs-small)', color: 'var(--tinta-suave)' }}>
                   {f.motivos.length > 0 ? `Qué le falta: ${f.motivos.join('; ')}.` : 'No le falta nada: está completa.'}
                 </p>
                 <GrupoProblemas anomalias={anomalias.valor} />
                 {omitidas.valor.length > 0 && (
                   <details className="calculo" style={{ marginTop: 'var(--sp-2)' }}>
-                    <summary style={{ color: 'var(--ink)', fontWeight: 500 }}>
+                    <summary style={{ color: 'var(--tinta)', fontWeight: 500 }}>
                       {omitidas.valor.length} {omitidas.valor.length === 1 ? 'fila no se contó' : 'filas no se contaron'} por ya estar en otro archivo
                     </summary>
                     <ul style={{ listStyle: 'none', padding: 0, margin: 'var(--sp-1) 0 var(--sp-3)' }}>
                       {omitidas.valor.map((o, i) => (
                         <li key={i} style={{ borderTop: 'var(--border)', padding: 'var(--sp-2) 0', display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 'var(--sp-4)', fontSize: 'var(--fs-small)' }}>
-                          <span style={{ color: 'var(--ink-soft)' }}>
-                            <span className="mono" style={{ color: 'var(--gray)' }}>fila {o.fila}</span> — ya estaba en «{nombreFuente[o.ya_en_fuente] ?? o.ya_en_fuente}», fila {o.ya_en_fila}
+                          <span style={{ color: 'var(--tinta-suave)' }}>
+                            <span className="mono" style={{ color: 'var(--tinta-tenue)' }}>fila {o.fila}</span> — ya estaba en «{nombreFuente[o.ya_en_fuente] ?? o.ya_en_fuente}», fila {o.ya_en_fila}
                           </span>
                           <form action={restituirFila.bind(null, alcance, f.id, o.fila)}>
                             <button type="submit" className="btn btn--secundario btn--sm">Contar de todos modos</button>

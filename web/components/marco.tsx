@@ -21,7 +21,7 @@ export function MarcoInforme({
 }) {
   return (
     <div>
-      <Link href="/" className="etiqueta no-imprimir inline-flex items-center gap-1.5 no-underline hover:underline" style={{ color: 'var(--gray)' }}>
+      <Link href="/" className="etiqueta no-imprimir inline-flex items-center gap-1.5 no-underline hover:underline" style={{ color: 'var(--tinta-tenue)' }}>
         <ArrowLeft className="size-3.5" aria-hidden="true" /> Todos los informes
       </Link>
       <div className="mt-6">

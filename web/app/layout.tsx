@@ -1,11 +1,11 @@
 import type { Metadata } from "next";
-import { Inter, IBM_Plex_Mono, Space_Grotesk } from "next/font/google";
+import { Montserrat, IBM_Plex_Mono, Rosarivo } from "next/font/google";
 import Link from "next/link";
 import "./globals.css";
 
-const inter = Inter({ variable: "--font-inter", subsets: ["latin"] });
+const montserrat = Montserrat({ variable: "--font-montserrat", subsets: ["latin"] });
 const plexMono = IBM_Plex_Mono({ variable: "--font-plex-mono", subsets: ["latin"], weight: ["400", "500"] });
-const spaceGrotesk = Space_Grotesk({ variable: "--font-space-grotesk", subsets: ["latin"], weight: ["400", "500", "600"] });
+const rosarivo = Rosarivo({ variable: "--font-rosarivo", subsets: ["latin"], weight: "400" });
 
 export const metadata: Metadata = {
   title: "Impacto EIRA",
@@ -16,11 +16,11 @@ export const metadata: Metadata = {
 export default function RootLayout({ children }: LayoutProps<"/">) {
   const entorno = process.env.NOMBRE_ENTORNO ?? "En blanco";
   return (
-    <html lang="es" className={`${inter.variable} ${plexMono.variable} ${spaceGrotesk.variable} h-full antialiased`}>
+    <html lang="es" className={`${montserrat.variable} ${plexMono.variable} ${rosarivo.variable} h-full antialiased`}>
       <body className="min-h-full">
-        <header className="no-imprimir" style={{ borderBottom: "var(--border)", background: "var(--paper)" }}>
+        <header className="no-imprimir" style={{ borderBottom: "var(--border)", background: "var(--papel)" }}>
           <div className="container flex items-center justify-between" style={{ minHeight: 56 }}>
-            <Link href="/" className="no-underline" style={{ fontFamily: "var(--font-display)", fontWeight: 600, fontSize: 17, letterSpacing: "-0.01em" }}>
+            <Link href="/" className="no-underline" style={{ fontFamily: "var(--font-display)", fontWeight: 400, fontSize: 19, letterSpacing: "-0.01em", fontSynthesis: "none" }}>
               EIRA · Impacto
             </Link>
             <span className="mono etiqueta" title="Entorno de demostración">{entorno}</span>
