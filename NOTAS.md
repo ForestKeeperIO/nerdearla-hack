@@ -147,20 +147,31 @@ sembrados. La dependencia `splink` queda instalada para el piloto.
 
 ---
 
-# NOTAS — Metabase (rama metabase, Tarea 4)
+# NOTAS — Metabase (rama metabase, Tarea 4, segunda pasada)
 
 ## Estado
 
 - Metabase OSS **v0.65.6** corriendo en http://127.0.0.1:3200 (JAR en `.metabase/`,
   base interna `.metabase/metabase.db.mv.db`, bitácora `.metabase/metabase.log`,
   credenciales generadas en `.metabase/credenciales.json` — todo ignorado por git).
-- Tableros públicos (datos ficticios, base `data/impacto.sqlite`):
+- La base `data/impacto.sqlite` usa el **esquema real del motor**
+  (`db/esquema.sql`, ya en main); `metabase/esquema_prueba.sql` se retiró.
+- Tableros públicos, por entorno (colecciones «Impacto EIRA · Real» / «· En
+  blanco»; los títulos ya no llevan sufijo de entorno):
   - Impacto: http://127.0.0.1:3200/public/dashboard/f62686a5-b630-4c72-948a-502228267c11
+    - Filtrado: `?programa=tamizaje-rosa` | `?programa=melenas-en-movimiento`
   - Calidad: http://127.0.0.1:3200/public/dashboard/f0b06799-74ef-4c7a-8485-ee1f4840c4a9
-  - Entorno `blanco` (base vacía) en `metabase/enlaces.json` → `entornos.blanco`.
-- **Iframe: permitido** (`frame-ancestors *`, sin `X-Frame-Options`; verificado
-  con una página servida desde otro puerto).
-- Pruebas: `uv run --with requests,pytest pytest metabase/test_metabase.py` → 5/5.
+  - Entorno `blanco` y plantilla `impacto_por_programa` en
+    `metabase/enlaces.json` → `entornos.<entorno>`.
+- El filtro `programa` está conectado a las 6 preguntas de Impacto
+  (variable `{{programa}}` opcional). Verificado por la API pública: sin
+  filtro da 77 personas impactadas, con `tamizaje-rosa` da 60.
+- Paleta de EIRA en las series (vino/ciruela/pizarra), tarjetas a las 24
+  columnas, tabla «Presencia por municipio» al final (sin cobertura %).
+- **Iframe: permitido** (`frame-ancestors *`, sin `X-Frame-Options`).
+- Pruebas: `uv run --with requests,pytest pytest metabase/test_metabase.py` → 8/8.
+- Capturas: `docs/capturas/metabase-impacto{,-tamizaje,-melenas}.png` y
+  `metabase-calidad.png` (Playwright, chromium_headless_shell-1254).
 
 ## Detener / reiniciar
 
@@ -171,14 +182,15 @@ bash metabase/arrancar.sh   # espera a /api/health; primera vez ~1-2 min
 
 ## Pendientes / avisos
 
-- `metabase/esquema_prueba.sql` es TEMPORAL. Cuando `origin/motor` traiga
-  `db/esquema.sql`: reconstruir `data/impacto.sqlite` con ese esquema y
-  reprovisionar (`--entorno real --db <ruta>`). La vista `v_calidad` debe
-  exponer `filas_omitidas`/`filas_nuevas` y hace falta `v_pares_pendientes`
-  (ver metabase/README.md).
+- La lista de valores del filtro «Programa» es ESTÁTICA
+  (`values_source_config.values` en `metabase/tableros.json`): si el catálogo
+  de iniciativas crece, hay que agregar el id ahí (la URL con otro id de
+  programa igual filtra, solo falta en el desplegable).
 - Metabase tarda ~90 s en arrancar la primera vez (migraciones Liquibase).
 - Al ponerlo detrás de un túnel: `METABASE_URL_PUBLICA=<url del túnel>` y
   reprovisionar para que los enlaces públicos usen esa dirección.
+- `data/impacto.sqlite` sigue siendo ficticio: cuando el motor real escriba
+  la base, basta reconstruir y reprovisionar `--entorno real --db <ruta>`.
 
 ---
 

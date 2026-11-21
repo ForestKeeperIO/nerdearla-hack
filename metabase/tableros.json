@@ -109,7 +109,7 @@
         {
           "id": "municipios_lista",
           "nombre": "Presencia por municipio",
-          "sql": "SELECT estado AS \"Estado\", municipio AS \"Municipio\", registros AS \"Registros\", personas AS \"Personas\" FROM v_presencia_municipios WHERE 1=1 [[AND iniciativa_id = {{programa}}]] ORDER BY estado, municipio",
+          "sql": "SELECT estado AS \"Estado\", municipio AS \"Municipio\", SUM(registros) AS \"Registros\", SUM(personas) AS \"Personas\" FROM v_presencia_municipios WHERE 1=1 [[AND iniciativa_id = {{programa}}]] GROUP BY estado, municipio ORDER BY estado, municipio",
           "display": "table",
           "visualization_settings": {},
           "col": 0,
