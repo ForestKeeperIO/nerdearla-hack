@@ -1,0 +1,123 @@
+ID EIRA,Nombre completo,Fecha de nacimiento,Edad,Municipio,Tipo de servicio,Fecha de servicio,Asistió
+LRM19620101,María López Ramírez,1962-01-01,64,Zapotlán el Grande,Papanicolaou,2026-03-10,Sí
+HDG19690612,Guadalupe Hernández Díaz,1969-06-12,57,Sayula,Mastografía,2026-03-11,Sí
+COC19761123,Carmen Castro Ortega,1976-11-23,49,Gómez Farías,Exploración clínica,2026-06-09,Sí
+RCR19830406,Rosa Rojas Castro,1983-04-06,43,Tapalpa,Mastografía,2026-06-12,No
+MNL19900917,Leticia Mora Navarro,1990-09-17,36,Jocotepec,Papanicolaou,2026-07-16,Sí
+FPP19970228,Patricia Flores Peña,1997-02-28,29,San Martín Hidalgo,Ultrasonido de mama,2026-09-09,Sí
+NAA19640711,Alicia Navarro Aguilar,1964-07-11,62,Zapotlán el Grande,Exploración clínica,2026-02-27,Sí
+CTT19711222,Teresa Cortés Torres,1971-12-22,54,Sayula,Mastografía,2026-09-15,Sí
+GAE19780505,Elena Gómez Anaya,1978-05-05,48,Gómez Farías,Papanicolaou,2026-03-30,No
+MHV19851016,Verónica Medina Hernández,1985-10-16,40,Tapalpa,Ultrasonido de mama,2026-09-18,Sí
+PFL19920327,Lucía Peña Flores,1992-03-27,34,Jocotepec,Exploración clínica,2026-07-04,Sí
+VMS19990810,Silvia Vega Medina,1999-08-10,27,San Martín Hidalgo,Mastografía,2026-07-10,Sí
+CSY19660121,Yolanda Cruz Salazar,1966-01-21,60,Zapotlán el Grande,Papanicolaou,2026-06-23,Sí
+SLA19730604,Araceli Salazar Lara,1973-06-04,53,Sayula,Ultrasonido de mama,2026-05-19,Sí
+ACN19801115,Norma Aguilar Campos,1980-11-15,45,Gómez Farías,Exploración clínica,2026-08-20,Sí
+RLI19870426,Imelda Ramírez López,1987-04-26,39,Tapalpa,Mastografía,2026-06-27,No
+RMA19940909,Adriana Ruiz Mora,1994-09-09,32,Jocotepec,Papanicolaou,2026-06-21,Sí
+LGC20010220,Claudia Lara Gómez,2001-02-20,25,San Martín Hidalgo,Ultrasonido de mama,2026-09-04,Sí
+TCD19680703,Dolores Torres Cruz,1968-07-03,58,Zapotlán el Grande,Exploración clínica,2026-08-07,Sí
+DRE19751214,Esperanza Díaz Ruiz,1975-12-14,50,Sayula,Mastografía,2026-08-18,Sí
+RRI19820525,Irma Reyes Reyes,1982-05-25,44,Gómez Farías,Papanicolaou,,Sí
+CIJ19891008,Josefina Campos Ibarra,1989-10-08,36,Tapalpa,Ultrasonido de mama,2026-12-15,Sí
+ARL19960319,Lourdes Anaya Rojas,1996-03-19,30,Rancho El Mezquite,Exploración clínica,2026-08-12,Sí
+OCM19630802,Marisol Ortega Cortés,1963-08-02,63,Sayulla,Mastografía,2026-08-17,Sí
+XX-0000,Ofelia Ibarra Vega,1970-01-13,56,Zapotlán el Grande,Papanicolaou,2026-07-01,Sí
+,María López Ramírez,1977-06-24,49,Sayula,Ultrasonido de mama,2026-05-24,Sí
+,Guadalupe Hernández Díaz,1984-11-07,41,Gómez Farías,Exploración clínica,2026-04-03,Sí
+COC19910418,Carmen Castro Ortega,1991-04-18,18,Tapalpa,Mastografía,2026-02-01,Sí
+RCR19980901,Rosa Rojas Castro,1998-09-01,28,Jocotepec,Papanicolaou,2026-07-08,Sí
+MNL19650212,Leticia Mora Navarro,1965-02-12,61,San Martín Hidalgo,Ultrasonido de mama,2026-02-21,Sí
+FPP19720723,Patricia Flores Peña,1972-07-23,54,Zapotlán el Grande,Exploración clínica,2026-03-01,Sí
+NAA19791206,Alicia Navarro Aguilar,1979-12-06,46,Sayula,Mastografía,2026-04-15,Sí
+CTT19860517,Teresa Cortés Torres,1986-05-17,40,Gómez Farías,Papanicolaou,2026-08-29,Sí
+GAE19931028,Elena Gómez Anaya,1993-10-28,32,Tapalpa,Ultrasonido de mama,2026-02-26,Sí
+MHV20000311,Verónica Medina Hernández,2000-03-11,26,Jocotepec,Exploración clínica,2026-05-27,Sí
+PFL19670822,Lucía Peña Flores,1967-08-22,59,San Martín Hidalgo,Mastografía,2026-02-03,Sí
+VMS19740105,Silvia Vega Medina,1974-01-05,52,Zapotlán el Grande,Papanicolaou,2026-08-28,Sí
+CSY19810616,Yolanda Cruz Salazar,1981-06-16,45,Sayula,Ultrasonido de mama,2026-09-17,Sí
+SLA19881127,Araceli Salazar Lara,1988-11-27,37,Gómez Farías,Exploración clínica,2026-07-26,Sí
+ACN19950410,Norma Aguilar Campos,1995-04-10,31,Tapalpa,Mastografía,2026-06-06,Sí
+RLI19620921,Imelda Ramírez López,1962-09-21,64,Jocotepec,Papanicolaou,2026-07-24,Sí
+RMA19690204,Adriana Ruiz Mora,1969-02-04,57,San Martín Hidalgo,Ultrasonido de mama,2026-04-22,Sí
+LGC19760715,Claudia Lara Gómez,1976-07-15,50,Zapotlán el Grande,Exploración clínica,2026-03-26,Sí
+TCD19831226,Dolores Torres Cruz,1983-12-26,42,Sayula,Mastografía,2026-05-13,Sí
+DRE19900509,Esperanza Díaz Ruiz,1990-05-09,36,Gómez Farías,Papanicolaou,2026-04-06,Sí
+RRI19971020,Irma Reyes Reyes,1997-10-20,28,Tapalpa,Ultrasonido de mama,2026-05-01,Sí
+CIJ19640303,Josefina Campos Ibarra,1964-03-03,62,Jocotepec,Exploración clínica,2026-05-03,Sí
+ARL19710814,Lourdes Anaya Rojas,1971-08-14,55,San Martín Hidalgo,Mastografía,2026-08-26,Sí
+OCM19780125,Marisol Ortega Cortés,1978-01-25,48,Zapotlán el Grande,Papanicolaou,2026-05-08,Sí
+IVO19850608,Ofelia Ibarra Vega,1985-06-08,41,Sayula,Ultrasonido de mama,2026-08-10,Sí
+LRM19921119,María López Ramírez,1992-11-19,33,Gómez Farías,Exploración clínica,2026-06-12,Sí
+HDG19990402,Guadalupe Hernández Díaz,1999-04-02,27,Tapalpa,Mastografía,2026-07-14,Sí
+COC19660913,Carmen Castro Ortega,1966-09-13,60,Jocotepec,Papanicolaou,2026-02-20,Sí
+RCR19730224,Rosa Rojas Castro,1973-02-24,53,San Martín Hidalgo,Ultrasonido de mama,2026-08-05,Sí
+MNL19800707,Leticia Mora Navarro,1980-07-07,46,Zapotlán el Grande,Exploración clínica,2026-04-29,Sí
+FPP19871218,Patricia Flores Peña,1987-12-18,38,Sayula,Mastografía,2026-02-23,Sí
+NAA19940501,Alicia Navarro Aguilar,1994-05-01,32,Gómez Farías,Papanicolaou,2026-06-23,Sí
+CTT20011012,Teresa Cortés Torres,2001-10-12,24,Tapalpa,Ultrasonido de mama,2026-06-18,Sí
+GAE19680323,Elena Gómez Anaya,1968-03-23,58,Jocotepec,Exploración clínica,2026-04-16,Sí
+MHV19750806,Verónica Medina Hernández,1975-08-06,51,San Martín Hidalgo,Mastografía,2026-04-15,Sí
+PFL19820117,Lucía Peña Flores,1982-01-17,44,Zapotlán el Grande,Papanicolaou,2026-05-29,Sí
+VMS19890628,Silvia Vega Medina,1989-06-28,37,Sayula,Ultrasonido de mama,2026-03-09,Sí
+CSY19961111,Yolanda Cruz Salazar,1996-11-11,29,Gómez Farías,Exploración clínica,2026-09-13,Sí
+SLA19630422,Araceli Salazar Lara,1963-04-22,63,Tapalpa,Mastografía,2026-07-16,Sí
+ACN19700905,Norma Aguilar Campos,1970-09-05,56,Jocotepec,Papanicolaou,2026-07-31,Sí
+RLI19770216,Imelda Ramírez López,1977-02-16,49,San Martín Hidalgo,Ultrasonido de mama,2026-08-03,Sí
+RMA19840727,Adriana Ruiz Mora,1984-07-27,42,Zapotlán el Grande,Exploración clínica,2026-06-28,Sí
+LGC19911210,Claudia Lara Gómez,1991-12-10,34,Sayula,Mastografía,2026-04-21,Sí
+TCD19980521,Dolores Torres Cruz,1998-05-21,28,Gómez Farías,Papanicolaou,2026-02-07,Sí
+DRE19651004,Esperanza Díaz Ruiz,1965-10-04,60,Tapalpa,Ultrasonido de mama,2026-09-06,Sí
+RRI19720315,Irma Reyes Reyes,1972-03-15,54,Jocotepec,Exploración clínica,2026-08-01,Sí
+CIJ19790826,Josefina Campos Ibarra,1979-08-26,47,San Martín Hidalgo,Mastografía,2026-05-06,Sí
+ARL19860109,Lourdes Anaya Rojas,1986-01-09,40,Zapotlán el Grande,Papanicolaou,2026-05-05,Sí
+OCM19930620,Marisol Ortega Cortés,1993-06-20,33,Sayula,Ultrasonido de mama,2026-05-30,Sí
+IVO20001103,Ofelia Ibarra Vega,2000-11-03,25,Gómez Farías,Exploración clínica,2026-05-20,Sí
+LRM19670414,María López Ramírez,1967-04-14,59,Tapalpa,Mastografía,2026-02-24,Sí
+HDG19740925,Guadalupe Hernández Díaz,1974-09-25,52,Jocotepec,Papanicolaou,2026-05-14,Sí
+COC19810208,Carmen Castro Ortega,1981-02-08,45,San Martín Hidalgo,Ultrasonido de mama,2026-09-17,Sí
+RCR19880719,Rosa Rojas Castro,1988-07-19,38,Zapotlán el Grande,Exploración clínica,2026-06-30,Sí
+MNL19951202,Leticia Mora Navarro,1995-12-02,30,Sayula,Mastografía,2026-06-22,Sí
+FPP19620513,Patricia Flores Peña,1962-05-13,64,Gómez Farías,Papanicolaou,2026-06-08,Sí
+NAA19691024,Alicia Navarro Aguilar,1969-10-24,56,Tapalpa,Ultrasonido de mama,2026-09-11,Sí
+CTT19760307,Teresa Cortés Torres,1976-03-07,50,Jocotepec,Exploración clínica,2026-03-02,Sí
+GAE19830818,Elena Gómez Anaya,1983-08-18,43,San Martín Hidalgo,Mastografía,2026-05-20,Sí
+MHV19900101,Verónica Medina Hernández,1990-01-01,36,Zapotlán el Grande,Papanicolaou,2026-06-10,Sí
+PFL19970612,Lucía Peña Flores,1997-06-12,29,Sayula,Ultrasonido de mama,2026-08-25,Sí
+VMS19641123,Silvia Vega Medina,1964-11-23,61,Gómez Farías,Exploración clínica,2026-08-12,Sí
+CSY19710406,Yolanda Cruz Salazar,1971-04-06,55,Tapalpa,Mastografía,2026-09-10,Sí
+SLA19780917,Araceli Salazar Lara,1978-09-17,48,Jocotepec,Papanicolaou,2026-07-04,Sí
+ACN19850228,Norma Aguilar Campos,1985-02-28,41,San Martín Hidalgo,Ultrasonido de mama,2026-09-13,Sí
+LRM19620101,María López Ramírez,1962-01-01,64,Zapotlán el Grande,Exploración clínica,2026-06-06,Sí
+HDG19690612,Guadalupe Hernández Díaz,1969-06-12,57,Sayula,Mastografía,2026-05-13,Sí
+COC19761123,Carmen Castro Ortega,1976-11-23,49,Gómez Farías,Papanicolaou,2026-06-15,Sí
+RCR19830406,Rosa Rojas Castro,1983-04-06,43,Tapalpa,Ultrasonido de mama,2026-04-08,Sí
+MNL19900917,Leticia Mora Navarro,1990-09-17,36,Jocotepec,Exploración clínica,2026-09-05,Sí
+FPP19970228,Patricia Flores Peña,1997-02-28,29,San Martín Hidalgo,Mastografía,2026-05-19,Sí
+NAA19640711,Alicia Navarro Aguilar,1964-07-11,62,Zapotlán el Grande,Papanicolaou,2026-06-25,Sí
+CTT19711222,Teresa Cortés Torres,1971-12-22,54,Sayula,Ultrasonido de mama,2026-06-03,Sí
+GAE19780505,Elena Gómez Anaya,1978-05-05,48,Gómez Farías,Exploración clínica,2026-06-12,Sí
+MHV19851016,Verónica Medina Hernández,1985-10-16,40,Tapalpa,Mastografía,2026-06-13,Sí
+PFL19920327,Lucía Peña Flores,1992-03-27,34,Jocotepec,Papanicolaou,2026-08-26,Sí
+VMS19990810,Silvia Vega Medina,1999-08-10,27,San Martín Hidalgo,Ultrasonido de mama,2026-02-07,Sí
+CSY19660121,Yolanda Cruz Salazar,1966-01-21,60,Zapotlán el Grande,Exploración clínica,2026-06-28,Sí
+SLA19730604,Araceli Salazar Lara,1973-06-04,53,Sayula,Mastografía,2026-03-30,Sí
+ACN19801115,Norma Aguilar Campos,1980-11-15,45,Gómez Farías,Papanicolaou,2026-08-16,Sí
+RLI19870426,Imelda Ramírez López,1987-04-26,39,Tapalpa,Ultrasonido de mama,2026-03-06,Sí
+RMA19940909,Adriana Ruiz Mora,1994-09-09,32,Jocotepec,Exploración clínica,2026-08-29,Sí
+LGC20010220,Claudia Lara Gómez,2001-02-20,25,San Martín Hidalgo,Mastografía,2026-02-13,Sí
+TCD19680703,Dolores Torres Cruz,1968-07-03,58,Zapotlán el Grande,Papanicolaou,2026-07-31,Sí
+DRE19751214,Esperanza Díaz Ruiz,1975-12-14,50,Sayula,Ultrasonido de mama,2026-06-14,Sí
+RRI19820525,Irma Reyes Reyes,1982-05-25,44,Gómez Farías,Exploración clínica,2026-09-16,Sí
+CIJ19891008,Josefina Campos Ibarra,1989-10-08,36,Tapalpa,Mastografía,2026-07-22,Sí
+ARL19960319,Lourdes Anaya Rojas,1996-03-19,30,Jocotepec,Papanicolaou,2026-02-27,Sí
+OCM19630802,Marisol Ortega Cortés,1963-08-02,63,San Martín Hidalgo,Ultrasonido de mama,2026-08-03,Sí
+IVO19700113,Ofelia Ibarra Vega,1970-01-13,56,Zapotlán el Grande,Exploración clínica,2026-07-10,Sí
+LRM19770624,María López Ramírez,1977-06-24,49,Sayula,Mastografía,2026-05-21,Sí
+HDG19841107,Guadalupe Hernández Díaz,1984-11-07,41,Gómez Farías,Papanicolaou,2026-06-01,Sí
+COC19910418,Carmen Castro Ortega,1991-04-18,35,Tapalpa,Ultrasonido de mama,2026-03-09,Sí
+RCR19980901,Rosa Rojas Castro,1998-09-01,28,Jocotepec,Exploración clínica,2026-06-04,Sí
+MNL19650212,Leticia Mora Navarro,1965-02-12,61,San Martín Hidalgo,Mastografía,2026-09-15,Sí
+FPP19970228,Patricia Flores Peña,1997-02-28,29,San Martín Hidalgo,Ultrasonido de mama,2026-09-09,Sí
+NAA19640711,Alicia Navarro Aguilar,1964-07-11,62,Zapotlán el Grande,Exploración clínica,2026-02-27,Sí
