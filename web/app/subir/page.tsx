@@ -1,4 +1,4 @@
-import { CargaPrograma } from '@/components/carga-programa';
+import { ElegirProgramaCarga } from '@/components/elegir-programa-carga';
 import { SubirArchivos } from '@/components/subir';
 import { Toaster } from '@/components/ui/sonner';
 import { informesActivos, pluralTipo } from '@/lib/catalogo';
@@ -17,6 +17,5 @@ export default async function Cargas({searchParams}: PageProps<'/subir'>) {
       programas={programas.filter(p=>p.clase!=='fuente_publica').map(({id,nombre,tipos_de_registro})=>({id,nombre,tipos_de_registro}))} lectura={soloLectura()}/>
     <Toaster position="bottom-right"/>
   </div>;
-  const inicio=programas.find(p=>p.id==='tamizaje-rosa') ?? programas[0];
-  return inicio ? <CargaPrograma programa={inicio.id}/> : <p>No hay programas habilitados para recibir archivos.</p>;
+  return <ElegirProgramaCarga programas={programas}/>;
 }

@@ -4,7 +4,7 @@ import { useCallback, useRef, useState } from 'react';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import { useDropzone, type FileRejection } from 'react-dropzone';
-import { ArrowUpRight, Check, FileSpreadsheet, Trash2, UploadCloud, XCircle } from 'lucide-react';
+import { FileSpreadsheet, Trash2, UploadCloud, XCircle } from 'lucide-react';
 import { toast } from 'sonner';
 import { Selector } from './selector';
 import { resolverNombre, SIN_ALTA } from '@/lib/programa-libre';
@@ -70,6 +70,7 @@ export function SubirArchivos({
   const [nombreLibre, setNombreLibre] = useState('');
   const [unidadLibre, setUnidadLibre] = useState('');
   const [corteLibre, setCorteLibre] = useState(fechaCorte);
+  const [confirmado, setConfirmado] = useState(false);
   const libre = alcance === 'otro';
   const elegido = libre ? resolverNombre(nombreLibre, programas) : programas.find(p => p.id === alcance);
   const libreValido = elegido?.tipos_de_registro.includes(unidadLibre) && !!corteLibre;
@@ -102,7 +103,7 @@ export function SubirArchivos({
   const { getRootProps, getInputProps, isDragActive, open } = useDropzone({
     onDrop: agregar,
     onFileDialogCancel: () => { reemplazar.current = null; },
-    disabled: lectura,
+    disabled: lectura || (libre && !confirmado),
     accept: {
       'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet': ['.xlsx'],
       'text/csv': ['.csv'],
@@ -152,14 +153,11 @@ export function SubirArchivos({
 
   return (
     <section aria-label="Subir archivos">
-      {archivos.length === 0 && <nav aria-label="Elegir programa de la carga" className="programas-carga">
-        {[...programas, {id:'otro',nombre:'Otro programa'}].map(p => <Link key={p.id}
-          href={p.id === 'otro' ? '/subir?otro=1' : `/informe/${p.id}/subir`}
-          aria-current={p.id === alcance ? 'page' : undefined}>
-          {p.nombre}{p.id === alcance ? <Check aria-hidden/> : <ArrowUpRight aria-hidden/>}
-        </Link>)}
-      </nav>}
-      {libre && <fieldset className="datos-programa-libre" disabled={enviando || lectura}>
+      {libre && <header className="cab-carga">
+        <p>{confirmado ? elegido?.nombre : '¿De qué programa es este archivo?'}</p>
+        <Link href="/subir" className="btn btn--secundario btn--sm">Cambiar</Link>
+      </header>}
+      {libre && !confirmado && <fieldset className="datos-programa-libre" disabled={enviando || lectura}>
         <legend>Datos del programa</legend>
         <label>Nombre del programa<input maxLength={100} value={nombreLibre} onChange={e=>setNombreLibre(e.target.value)} /></label>
         <label>Unidad<select value={unidadLibre} onChange={e=>setUnidadLibre(e.target.value)}>
@@ -170,8 +168,9 @@ export function SubirArchivos({
           : !elegido ? SIN_ALTA : unidadLibre && !elegido.tipos_de_registro.includes(unidadLibre)
           ? 'La unidad elegida no está habilitada para este programa.'
           : `Se procesará como ${elegido.nombre}.`}</p>
+        <button type="button" className="btn btn--primario" disabled={!libreValido} onClick={() => setConfirmado(true)}>Usar este programa</button>
       </fieldset>}
-      <div
+      {(!libre || confirmado) && <div
         {...getRootProps({className:'zona-carga'})}
         data-arrastrando={isDragActive} aria-disabled={lectura}
       >
@@ -182,7 +181,7 @@ export function SubirArchivos({
         </p>
         <button id="elegir-archivo-carga" type="button" onClick={open} disabled={lectura} className="elegir-archivo">Elegir archivo</button>
         <small>{lectura?'Modo de consulta: no se reciben archivos.':'Excel (.xlsx) o CSV · Hasta 10 MB por archivo'}</small>
-      </div>
+      </div>}
 
       {archivos.length > 0 && (
         <ul className="mt-4" style={{ listStyle: 'none', padding: 0 }}>
