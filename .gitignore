@@ -4,9 +4,8 @@ node_modules/
 dist/
 .env
 .valkey/
+.metabase/
 __pycache__/
 *.pyc
 .venv/
-data/
-.valkey/
 reportes/agregado_publico.csv

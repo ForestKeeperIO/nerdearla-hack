@@ -144,3 +144,35 @@ sembrados. La dependencia `splink` queda instalada para el piloto.
 - `edad_inconsistente` está implementada pero no se ejercita en los datos.
 - `posible_correccion` (fila casi igual con un campo distinto) está en las
   reglas pero sin detección aún.
+# NOTAS — Metabase (rama metabase, Tarea 4)
+
+## Estado
+
+- Metabase OSS **v0.65.6** corriendo en http://127.0.0.1:3200 (JAR en `.metabase/`,
+  base interna `.metabase/metabase.db.mv.db`, bitácora `.metabase/metabase.log`,
+  credenciales generadas en `.metabase/credenciales.json` — todo ignorado por git).
+- Tableros públicos (datos ficticios, base `data/impacto.sqlite`):
+  - Impacto: http://127.0.0.1:3200/public/dashboard/f62686a5-b630-4c72-948a-502228267c11
+  - Calidad: http://127.0.0.1:3200/public/dashboard/f0b06799-74ef-4c7a-8485-ee1f4840c4a9
+  - Entorno `blanco` (base vacía) en `metabase/enlaces.json` → `entornos.blanco`.
+- **Iframe: permitido** (`frame-ancestors *`, sin `X-Frame-Options`; verificado
+  con una página servida desde otro puerto).
+- Pruebas: `uv run --with requests,pytest pytest metabase/test_metabase.py` → 5/5.
+
+## Detener / reiniciar
+
+```bash
+pkill -f '.metabase/metabase.jar'
+bash metabase/arrancar.sh   # espera a /api/health; primera vez ~1-2 min
+```
+
+## Pendientes / avisos
+
+- `metabase/esquema_prueba.sql` es TEMPORAL. Cuando `origin/motor` traiga
+  `db/esquema.sql`: reconstruir `data/impacto.sqlite` con ese esquema y
+  reprovisionar (`--entorno real --db <ruta>`). La vista `v_calidad` debe
+  exponer `filas_omitidas`/`filas_nuevas` y hace falta `v_pares_pendientes`
+  (ver metabase/README.md).
+- Metabase tarda ~90 s en arrancar la primera vez (migraciones Liquibase).
+- Al ponerlo detrás de un túnel: `METABASE_URL_PUBLICA=<url del túnel>` y
+  reprovisionar para que los enlaces públicos usen esa dirección.
