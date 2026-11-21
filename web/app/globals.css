@@ -1,0 +1,134 @@
+/* Hallmark · shape: app screen · genre: modern-minimal · theme: Coral (deal 2/3, seed herramienta-interna-para-ong-6f3a·c50cad20·2026-11-21·r0)
+ * nav: barra superior con los cuatro pasos de EIRA · signature: la lista viva de trabajos con su estado y "cómo se calculó" en cada cifra · states: pendiente, procesando, listo, duplicado, version_nueva, traslape_parcial, error
+ * axes: light/grotesk-sans/warm · posture: restrained · contrast: pass · v2.0.0 */
+/* Hallmark · pre-emit critique: P_ H_ E_ S_ R_ V_ · weakest: _, pendiente de la auditoría */
+@import url("./tokens.css");
+@import url("./base.css");
+@import "tailwindcss";
+@import "tw-animate-css";
+@import "shadcn/tailwind.css";
+
+@custom-variant dark (&:is(.dark *));
+
+@theme inline {
+  --color-background: var(--background);
+  --color-foreground: var(--foreground);
+  --font-sans: var(--font-body);
+  --font-mono: var(--font-outlier);
+  --font-heading: var(--font-display);
+  --color-ring: var(--ring);
+  --color-input: var(--input);
+  --color-border: var(--border);
+  --color-destructive: var(--destructive);
+  --color-destructive-foreground: var(--destructive-foreground);
+  --color-accent-foreground: var(--accent-foreground);
+  --color-accent: var(--accent);
+  --color-muted-foreground: var(--muted-foreground);
+  --color-muted: var(--muted);
+  --color-secondary-foreground: var(--secondary-foreground);
+  --color-secondary: var(--secondary);
+  --color-primary-foreground: var(--primary-foreground);
+  --color-primary: var(--primary);
+  --color-popover-foreground: var(--popover-foreground);
+  --color-popover: var(--popover);
+  --color-card-foreground: var(--card-foreground);
+  --color-card: var(--card);
+  --color-estado-listo: var(--estado-listo);
+  --color-estado-listo-fondo: var(--estado-listo-fondo);
+  --color-estado-aviso: var(--estado-aviso);
+  --color-estado-aviso-fondo: var(--estado-aviso-fondo);
+  --color-estado-error: var(--estado-error);
+  --color-estado-error-fondo: var(--estado-error-fondo);
+  --color-estado-info: var(--estado-info);
+  --color-estado-info-fondo: var(--estado-info-fondo);
+  --color-rosa: var(--color-accent-2);
+  --radius-sm: calc(var(--radius) * 0.6);
+  --radius-md: calc(var(--radius) * 0.8);
+  --radius-lg: var(--radius);
+  --radius-xl: calc(var(--radius) * 1.4);
+  --radius-2xl: calc(var(--radius) * 1.8);
+  --radius-3xl: calc(var(--radius) * 2.2);
+  --radius-4xl: calc(var(--radius) * 2.6);
+}
+
+:root {
+  /* Rosa de EIRA como acento (requisito del proyecto; sustituye el coral del tema). */
+  --color-accent: oklch(72% 0.15 8);
+  --color-accent-2: oklch(50% 0.19 8);
+  --color-focus: oklch(50% 0.19 8);
+
+  --font-display: "General Sans", var(--font-geist-sans, ui-sans-serif), ui-sans-serif, system-ui, sans-serif;
+  --font-body: var(--font-display);
+  --font-outlier: var(--font-geist-mono, ui-monospace), ui-monospace, monospace;
+
+  --background: var(--color-paper);
+  --foreground: var(--color-ink);
+  --card: var(--color-cotton);
+  --card-foreground: var(--color-print);
+  --popover: var(--color-cotton);
+  --popover-foreground: var(--color-print);
+  --primary: var(--color-board);
+  --primary-foreground: var(--color-board-type);
+  --secondary: var(--color-paper-2);
+  --secondary-foreground: var(--color-ink);
+  --muted: var(--color-paper-2);
+  --muted-foreground: var(--color-muted);
+  --accent: color-mix(in oklab, var(--color-accent) 26%, var(--color-cotton));
+  --accent-foreground: var(--color-accent-ink);
+  --destructive: var(--color-error);
+  --destructive-foreground: oklch(98% 0.01 80);
+  --border: var(--color-rule);
+  --input: var(--color-rule-2);
+  --ring: var(--color-focus);
+  --radius: var(--radius-card);
+
+  /* Estados del flujo de archivos: siempre con texto además de color. */
+  --estado-listo: oklch(44% 0.11 152);
+  --estado-listo-fondo: oklch(94% 0.045 150);
+  --estado-aviso: oklch(48% 0.12 70);
+  --estado-aviso-fondo: oklch(95% 0.055 85);
+  --estado-error: oklch(50% 0.18 25);
+  --estado-error-fondo: oklch(94% 0.045 25);
+  --estado-info: oklch(50% 0.09 45);
+  --estado-info-fondo: var(--color-paper-2);
+}
+
+@layer base {
+  /* Objetivos táctiles de 44 px en todo lo interactivo. */
+  button, [role="button"], select, input[type="checkbox"], input[type="radio"] { min-height: 44px; }
+  input:not([type="checkbox"]):not([type="radio"]), select { min-height: 44px; }
+  /* Transición de estado, nunca decorativa. */
+  button, a, [role="button"] { transition: background-color var(--dur-short) var(--ease-out), border-color var(--dur-short) var(--ease-out), transform var(--dur-micro) var(--ease-out); }
+}
+
+.mono { font-family: var(--font-outlier); font-variant-numeric: tabular-nums; }
+.etiqueta { color: var(--color-muted); font-weight: 500; }
+
+/* Tarjeta de papel: la superficie de trabajo del tema Coral. */
+.tarjeta { background: var(--color-cotton); border: 1px solid var(--color-rule); border-radius: var(--radius-card); box-shadow: var(--edge-stock), var(--cast-stock); padding: var(--space-md); }
+.tarjeta > h3 { font-size: var(--text-title); }
+.cifra { font-family: var(--font-outlier); font-variant-numeric: tabular-nums; font-size: var(--text-2xl); font-weight: 500; letter-spacing: -0.02em; }
+
+/* Marcas de estado: texto + fondo + color, nunca solo color. */
+.estado { display: inline-flex; align-items: center; gap: var(--space-xs); padding: var(--space-2xs) var(--space-sm); border-radius: var(--radius-pill); font-weight: 600; line-height: 1.6; }
+.estado--listo { color: var(--estado-listo); background: var(--estado-listo-fondo); }
+.estado--aviso { color: var(--estado-aviso); background: var(--estado-aviso-fondo); }
+.estado--error { color: var(--estado-error); background: var(--estado-error-fondo); }
+.estado--info { color: var(--estado-info); background: var(--estado-info-fondo); }
+
+/* El "Cómo se calculó": desplegable nativo, operable con teclado. */
+details.calculo summary { cursor: pointer; color: var(--color-muted); min-height: 44px; display: inline-flex; align-items: center; }
+details.calculo summary:hover { color: var(--color-accent-2); }
+details.calculo .calculo__cuerpo { font-family: var(--font-outlier); color: var(--color-ink-2); background: var(--color-paper-2); border: 1px solid var(--color-rule); border-radius: var(--radius-input); padding: var(--space-sm) var(--space-md); margin-top: var(--space-2xs); overflow-wrap: anywhere; }
+
+/* Impresión del informe. */
+.solo-imprimir { display: none; }
+@media print {
+  .no-imprimir { display: none !important; }
+  .solo-imprimir { display: block; }
+  body { background: #fff; font-size: 12pt; }
+  main.container { max-width: none; padding: 0; }
+  .tarjeta { box-shadow: none !important; border: 1px solid #999 !important; break-inside: avoid; }
+  a[href]::after { content: ""; }
+  @page { margin: 18mm; }
+}

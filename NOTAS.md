@@ -1,48 +1,53 @@
-# NOTAS — base de Valkey (rama valkey-base)
+# NOTAS — rama fe (frontend y tableros)
 
-## Cómo se usa
+## Habilidades instaladas (paso 1)
 
-```bash
-VALKEY_PORT=6391 npm run valkey      # levanta Valkey local (binario oficial 9.2.0)
-VALKEY_URL=redis://127.0.0.1:6391 npm run semilla
-VALKEY_URL=redis://127.0.0.1:6391 npm run verificar
-npm test                             # usa el puerto 6391, base 15
-```
+- `npx modern-web-guidance@latest install` funcionó a la primera. Instalada en
+  `.agents/skills/modern-web-guidance/` (con symlink para Claude Code).
+- `npx skills add nutlope/hallmark` funcionó a la primera. Instalada en
+  `.agents/skills/hallmark/` (`skills-lock.json` en la raíz quedó actualizado).
 
-En el 6379 corre la instancia de otro equipo: no tocarla. Las pruebas usan la
-base 15 del 6391 para no mezclarse con la base de demostración (base 0).
+## Dirección visual (Hallmark, modo app screen + fast mode)
 
-## Salida de `npm run verificar` (con la semilla cargada)
+- Alcance: pantalla de aplicación ("app screens"), género modern-minimal.
+- Tema repartido y elegido: **Coral** (2/3, seed herramienta-interna-para-ong-6f3a·c50cad20·2026-11-21·r0):
+  papel gris cálido, superficies de algodón, un solo acento para acción/selección/estado.
+- El acento del tema se corrió de coral a **rosa** (oklch hue 8): requisito explícito de EIRA
+  ("rosa como acento, no como fondo").
+- `theme.mjs scaffold coral --scope app` escribió `web/app/tokens.css` y `web/app/base.css`;
+  se quitaron de `base.css` las reglas `[data-slot]` (chocaban con la convención de shadcn/ui).
+- Stamp Hallmark en la primera línea de `web/app/globals.css`.
 
-```
-OK     eira:contrato existe y vale 1                      valor=1
-OK     suma de eira:cnt:atencion = 160                    suma=160
-OK     suma de eira:cnt:participacion = 80                suma=80
-OK     per:programa:Tamizaje Rosa ⊆ per:todas             90 miembros, 0 fuera
-OK     per:programa:Salud que Florece ⊆ per:todas         75 miembros, 0 fuera
-OK     per:programa:Nutrición ⊆ per:todas                 40 miembros, 0 fuera
-OK     SINTERCARD Tamizaje Rosa ∩ Salud que Florece = 15  cruce=15
-OK     ningún valor contiene nombres completos ficticios  50 claves revisadas
-OK     cada fuente de eira:fuentes tiene su hash          3 fuentes
+### Las 5 reglas que más cambiaron el diseño
 
-Todo el contrato en orden.
-```
+1. Todo color y fuente pasa por tokens en `:root` — nada de literales fuera del bloque
+   (`tokens.css` + mapeo a variables shadcn en `globals.css`).
+2. Densidad de app: controles de 44 px, tablas antes que tarjetas, estado en la URL
+   (los filtros del tablero viven en `?programa=…&ciudad=…`).
+3. Cada región con datos tiene cuatro estados (cargando, vacío con qué hacer, error, lleno):
+   los estados vacíos de trabajos, fuentes, calidad y tablero dicen qué hacer ahora.
+4. Estado con texto además de color: las marcas `.estado` llevan rótulo escrito
+   ("Listo: versión nueva", "Duplicado: idéntico"), nunca solo un punto de color.
+5. Firma obligada de la herramienta: la lista viva de trabajos (refresco 2 s) y el
+   desplegable "Cómo se calculó" con el comando de Valkey y los ms en cada cifra.
 
-## Bloqueos y pendientes
+Modern Web Guidance: se usó para confirmar patrones (dialog/details nativo para el
+desplegable, `:focus-visible`, `prefers-reduced-motion`, impresión). Ver sección
+"Modern Web Guidance" al final de esta nota.
 
-- `py/ejemplo_worker.py` queda sin ejecutar: `python3` no tiene el paquete
-  `valkey` (`ModuleNotFoundError`) y por las reglas no se instala pip. En la
-  máquina del equipo de procesamiento: `pip install valkey`.
-- `compose.yaml` no se probó: esta máquina no tiene Docker (indicado en la tarea).
+## Decisiones y supuestos
 
-## Decisiones de la semilla (no son cambios al contrato)
+- Subida por ruta `POST /api/subir` (multipart) en vez de acción de servidor:
+  las server actions tienen límite de 1 MB de cuerpo y los archivos llegan a 10 MB.
+  Mismo efecto en Valkey: `SET eira:archivo:<id> EX 3600`, `HSET eira:trabajo:<id>`
+  pendiente, `XADD eira:trabajos`.
+- `decision` para `restituir_fila` se escribe como `restituir` (el contrato solo
+  nombra `misma|distinta`, que aplican a `persona`). Avisado por si Python espera otro valor.
+- Fecha de corte del tablero: la más reciente de las fuentes; hoy si no hay ninguna.
+- En `eira:decisiones` el campo `por` se llena con el rol ("Presidencia"/"Coordinación").
 
-- Los 20 registros sin identificar (`eira:sinid`) son además de los conteos:
-  12 en Tamizaje Rosa y 8 en Salud que Florece. Por eso `filas` de cada fuente
-  (132 y 88) es mayor que sus conteos identificados (120 y 80).
-- Hay 4 trabajos y 3 fuentes: `tr-004` (`tamizaje-rosa-v2.xlsx`, listo con
-  `nivel_duplicado=version_nueva`) no crea fuente propia; apunta a
-  `fuente_original=f-tamizaje-rosa`. Las 8 filas "agregadas" no alteran los
-  conteos de la semilla para mantener los invariantes (160/80).
-- Identificadores de persona opacos: `p` + 15 hex de SHA-256 de una semilla
-  fija. Etiquetas de pares: solo iniciales, ciudad y edad.
+## Bloqueos / pendientes
+
+- El benchmark de 21st.dev/details.so (`…/devin2/out/c.md`) todavía no existe a esta hora
+  (solo `c.tmp`; el proceso que lo genera está atorado en permisos). Se revisó de nuevo
+  al terminar el paso 3: sigue sin existir.
