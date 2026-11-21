@@ -1,7 +1,7 @@
 """Pruebas de la Tarea 4: provisionamiento de Metabase.
 
 Necesitan Metabase corriendo (bash metabase/arrancar.sh) y una base SQLite
-creada con metabase/datos_prueba.py (y una vacía con --vacia).
+creada con metabase/construir_demo.py (y una vacía con --vacia).
 
     uv run --with requests,pytest pytest metabase/test_metabase.py
 """
@@ -73,23 +73,26 @@ def test_url_filtrada_por_programa_responde(enlaces):
         assert r.status_code == 200, f"{programa}: {r.status_code}"
 
 
-def test_con_base_vacia_los_tableros_responden():
-    # Entorno "blanco": SQLite solo con el esquema y catálogos, sin registros.
+def test_un_solo_juego_de_enlaces_y_responde(enlaces):
+    # No se reprovisiona aquí: el entorno «blanco» apunta a la base de la
+    # aplicación en línea y esta prueba no debe cambiarle la conexión.
+    principal = enlaces["entornos"][enlaces["principal"]]
+    assert list(enlaces["entornos"]) == [enlaces["principal"]], "un solo juego de enlaces públicos"
+    for clave in ("impacto", "calidad"):
+        r = requests.get(principal[clave], timeout=30)
+        assert r.status_code == 200, f"{clave}: {r.status_code}"
+
+
+def test_base_vacia_se_construye():
     subprocess.run(
-        ["uv", "run", str(METABASE / "datos_prueba.py"), "--vacia", "--db", str(DB_VACIA)],
+        ["uv", "run", "python", str(METABASE / "construir_demo.py"), "--vacia", "--db", str(DB_VACIA)],
         cwd=RAIZ, check=True,
     )
-    provisionar("--entorno", "blanco", "--db", str(DB_VACIA))
-    enlaces = json.loads(ENLACES.read_text())
-    blanco = enlaces["entornos"]["blanco"]
-    for clave in ("impacto", "calidad"):
-        r = requests.get(blanco[clave], timeout=30)
-        assert r.status_code == 200, f"{clave} (blanco): {r.status_code}"
 
 
 def test_provisionar_dos_veces_no_duplica():
-    provisionar()
-    provisionar()
+    provisionar("--entorno", "real")
+    provisionar("--entorno", "real")
     # Un "Impacto" y un "Calidad" por colección (real y blanco), nada más.
     sid = sesion()
     h = {"X-Metabase-Session": sid}
@@ -97,6 +100,7 @@ def test_provisionar_dos_veces_no_duplica():
                for d in requests.get(f"{BASE}/api/dashboard", headers=h, timeout=30).json()
                if not d.get("archived") and d["name"] in ("Impacto", "Calidad")]
     assert len(nombres) == 4, nombres
+    assert "127.0.0.1" not in ENLACES.read_text() or not (RAIZ / ".metabase" / "url-publica").exists()
     for nombre in ("Impacto", "Calidad"):
         cols = sorted(c for n, c in nombres if n == nombre)
         assert len(cols) == 2 and cols[0] != cols[1], nombres
@@ -116,6 +120,8 @@ def test_sin_sufijos_de_entorno_en_titulos():
 def test_cada_pregunta_consulta_solo_vistas():
     for t in TABLEROS["tableros"]:
         for p in t["preguntas"]:
+            if p.get("texto"):
+                continue  # tarjeta de texto, sin consulta
             tablas = re.findall(r"(?:from|join)\s+([A-Za-z_][\w]*)", p["sql"], re.IGNORECASE)
             assert tablas, f"{p['id']}: no referencia ninguna vista"
             for tabla in tablas:

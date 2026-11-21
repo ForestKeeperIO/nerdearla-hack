@@ -1,9 +1,15 @@
 {
-  "descripcion": "Preguntas y tableros que provisionar.py crea por la API. Todas las consultas son SQL nativas SOLO sobre vistas v_* (db/esquema.sql de la rama motor). Paleta de EIRA: vino #7d3b3b, ciruela #6a2b51, pizarra #7e8ba3, en ese orden. La variable opcional {{programa}} permite filtrar el tablero Impacto por iniciativa desde la URL pública.",
-  "paleta": ["#7d3b3b", "#6a2b51", "#7e8ba3"],
+  "descripcion": "Preguntas y tableros que provisionar.py crea por la API. Todas las consultas son SQL nativas SOLO sobre vistas v_* (db/esquema.sql). Paleta de EIRA: vino #7d3b3b, ciruela #6a2b51, pizarra #7e8ba3. Marcadores que provisionar.py sustituye con catalogos/iniciativas.json: @PROGRAMA(col)@ = CASE con el nombre de cada iniciativa; @PUBLICAS@ = ids de las iniciativas de clase fuente_publica; @PROGRAMAS_DEL_DEMO@ = valores del filtro (iniciativas con en_demo). Las entradas con «texto» son tarjetas de texto, no preguntas. «entornos» limita un tablero a esos entornos. @VALORES(col)@ = valores distintos de esa columna de v_conteos en la base del entorno (sin fuentes públicas), para las listas de los filtros.",
+  "paleta": [
+    "#7d3b3b",
+    "#6a2b51",
+    "#7e8ba3"
+  ],
   "tableros": [
     {
       "nombre": "Impacto",
+      "clave": "impacto",
+      "descripcion": "Personas impactadas, actividad y presencia territorial de los programas de EIRA.",
       "parametros": [
         {
           "id": "programa",
@@ -13,7 +19,45 @@
           "sectionId": "string",
           "values_query_type": "list",
           "values_source_type": "static-list",
-          "values_source_config": {"values": ["tamizaje-rosa", "melenas-en-movimiento"]}
+          "values_source_config": {
+            "values": "@PROGRAMAS_DEL_DEMO@"
+          }
+        },
+        {
+          "id": "mes",
+          "name": "Mes",
+          "slug": "mes",
+          "type": "string/=",
+          "sectionId": "string",
+          "values_query_type": "list",
+          "values_source_type": "static-list",
+          "values_source_config": {
+            "values": "@VALORES(periodo)@"
+          }
+        },
+        {
+          "id": "municipio",
+          "name": "Municipio",
+          "slug": "municipio",
+          "type": "string/=",
+          "sectionId": "string",
+          "values_query_type": "list",
+          "values_source_type": "static-list",
+          "values_source_config": {
+            "values": "@VALORES(municipio)@"
+          }
+        },
+        {
+          "id": "servicio",
+          "name": "Tipo de servicio",
+          "slug": "servicio",
+          "type": "string/=",
+          "sectionId": "string",
+          "values_query_type": "list",
+          "values_source_type": "static-list",
+          "values_source_config": {
+            "values": "@VALORES(servicio)@"
+          }
         }
       ],
       "preguntas": [
@@ -27,46 +71,73 @@
           },
           "col": 0,
           "row": 0,
-          "size_x": 8,
-          "size_y": 4
+          "size_x": 6,
+          "size_y": 3
+        },
+        {
+          "id": "edad_promedio",
+          "nombre": "Edad promedio · todos los programas",
+          "sql": "SELECT COALESCE(CAST(ROUND(AVG(edad), 1) AS TEXT) || ' años', 'Sin datos') AS total FROM v_edad",
+          "display": "scalar",
+          "visualization_settings": {
+            "scalar.field": "total"
+          },
+          "col": 6,
+          "row": 0,
+          "size_x": 6,
+          "size_y": 3
+        },
+        {
+          "id": "municipios_con_presencia",
+          "nombre": "Municipios con presencia",
+          "sql": "SELECT COUNT(DISTINCT municipio_clave) AS total FROM v_presencia_municipios WHERE iniciativa_id NOT IN (@PUBLICAS@) [[AND iniciativa_id = {{programa}}]]",
+          "display": "scalar",
+          "visualization_settings": {
+            "scalar.field": "total"
+          },
+          "col": 12,
+          "row": 0,
+          "size_x": 6,
+          "size_y": 3
         },
         {
           "id": "donantes",
-          "nombre": "Donantes",
+          "nombre": "Donantes de cabello",
           "sql": "SELECT COALESCE(SUM(donantes), 0) AS total FROM v_personas_por_programa WHERE 1=1 [[AND iniciativa = {{programa}}]]",
           "display": "scalar",
           "visualization_settings": {
             "scalar.field": "total"
           },
-          "col": 8,
+          "col": 18,
           "row": 0,
-          "size_x": 8,
-          "size_y": 4
+          "size_x": 6,
+          "size_y": 3
         },
         {
-          "id": "municipios_con_presencia",
-          "nombre": "Municipios con presencia",
-          "sql": "SELECT COUNT(DISTINCT municipio_clave) AS total FROM v_presencia_municipios WHERE 1=1 [[AND iniciativa_id = {{programa}}]]",
-          "display": "scalar",
-          "visualization_settings": {
-            "scalar.field": "total"
-          },
-          "col": 16,
-          "row": 0,
-          "size_x": 8,
-          "size_y": 4
+          "texto": "**Cómo leer estas cifras.** Las personas se cuentan una sola vez por programa aunque tengan varios registros; quien está en dos programas cuenta en cada uno. Atenciones, donaciones y pelucas se cuentan por separado y no se suman entre sí. Las donantes de cabello no son personas impactadas. Los filtros de mes y tipo de servicio aplican a las gráficas de actividad, y el de municipio a las de presencia; las cifras de personas solo cambian con el programa.",
+          "display": "text",
+          "col": 0,
+          "row": 3,
+          "size_x": 24,
+          "size_y": 2
         },
         {
           "id": "registros_por_tipo",
-          "nombre": "Registros por tipo",
-          "sql": "SELECT CASE tipo_registro WHEN 'atencion' THEN 'Atenciones' WHEN 'estudio' THEN 'Estudios' WHEN 'participacion' THEN 'Participaciones' WHEN 'entrega_insumo' THEN 'Entregas de insumos' WHEN 'donacion' THEN 'Donaciones recibidas' WHEN 'producto_entregado' THEN 'Productos entregados' WHEN 'registro_publico' THEN 'Registros de fuentes públicas' ELSE tipo_registro END AS tipo, SUM(total) AS registros FROM v_conteos WHERE 1=1 [[AND iniciativa_id = {{programa}}]] GROUP BY tipo_registro ORDER BY registros DESC",
-          "display": "bar",
+          "nombre": "Actividad por tipo de registro",
+          "sql": "SELECT CASE tipo_registro WHEN 'atencion' THEN 'Atenciones' WHEN 'estudio' THEN 'Estudios' WHEN 'participacion' THEN 'Participaciones' WHEN 'entrega_insumo' THEN 'Entregas de insumos' WHEN 'donacion' THEN 'Donaciones de cabello' WHEN 'producto_entregado' THEN 'Pelucas entregadas' ELSE tipo_registro END AS tipo, SUM(total) AS registros FROM v_conteos WHERE iniciativa_id NOT IN (@PUBLICAS@) [[AND iniciativa_id = {{programa}}]] [[AND periodo = {{mes}}]] [[AND servicio = {{servicio}}]] GROUP BY tipo_registro ORDER BY registros DESC",
+          "display": "row",
           "visualization_settings": {
-            "graph.dimensions": ["tipo"],
-            "graph.metrics": ["registros"],
+            "graph.dimensions": [
+              "tipo"
+            ],
+            "graph.metrics": [
+              "registros"
+            ],
             "graph.show_values": true,
             "graph.x_axis.title_text": "",
             "graph.y_axis.title_text": "",
+            "graph.x_axis.labels_enabled": false,
+            "graph.y_axis.labels_enabled": false,
             "series_settings": {
               "registros": {
                 "color": "#7d3b3b",
@@ -75,21 +146,28 @@
             }
           },
           "col": 0,
-          "row": 4,
+          "row": 5,
           "size_x": 12,
-          "size_y": 8
+          "size_y": 6
         },
         {
           "id": "personas_por_iniciativa",
           "nombre": "Personas por programa",
-          "sql": "SELECT CASE iniciativa WHEN 'tamizaje-rosa' THEN 'Tamizaje Rosa' WHEN 'melenas-en-movimiento' THEN 'Melenas en Movimiento' ELSE iniciativa END AS programa, personas_impactadas, donantes FROM v_personas_por_programa WHERE 1=1 [[AND iniciativa = {{programa}}]]",
+          "sql": "SELECT @PROGRAMA(iniciativa)@ AS programa, personas_impactadas, donantes FROM v_personas_por_programa WHERE 1=1 [[AND iniciativa = {{programa}}]] ORDER BY personas_impactadas DESC",
           "display": "bar",
           "visualization_settings": {
-            "graph.dimensions": ["programa"],
-            "graph.metrics": ["personas_impactadas", "donantes"],
+            "graph.dimensions": [
+              "programa"
+            ],
+            "graph.metrics": [
+              "personas_impactadas",
+              "donantes"
+            ],
             "graph.show_values": true,
             "graph.x_axis.title_text": "",
             "graph.y_axis.title_text": "",
+            "graph.x_axis.labels_enabled": false,
+            "graph.y_axis.labels_enabled": false,
             "series_settings": {
               "personas_impactadas": {
                 "color": "#7d3b3b",
@@ -97,66 +175,216 @@
               },
               "donantes": {
                 "color": "#6a2b51",
-                "title": "Donantes"
+                "title": "Donantes de cabello"
               }
             }
           },
           "col": 12,
-          "row": 4,
+          "row": 5,
           "size_x": 12,
-          "size_y": 8
+          "size_y": 6
+        },
+        {
+          "id": "actividad_por_mes",
+          "nombre": "Actividad por mes",
+          "sql": "SELECT CASE substr(periodo, 6, 2) WHEN '01' THEN 'ene' WHEN '02' THEN 'feb' WHEN '03' THEN 'mar' WHEN '04' THEN 'abr' WHEN '05' THEN 'may' WHEN '06' THEN 'jun' WHEN '07' THEN 'jul' WHEN '08' THEN 'ago' WHEN '09' THEN 'sep' WHEN '10' THEN 'oct' WHEN '11' THEN 'nov' ELSE 'dic' END || ' ' || substr(periodo, 1, 4) AS mes, @PROGRAMA(iniciativa_id)@ AS programa, SUM(total) AS registros FROM v_conteos WHERE iniciativa_id NOT IN (@PUBLICAS@) AND periodo <> '' [[AND iniciativa_id = {{programa}}]] [[AND periodo = {{mes}}]] [[AND servicio = {{servicio}}]] GROUP BY periodo, iniciativa_id ORDER BY periodo, iniciativa_id DESC",
+          "display": "bar",
+          "visualization_settings": {
+            "graph.dimensions": [
+              "mes",
+              "programa"
+            ],
+            "graph.metrics": [
+              "registros"
+            ],
+            "graph.show_values": false,
+            "graph.x_axis.title_text": "",
+            "graph.y_axis.title_text": "",
+            "graph.x_axis.labels_enabled": false,
+            "graph.y_axis.labels_enabled": false,
+            "series_settings": {
+              "Tamizaje Rosa": {
+                "color": "#7d3b3b",
+                "title": "Tamizaje Rosa"
+              },
+              "Melenas en Movimiento": {
+                "color": "#6a2b51",
+                "title": "Melenas en Movimiento"
+              }
+            },
+            "stackable.stack_type": "stacked",
+            "graph.x_axis.scale": "ordinal"
+          },
+          "col": 0,
+          "row": 11,
+          "size_x": 14,
+          "size_y": 7
+        },
+        {
+          "id": "servicios",
+          "nombre": "Servicios más frecuentes",
+          "sql": "SELECT servicio, SUM(total) AS registros FROM v_conteos WHERE iniciativa_id NOT IN (@PUBLICAS@) AND servicio <> '' [[AND iniciativa_id = {{programa}}]] [[AND periodo = {{mes}}]] [[AND servicio = {{servicio}}]] GROUP BY servicio ORDER BY registros DESC LIMIT 10",
+          "display": "row",
+          "visualization_settings": {
+            "graph.dimensions": [
+              "servicio"
+            ],
+            "graph.metrics": [
+              "registros"
+            ],
+            "graph.show_values": true,
+            "graph.x_axis.title_text": "",
+            "graph.y_axis.title_text": "",
+            "graph.x_axis.labels_enabled": false,
+            "graph.y_axis.labels_enabled": false,
+            "series_settings": {
+              "registros": {
+                "color": "#6a2b51",
+                "title": "Registros"
+              }
+            }
+          },
+          "col": 14,
+          "row": 11,
+          "size_x": 10,
+          "size_y": 7
+        },
+        {
+          "id": "registros_por_municipio",
+          "nombre": "Registros por municipio",
+          "sql": "SELECT municipio, SUM(registros) AS registros FROM v_presencia_municipios WHERE iniciativa_id NOT IN (@PUBLICAS@) [[AND iniciativa_id = {{programa}}]] [[AND municipio = {{municipio}}]] GROUP BY municipio_clave ORDER BY registros DESC LIMIT 12",
+          "display": "row",
+          "visualization_settings": {
+            "graph.dimensions": [
+              "municipio"
+            ],
+            "graph.metrics": [
+              "registros"
+            ],
+            "graph.show_values": true,
+            "graph.x_axis.title_text": "",
+            "graph.y_axis.title_text": "",
+            "graph.x_axis.labels_enabled": false,
+            "graph.y_axis.labels_enabled": false,
+            "series_settings": {
+              "registros": {
+                "color": "#7e8ba3",
+                "title": "Registros"
+              }
+            }
+          },
+          "col": 0,
+          "row": 18,
+          "size_x": 10,
+          "size_y": 7
         },
         {
           "id": "municipios_lista",
           "nombre": "Presencia por municipio",
-          "sql": "SELECT estado AS \"Estado\", municipio AS \"Municipio\", SUM(registros) AS \"Registros\", SUM(personas) AS \"Personas\" FROM v_presencia_municipios WHERE 1=1 [[AND iniciativa_id = {{programa}}]] GROUP BY estado, municipio ORDER BY estado, municipio",
+          "sql": "SELECT municipio AS \"Municipio\", estado AS \"Estado\", SUM(registros) AS \"Registros\", SUM(personas) AS \"Personas con registro\" FROM v_presencia_municipios WHERE iniciativa_id NOT IN (@PUBLICAS@) [[AND iniciativa_id = {{programa}}]] [[AND municipio = {{municipio}}]] GROUP BY estado, municipio_clave ORDER BY SUM(registros) DESC",
           "display": "table",
-          "visualization_settings": {},
-          "col": 0,
-          "row": 12,
-          "size_x": 24,
-          "size_y": 8
+          "visualization_settings": {
+            "table.pivot": false
+          },
+          "col": 10,
+          "row": 18,
+          "size_x": 14,
+          "size_y": 7
         }
       ]
     },
     {
       "nombre": "Calidad",
+      "clave": "calidad",
+      "descripcion": "Calidad de cada reporte cargado, problemas encontrados y pares de personas por decidir.",
       "preguntas": [
         {
-          "id": "estrellas",
-          "nombre": "Estrellas por reporte",
-          "sql": "SELECT nombre AS \"Reporte\", iniciativa_id AS \"Programa\", estrellas AS \"Estrellas\", puntaje AS \"Puntaje\" FROM (SELECT DISTINCT nombre, iniciativa_id, estrellas, puntaje FROM v_calidad) ORDER BY estrellas DESC",
-          "display": "table",
-          "visualization_settings": {},
+          "id": "reportes",
+          "nombre": "Reportes cargados",
+          "sql": "SELECT COUNT(DISTINCT fuente) AS total FROM v_calidad",
+          "display": "scalar",
+          "visualization_settings": {
+            "scalar.field": "total"
+          },
           "col": 0,
           "row": 0,
-          "size_x": 16,
-          "size_y": 6
+          "size_x": 6,
+          "size_y": 3
+        },
+        {
+          "id": "filas_agregadas",
+          "nombre": "Filas agregadas",
+          "sql": "SELECT COALESCE(SUM(filas_nuevas), 0) AS total FROM (SELECT DISTINCT fuente, filas_nuevas FROM v_calidad)",
+          "display": "scalar",
+          "visualization_settings": {
+            "scalar.field": "total"
+          },
+          "col": 6,
+          "row": 0,
+          "size_x": 6,
+          "size_y": 3
+        },
+        {
+          "id": "filas_omitidas",
+          "nombre": "Filas repetidas que no se contaron",
+          "sql": "SELECT COALESCE(SUM(filas_omitidas), 0) AS total FROM (SELECT DISTINCT fuente, filas_omitidas FROM v_calidad)",
+          "display": "scalar",
+          "visualization_settings": {
+            "scalar.field": "total"
+          },
+          "col": 12,
+          "row": 0,
+          "size_x": 6,
+          "size_y": 3
         },
         {
           "id": "pares_pendientes",
           "nombre": "Pares de personas por decidir",
-          "sql": "SELECT COUNT(*) AS pares_pendientes FROM v_pares_pendientes",
+          "sql": "SELECT COUNT(*) AS total FROM v_pares_pendientes",
           "display": "scalar",
           "visualization_settings": {
-            "scalar.field": "pares_pendientes"
+            "scalar.field": "total"
           },
-          "col": 16,
+          "col": 18,
           "row": 0,
-          "size_x": 8,
-          "size_y": 6
+          "size_x": 6,
+          "size_y": 3
+        },
+        {
+          "id": "estrellas",
+          "nombre": "Calidad por reporte",
+          "sql": "SELECT nombre AS \"Reporte\", @PROGRAMA(iniciativa_id)@ AS \"Programa\", substr('★★★★★', 1, estrellas) || substr('☆☆☆☆☆', 1, 5 - estrellas) AS \"Calidad\", puntaje AS \"Puntaje\", filas_nuevas AS \"Filas agregadas\", filas_omitidas AS \"Filas omitidas\", SUM(problemas) AS \"Problemas\" FROM v_calidad GROUP BY fuente ORDER BY puntaje DESC, nombre",
+          "display": "table",
+          "visualization_settings": {
+            "table.pivot": false,
+            "column_settings": {
+              "[\"name\",\"Puntaje\"]": {
+                "decimals": 0
+              }
+            }
+          },
+          "col": 0,
+          "row": 3,
+          "size_x": 24,
+          "size_y": 7
         },
         {
           "id": "problemas_por_regla",
-          "nombre": "Problemas por regla",
-          "sql": "SELECT regla, SUM(problemas) AS problemas FROM v_calidad WHERE regla IS NOT NULL GROUP BY regla ORDER BY problemas DESC",
-          "display": "bar",
+          "nombre": "Problemas por tipo",
+          "sql": "SELECT CASE regla WHEN 'faltante' THEN 'Dato faltante' WHEN 'fecha_invalida' THEN 'Fecha inválida' WHEN 'fecha_futura' THEN 'Fecha futura' WHEN 'ciudad_desconocida' THEN 'Ciudad desconocida' WHEN 'id_invalido' THEN 'ID inválido' WHEN 'edad_inconsistente' THEN 'Edad inconsistente' WHEN 'fila_repetida' THEN 'Fila repetida en el archivo' WHEN 'fila_ya_cargada' THEN 'Fila ya cargada antes' WHEN 'posible_correccion' THEN 'Posible corrección' WHEN 'tipo_desconocido' THEN 'Tipo desconocido' ELSE regla END AS problema, SUM(problemas) AS problemas FROM v_calidad WHERE regla IS NOT NULL GROUP BY regla ORDER BY problemas DESC",
+          "display": "row",
           "visualization_settings": {
-            "graph.dimensions": ["regla"],
-            "graph.metrics": ["problemas"],
+            "graph.dimensions": [
+              "problema"
+            ],
+            "graph.metrics": [
+              "problemas"
+            ],
             "graph.show_values": true,
             "graph.x_axis.title_text": "",
             "graph.y_axis.title_text": "",
+            "graph.x_axis.labels_enabled": false,
+            "graph.y_axis.labels_enabled": false,
             "series_settings": {
               "problemas": {
                 "color": "#7d3b3b",
@@ -165,32 +393,143 @@
             }
           },
           "col": 0,
-          "row": 6,
-          "size_x": 12,
-          "size_y": 7
+          "row": 10,
+          "size_x": 10,
+          "size_y": 8
         },
         {
-          "id": "omitidas",
-          "nombre": "Filas omitidas por reporte",
-          "sql": "SELECT nombre AS reporte, MAX(filas_omitidas) AS filas_omitidas FROM v_calidad GROUP BY nombre ORDER BY filas_omitidas DESC",
-          "display": "bar",
+          "id": "pares_lista",
+          "nombre": "Personas que podrían ser la misma",
+          "sql": "SELECT etiqueta_a AS \"Persona A\", etiqueta_b AS \"Persona B\", motivo AS \"Motivo\", ROUND(probabilidad * 100) AS \"Parecido\" FROM v_pares_pendientes ORDER BY probabilidad DESC",
+          "display": "table",
           "visualization_settings": {
-            "graph.dimensions": ["reporte"],
-            "graph.metrics": ["filas_omitidas"],
+            "table.pivot": false,
+            "column_settings": {
+              "[\"name\",\"Parecido\"]": {
+                "suffix": " %",
+                "decimals": 0
+              }
+            }
+          },
+          "col": 10,
+          "row": 10,
+          "size_x": 14,
+          "size_y": 8
+        }
+      ]
+    },
+    {
+      "nombre": "Contexto público",
+      "clave": "contexto_publico",
+      "entornos": [
+        "real"
+      ],
+      "descripcion": "Datos abiertos oficiales de cáncer de mama y cervicouterino en Jalisco (INEGI y Secretaría de Salud).",
+      "preguntas": [
+        {
+          "id": "pub_registros",
+          "nombre": "Filas cargadas de fuentes públicas",
+          "sql": "SELECT COALESCE(SUM(filas_nuevas), 0) AS total FROM (SELECT DISTINCT fuente, filas_nuevas FROM v_calidad WHERE iniciativa_id IN (@PUBLICAS@))",
+          "display": "scalar",
+          "visualization_settings": {
+            "scalar.field": "total"
+          },
+          "col": 0,
+          "row": 0,
+          "size_x": 8,
+          "size_y": 3
+        },
+        {
+          "id": "pub_fuentes",
+          "nombre": "Fuentes oficiales cargadas",
+          "sql": "SELECT COUNT(DISTINCT fuente) AS total FROM v_calidad WHERE iniciativa_id IN (@PUBLICAS@)",
+          "display": "scalar",
+          "visualization_settings": {
+            "scalar.field": "total"
+          },
+          "col": 8,
+          "row": 0,
+          "size_x": 8,
+          "size_y": 3
+        },
+        {
+          "id": "pub_municipios",
+          "nombre": "Municipios de Jalisco con datos",
+          "sql": "SELECT COUNT(DISTINCT municipio_clave) AS total FROM v_presencia_municipios WHERE iniciativa_id IN (@PUBLICAS@)",
+          "display": "scalar",
+          "visualization_settings": {
+            "scalar.field": "total"
+          },
+          "col": 16,
+          "row": 0,
+          "size_x": 8,
+          "size_y": 3
+        },
+        {
+          "texto": "**Qué son estos datos.** Reportes de datos abiertos oficiales (INEGI y Secretaría de Salud) sobre cáncer de mama y cervicouterino en Jalisco. No traen identificador de persona: dan contexto y nunca se suman a las personas impactadas por EIRA.",
+          "display": "text",
+          "col": 0,
+          "row": 3,
+          "size_x": 24,
+          "size_y": 2
+        },
+        {
+          "id": "pub_por_fuente",
+          "nombre": "Registros por fuente",
+          "sql": "SELECT CASE nombre WHEN 'defunciones_mujeres_jalisco_c50_c53_2024.csv' THEN 'Defunciones 2024 (INEGI)' WHEN 'defunciones_jalisco_mujeres_c50_c53_mensual_2024.csv' THEN 'Defunciones por mes 2024 (INEGI)' WHEN 'egresos_hospitalarios_jalisco_c50_c53_2024.csv' THEN 'Egresos hospitalarios 2024 (Secretaría de Salud)' WHEN 'clues_unidades_salud_jalisco_2026.csv' THEN 'Unidades de salud 2026 (CLUES)' ELSE nombre END AS fuente_publica, filas_nuevas AS registros FROM (SELECT DISTINCT fuente, nombre, filas_nuevas FROM v_calidad WHERE iniciativa_id IN (@PUBLICAS@)) ORDER BY registros DESC",
+          "display": "row",
+          "visualization_settings": {
+            "graph.dimensions": [
+              "fuente_publica"
+            ],
+            "graph.metrics": [
+              "registros"
+            ],
             "graph.show_values": true,
             "graph.x_axis.title_text": "",
             "graph.y_axis.title_text": "",
+            "graph.x_axis.labels_enabled": false,
+            "graph.y_axis.labels_enabled": false,
             "series_settings": {
-              "filas_omitidas": {
-                "color": "#6a2b51",
-                "title": "Filas omitidas"
+              "registros": {
+                "color": "#7d3b3b",
+                "title": "Registros"
+              }
+            }
+          },
+          "col": 0,
+          "row": 5,
+          "size_x": 12,
+          "size_y": 8
+        },
+        {
+          "id": "pub_por_municipio",
+          "nombre": "Municipios con más registros",
+          "sql": "SELECT municipio, SUM(registros) AS registros FROM v_presencia_municipios WHERE iniciativa_id IN (@PUBLICAS@) GROUP BY municipio_clave ORDER BY registros DESC LIMIT 12",
+          "display": "row",
+          "visualization_settings": {
+            "graph.dimensions": [
+              "municipio"
+            ],
+            "graph.metrics": [
+              "registros"
+            ],
+            "graph.show_values": true,
+            "graph.x_axis.title_text": "",
+            "graph.y_axis.title_text": "",
+            "graph.x_axis.labels_enabled": false,
+            "graph.y_axis.labels_enabled": false,
+            "series_settings": {
+              "registros": {
+                "color": "#7e8ba3",
+                "title": "Registros"
               }
             }
           },
           "col": 12,
-          "row": 6,
+          "row": 5,
           "size_x": 12,
-          "size_y": 7
+          "size_y": 8
         }
       ]
     }
