@@ -3,11 +3,13 @@
 .enc-revision p { margin-block: .4rem; color: var(--tinta-suave); font-size: var(--fs-small); }
 .enc-revision .enc-error { color: var(--error); font-weight: 600; }
 .enc-tabla { overflow: auto; max-height: 22rem; margin-block: .75rem; }
-.enc-tabla table { width: 100%; border-spacing: 0; text-align: left; font-size: var(--fs-small); }
+.enc-tabla table { width: 100%; min-width: 16rem; border-spacing: 0; text-align: left; font-size: var(--fs-small); }
 .enc-tabla th, .enc-tabla td { padding: .5rem; border-bottom: var(--border); overflow-wrap: anywhere; }
 .enc-tabla thead th { position: sticky; top: 0; background: var(--papel-2); font-weight: 650; }
 .enc-tabla tbody th { font-weight: 500; }
-.enc-chip { display: inline-block; padding: .15rem .5rem; border-radius: var(--r-pill); background: var(--papel-2); font-variant-numeric: tabular-nums; }
+.enc-chip { display: inline-block; padding: .15rem .5rem; border-radius: var(--r-pill); background: var(--papel-2); font-variant-numeric: tabular-nums; white-space: nowrap; }
+/* En la columna angosta del recibo, «Confianza» y «100 %» no se parten. */
+.enc-tabla th:last-child, .enc-tabla td:last-child { width: 1%; white-space: nowrap; overflow-wrap: normal; }
 .enc-tabla tr[data-sin-campo="true"] { color: #704600; background-color: #fff8e6; }
 .enc-tabla tr[data-sin-campo="true"] .enc-chip { background: #ffebb6; }
 .enc-resultado summary { cursor: pointer; color: var(--vino); font-size: var(--fs-small); padding-block: .4rem; }
