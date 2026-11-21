@@ -8,7 +8,7 @@ import { Valkey } from 'iovalkey';
 import {
   anom, bitacora, campoConteo, cnt, contrato, fuente, fuentes, nac, omitidas,
   pares, perCerteza, perCiudad, perPeriodo, perPrograma, perServicio, perTipo,
-  perTodas, sinid, trabajo, trabajos, valores,
+  perTodas, presencia, sinid, trabajo, trabajos, valores,
 } from '../lib/claves';
 
 const v = new Valkey(
@@ -22,6 +22,15 @@ const MEL = 'melenas-en-movimiento';
 const CIUDADES = [
   'Zapotlán el Grande', 'Sayula', 'Gómez Farías', 'Tapalpa', 'Jocotepec', 'San Martín Hidalgo',
 ];
+// Clave INEGI de cada municipio de la semilla (los 6 son de Jalisco, clave 14).
+const MUNICIPIO: Record<string, string> = {
+  'Zapotlán el Grande': '14023',
+  'Sayula': '14082',
+  'Gómez Farías': '14079',
+  'Tapalpa': '14086',
+  'Jocotepec': '14050',
+  'San Martín Hidalgo': '14077',
+};
 const PERIODOS = ['2026-04', '2026-05', '2026-06', '2026-07', '2026-08', '2026-09'];
 const CORTE = '2026-09-30';
 const CREADO = '2026-11-21T14:00:00Z';
@@ -59,6 +68,8 @@ async function registrar(
   const ciudad = ciudadDe(iPersona);
   const pipe = v.pipeline();
   pipe.hincrby(cnt(unidad), campoConteo(programa, ciudad, periodo, servicio), 1);
+  pipe.hincrby(presencia(programa), MUNICIPIO[ciudad], 1);
+  pipe.hincrby(presencia('global'), MUNICIPIO[ciudad], 1);
   pipe.sadd(perTodas(), id);
   pipe.sadd(perPrograma(programa), id);
   pipe.sadd(perTipo(unidad), id);
@@ -95,6 +106,8 @@ async function main() {
   // 8 atenciones sin persona identificada.
   for (let r = 0; r < 8; r++) {
     await v.hincrby(sinid(), campoConteo(TAM, CIUDADES[r % 6], PERIODOS[(r * 2) % 6], 'Exploración clínica'), 1);
+    await v.hincrby(presencia(TAM), MUNICIPIO[CIUDADES[r % 6]], 1);
+    await v.hincrby(presencia('global'), MUNICIPIO[CIUDADES[r % 6]], 1);
   }
 
   // Melenas en Movimiento: 60 donaciones de trenza (55 donantes) y
@@ -108,6 +121,8 @@ async function main() {
   // 5 entregas de peluca sin persona identificada.
   for (let r = 0; r < 5; r++) {
     await v.hincrby(sinid(), campoConteo(MEL, CIUDADES[(r * 2) % 6], PERIODOS[(r * 3) % 6], 'Peluca oncológica'), 1);
+    await v.hincrby(presencia(MEL), MUNICIPIO[CIUDADES[(r * 2) % 6]], 1);
+    await v.hincrby(presencia('global'), MUNICIPIO[CIUDADES[(r * 2) % 6]], 1);
   }
 
   // Fuentes importadas.

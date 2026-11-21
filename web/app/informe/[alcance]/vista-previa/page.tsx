@@ -9,9 +9,11 @@ import {
 } from '@/lib/datos';
 import { nombrePrograma, pluralRol, pluralTipo, programasDemo, rolDe } from '@/lib/catalogo';
 import { aprobarCifras } from '@/lib/acciones';
+import { presenciaDe } from '@/lib/territorio';
 import { MarcoInforme } from '@/components/marco';
 import { PieDePaso } from '@/components/pie-de-paso';
 import { ComoSeCalculo } from '@/components/como';
+import { PresenciaTerritorial } from '@/components/presencia';
 import { BarList } from '@/components/ui/bar-list';
 
 export const dynamic = 'force-dynamic';
@@ -127,6 +129,7 @@ export default async function PaginaVistaPrevia({ params }: { params: Promise<{ 
     : personasTxt(totalImpactadas);
   const metabase = enlaceMetabase();
   const totalNoImpactadas = porPrograma.reduce((s, p) => s + p.noImpactadas, 0);
+  const presencia = await presenciaDe(alcance);
 
   return (
     <MarcoInforme
@@ -223,6 +226,12 @@ export default async function PaginaVistaPrevia({ params }: { params: Promise<{ 
             title="Tablero de impacto"
             style={{ width: '100%', height: 560, border: 'var(--border)', borderRadius: 'var(--r-lg)', background: 'var(--superficie)' }}
           />
+        </div>
+      )}
+
+      {presencia && (
+        <div className="tarjeta" style={{ marginTop: 'var(--sp-4)' }}>
+          <PresenciaTerritorial resumen={presencia} />
         </div>
       )}
 

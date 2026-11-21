@@ -6,9 +6,11 @@ import {
   sinIdentificar, type ResumenTipo,
 } from '@/lib/datos';
 import { nombrePrograma, pluralRol, pluralTipo, programasDemo, rolDe } from '@/lib/catalogo';
+import { presenciaDe } from '@/lib/territorio';
 import { MarcoInforme } from '@/components/marco';
 import { PieDePaso } from '@/components/pie-de-paso';
 import { BotonImprimir } from '@/components/imprimir';
+import { PresenciaTerritorial } from '@/components/presencia';
 
 export const dynamic = 'force-dynamic';
 
@@ -45,6 +47,7 @@ export default async function PaginaExportar({ params }: { params: Promise<{ alc
   ]);
   const enAmbos = esGlobal ? (await personasEnMasDeUnPrograma(programaIds)).valor : 0;
   const totalNoImpactadas = porPrograma.reduce((s, p) => s + p.noImpactadas, 0);
+  const presencia = await presenciaDe(alcance);
 
   const hoy = new Date().toLocaleDateString('es-MX', { day: 'numeric', month: 'long', year: 'numeric' });
   const notas: string[] = [
@@ -145,6 +148,12 @@ export default async function PaginaExportar({ params }: { params: Promise<{ alc
             ))}
           </ul>
         </section>
+
+        {presencia && (
+          <section style={{ marginTop: 'var(--sp-6)' }}>
+            <PresenciaTerritorial resumen={presencia} Titulo="h3" />
+          </section>
+        )}
 
         <section style={{ marginTop: 'var(--sp-6)' }} aria-labelledby="i-advertencias">
           <h3 id="i-advertencias">Advertencias</h3>

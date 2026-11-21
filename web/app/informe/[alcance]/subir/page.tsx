@@ -4,6 +4,7 @@ import { fechaCorteDe, fuentesDe, leerInforme, trabajosDe } from '@/lib/informe'
 import { fijarFechaCorte } from '@/lib/acciones';
 import { puedeEntrar, motivoBloqueo } from '@/lib/recorrido';
 import { tiposDe } from '@/lib/catalogo';
+import { estadosCatalogo } from '@/lib/territorio';
 import { MarcoInforme } from '@/components/marco';
 import { PieDePaso } from '@/components/pie-de-paso';
 import { SubirArchivos } from '@/components/subir';
@@ -48,7 +49,7 @@ export default async function PaginaSubir({ params }: { params: Promise<{ alcanc
         </form>
       )}
 
-      <SubirArchivos alcance={alcance} tipos={tipos} fechaCorte={fechaCorte} />
+      <SubirArchivos alcance={alcance} tipos={tipos} fechaCorte={fechaCorte} estados={estadosCatalogo()} />
 
       <div className="mt-10">
         <ListaVivo alcance={alcance} inicial={{ trabajos: trabajos.valor, fuentes: fuentes.valor }} />

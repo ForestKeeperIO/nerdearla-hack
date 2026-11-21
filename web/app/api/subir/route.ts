@@ -22,6 +22,10 @@ export async function POST(request: Request) {
   const unidad = String(form.get('unidad') ?? '').trim();
   const fechaCorte = String(form.get('fecha_corte') ?? '').trim();
   const por = String(form.get('por') ?? '').trim() || 'Coordinación';
+  // Estado al que corresponden las ciudades del archivo (por defecto Jalisco, 14).
+  const estadoClave = /^\d{2}$/.test(String(form.get('estado_clave') ?? ''))
+    ? String(form.get('estado_clave'))
+    : '14';
 
   if (!(archivoSubido instanceof File) || archivoSubido.size === 0) {
     return NextResponse.json({ ok: false, error: 'Falta el archivo.' }, { status: 400 });
@@ -68,6 +72,7 @@ export async function POST(request: Request) {
     nombre,
     programa,
     unidad,
+    estado_clave: estadoClave,
     fecha_corte: fechaCorte,
     por,
     creado_en: creadoEn,
@@ -88,6 +93,7 @@ export async function POST(request: Request) {
     'nombre', nombre,
     'programa', programa,
     'unidad', unidad,
+    'estado_clave', estadoClave,
     'fecha_corte', fechaCorte,
     'por', por,
   );
