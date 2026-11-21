@@ -4,7 +4,7 @@
 import { valkey } from './valkey';
 import {
   anom, bitacora, cnt, decisiones, den, fuente, fuentes, nac, omitidas, pares,
-  perCerteza, perCiudad, perPeriodo, perPrograma, perServicio, perTodas,
+  perCerteza, perCiudad, perPeriodo, perPrograma, perServicio, perTipo, perTodas,
   sinid, trabajo, trabajos, valores,
 } from './claves';
 
@@ -12,14 +12,13 @@ import type {
   Anomalia, CiudadConteo, Cobertura, EntradaBitacora, Filtros, Fuente, Med,
   Omitida, Par, Trabajo, Unidad,
 } from './comun';
-import { NOMBRE_UNIDAD, UNIDADES } from './comun';
-import { valoresPrograma } from './catalogo';
+import { tiposDe, valoresPrograma } from './catalogo';
 
 export type {
   Anomalia, CiudadConteo, Cobertura, EntradaBitacora, Filtros, Fuente, Med,
   Omitida, Par, Trabajo, Unidad,
 };
-export { NOMBRE_UNIDAD, UNIDADES, personasTxt } from './comun';
+export { personasTxt } from './comun';
 import { personasTxt } from './comun';
 
 async function medir<T>(comando: string, f: () => Promise<T>): Promise<Med<T>> {
@@ -97,12 +96,12 @@ export async function conteoUnidad(unidad: Unidad, f: Filtros): Promise<Med<numb
   return sumaHash(cnt(unidad), f);
 }
 
-/** Unidades que tienen al menos un campo de conteo. */
-export async function unidadesConDatos(): Promise<Med<Unidad[]>> {
-  return medir(`HLEN ${UNIDADES.map((u) => cnt(u)).join(' · ')}`, async () => {
+/** De una lista de tipos de registro, los que tienen al menos un campo de conteo. */
+export async function unidadesConDatos(tipos: string[]): Promise<Med<Unidad[]>> {
+  return medir(`HLEN ${tipos.map((u) => cnt(u)).join(' · ')}`, async () => {
     const v = valkey();
     const hay: Unidad[] = [];
-    for (const u of UNIDADES) if ((await v.hlen(cnt(u))) > 0) hay.push(u);
+    for (const u of tipos) if ((await v.hlen(cnt(u))) > 0) hay.push(u);
     return hay;
   });
 }
@@ -423,6 +422,18 @@ export async function personasEntre(programaA: string, programaB: string): Promi
   );
 }
 
+/** Valores de programa presentes en los datos (tal como se guardaron: id o nombre). */
+export async function programasPresentes(): Promise<Med<string[]>> {
+  return medir(`SMEMBERS ${valores('programa')}`, async () =>
+    (await valkey().smembers(valores('programa'))).sort(),
+  );
+}
+
+/** Personas únicas de un valor de programa tal como está guardado (SCARD). */
+export async function personasDeValor(valor: string): Promise<Med<number>> {
+  return medir(`SCARD ${perPrograma(valor)}`, () => valkey().scard(perPrograma(valor)));
+}
+
 /** Filas que dos coordinaciones registraron igual (omitidas de todas las fuentes). */
 export async function filasCompartidas(): Promise<Med<number>> {
   return medir(`ZREVRANGE ${fuentes()} → LLEN ${omitidas('<id>')}`, async () => {
@@ -432,4 +443,158 @@ export async function filasCompartidas(): Promise<Med<number>> {
     for (const id of ids) n += await v.llen(omitidas(id));
     return n;
   });
+}
+
+// --- Personas por tipo de registro (donante vs. beneficiaria) ------------------
+
+/**
+ * Ids de personas impactadas de un programa: las que tienen un registro de un
+ * tipo que cuenta personas (cuenta_personas en el catálogo). Se calcula con los
+ * conjuntos eira:per:tipo:* dentro del conjunto del programa; si el motor aún
+ * no escribe esos conjuntos, cae al conjunto del programa entero.
+ */
+export async function impactadasIdsDe(programaId: string): Promise<Med<string[]>> {
+  const v = valkey();
+  const prog = await valorProgramaGuardado(programaId);
+  const clavePrograma = perPrograma(prog);
+  const tipos = tiposDe(programaId).filter((t) => t.cuenta_personas);
+  const clavesTipo: string[] = [];
+  for (const t of tipos) {
+    const k = perTipo(t.clave);
+    if (await v.exists(k)) clavesTipo.push(k);
+  }
+  const comando = clavesTipo.length
+    ? `SUNION ${clavesTipo.join(' ')} ∩ SMEMBERS ${clavePrograma}`
+    : `SMEMBERS ${clavePrograma}`;
+  return medir(comando, async () => {
+    const delPrograma = new Set(await v.smembers(clavePrograma));
+    // Programa del catálogo sin tipos que cuenten personas: no hay impactadas.
+    if (tiposDe(programaId).length > 0 && tipos.length === 0) return [];
+    if (clavesTipo.length === 0) return [...delPrograma];
+    const union = await v.sunion(...clavesTipo);
+    return union.filter((id) => delPrograma.has(id));
+  });
+}
+
+/** Ids de personas del programa que NO cuentan como impactadas (donantes, voluntarias). */
+export async function noImpactadasIdsDe(programaId: string): Promise<Med<string[]>> {
+  const v = valkey();
+  const prog = await valorProgramaGuardado(programaId);
+  const tipos = tiposDe(programaId).filter((t) => !t.cuenta_personas);
+  const clavesTipo: string[] = [];
+  for (const t of tipos) {
+    const k = perTipo(t.clave);
+    if (await v.exists(k)) clavesTipo.push(k);
+  }
+  const comando = clavesTipo.length
+    ? `SUNION ${clavesTipo.join(' ')} ∩ SMEMBERS ${perPrograma(prog)}`
+    : '(sin conjuntos por tipo)';
+  return medir(comando, async () => {
+    if (clavesTipo.length === 0) return [];
+    const delPrograma = new Set(await v.smembers(perPrograma(prog)));
+    const union = await v.sunion(...clavesTipo);
+    return union.filter((id) => delPrograma.has(id));
+  });
+}
+
+/** Personas de un tipo de registro concreto (donantes de trenza, beneficiarias de peluca). */
+export async function personasDeTipo(tipo: Unidad, programaId: string): Promise<Med<number>> {
+  const prog = await valorProgramaGuardado(programaId);
+  const ks = [perTipo(tipo), perPrograma(prog)];
+  return medir(`SINTERCARD ${ks.length} ${ks.join(' ')}`, async () =>
+    Number(await valkey().call('SINTERCARD', ks.length, ...ks)),
+  );
+}
+
+export type ResumenTipo = {
+  tipo: Unidad;
+  /** Registros contados (cnt:<tipo>). */
+  conteo: number;
+  /** Personas únicas del tipo dentro del programa; null si el motor no escribió eira:per:tipo. */
+  personas: number | null;
+  /** Si las personas de este tipo cuentan como impactadas. */
+  cuenta: boolean;
+};
+
+/** Cifras por tipo de registro de un programa: registros y personas, por separado, nunca sumadas. */
+export async function resumenTiposDe(programaId: string): Promise<ResumenTipo[]> {
+  const v = valkey();
+  const prog = await valorProgramaGuardado(programaId);
+  const f: Filtros = { programa: prog, programaAlt: valoresPrograma(programaId).find((x) => x !== prog) };
+  const lista: ResumenTipo[] = [];
+  for (const t of tiposDe(programaId)) {
+    const conteo = (await conteoUnidad(t.clave, f)).valor;
+    if (conteo === 0) continue;
+    const claveTipo = perTipo(t.clave);
+    const personas = (await v.exists(claveTipo))
+      ? Number(await v.call('SINTERCARD', 2, claveTipo, perPrograma(prog)))
+      : null;
+    lista.push({ tipo: t.clave, conteo, personas, cuenta: t.cuenta_personas });
+  }
+  return lista;
+}
+
+/** Personas que aparecen en más de un programa (unión exacta de las intersecciones por pares). */
+export async function personasEnMasDeUnPrograma(programaIds: string[]): Promise<Med<number>> {
+  const valores = await Promise.all(programaIds.map((id) => valorProgramaGuardado(id)));
+  const comandos: string[] = [];
+  for (let i = 0; i < valores.length; i++)
+    for (let j = i + 1; j < valores.length; j++)
+      comandos.push(`SINTER ${perPrograma(valores[i])} ${perPrograma(valores[j])}`);
+  return medir(comandos.join(' ; ') || '(un solo programa)', async () => {
+    const v = valkey();
+    const union = new Set<string>();
+    for (let i = 0; i < valores.length; i++) {
+      for (let j = i + 1; j < valores.length; j++) {
+        const inter = (await v.call('SINTER', perPrograma(valores[i]), perPrograma(valores[j]))) as string[];
+        for (const id of inter) union.add(id);
+      }
+    }
+    return union.size;
+  });
+}
+
+/** Edad promedio de una lista explícita de personas a la fecha de corte. */
+export async function edadPromedioIds(
+  ids: string[],
+  fechaCorte: string,
+): Promise<Med<{ promedio: number | null; n: number }>> {
+  return medir(`HMGET ${nac()} <personas>`, async () => {
+    if (ids.length === 0) return { promedio: null, n: 0 };
+    const nacimientos = await valkey().hmget(nac(), ...ids);
+    const corte = new Date(fechaCorte + 'T00:00:00Z');
+    let suma = 0;
+    let n = 0;
+    for (const s of nacimientos) {
+      if (!s) continue;
+      const d = new Date(s + 'T00:00:00Z');
+      if (isNaN(d.getTime())) continue;
+      let edad = corte.getUTCFullYear() - d.getUTCFullYear();
+      const m = corte.getUTCMonth() - d.getUTCMonth();
+      if (m < 0 || (m === 0 && corte.getUTCDate() < d.getUTCDate())) edad--;
+      if (edad >= 0 && edad < 120) {
+        suma += edad;
+        n++;
+      }
+    }
+    return { promedio: n ? Math.round((suma / n) * 10) / 10 : null, n };
+  });
+}
+
+/** Personas por ciudad dentro de una lista explícita de personas. */
+export async function personasPorCiudadIds(ids: string[]): Promise<Med<CiudadConteo[]>> {
+  const ciudades = await valkey().smembers(valores('ciudad'));
+  return medir(
+    `SMEMBERS eira:valores:ciudad → SMEMBERS eira:per:ciudad:<c> ∩ <personas>`,
+    async () => {
+      const v = valkey();
+      const set = new Set(ids);
+      const lista: CiudadConteo[] = [];
+      for (const c of ciudades.sort()) {
+        const miembros = await v.smembers(perCiudad(c));
+        lista.push({ ciudad: c, personas: miembros.filter((id) => set.has(id)).length });
+      }
+      return lista.sort((a, b) => b.personas - a.personas);
+    },
+  );
 }

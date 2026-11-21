@@ -17,15 +17,8 @@ export type Filtros = {
   servicio?: string;
 };
 
-export const UNIDADES = ['atencion', 'estudio', 'participacion', 'entrega_insumo'] as const;
-export type Unidad = (typeof UNIDADES)[number];
-
-export const NOMBRE_UNIDAD: Record<Unidad, string> = {
-  atencion: 'Atenciones',
-  estudio: 'Estudios',
-  participacion: 'Participaciones',
-  entrega_insumo: 'Entregas de insumo',
-};
+/** Clave de tipo de registro del catálogo (atencion, donacion, …). Los nombres salen del catálogo. */
+export type Unidad = string;
 
 export type Trabajo = {
   id: string;

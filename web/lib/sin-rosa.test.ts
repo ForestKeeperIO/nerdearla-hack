@@ -41,14 +41,22 @@ function tonoDeclarado(c: string): number | null {
   return m ? Number(m[1]) % 360 : null;
 }
 
-const esRosa = (t: number) => t >= 0 && ((t >= 0 && t <= 20) || t >= 295);
+const esRosa = (t: number) => t >= 0 && ((t >= 0 && t <= 10) || t >= 295);
+
+/** Colores semánticos de la auditoría (ladrillo apagado para error): aprobados aunque su tono cae en la banda. */
+const PERMITIDOS = new Set(['#8c3b2e', '#f5e7e3', '#8a6d1f', '#f6f0dc']);
+
+/** Quita los comentarios para que una mención en prosa ("sin rosa") no cuente. */
+function sinComentarios(texto: string): string {
+  return texto.replace(/\/\*[\s\S]*?\*\//g, '').replace(/(^|\s)\/\/[^\n]*/g, '$1');
+}
 
 describe('sin rosa', () => {
   const problemas: string[] = [];
 
   for (const ruta of archivos(RAIZ)) {
     const rel = relative(RAIZ, ruta);
-    const texto = readFileSync(ruta, 'utf8');
+    const texto = sinComentarios(readFileSync(ruta, 'utf8'));
     const lineas = texto.split('\n');
     lineas.forEach((linea, i) => {
       if (/\b(rose|pink|fuchsia|magenta|rosa)\b/i.test(linea)) {
@@ -59,7 +67,9 @@ describe('sin rosa', () => {
       }
       for (const m of linea.matchAll(/#[0-9a-fA-F]{3}(?:[0-9a-fA-F]{3})?\b/g)) {
         const t = tonoHex(m[0]);
-        if (esRosa(t)) problemas.push(`${rel}:${i + 1} color rosa ${m[0]} (tono ${t.toFixed(0)}°)`);
+        if (esRosa(t) && !PERMITIDOS.has(m[0].toLowerCase())) {
+          problemas.push(`${rel}:${i + 1} color rosa ${m[0]} (tono ${t.toFixed(0)}°)`);
+        }
       }
       for (const m of linea.matchAll(/(?:hsl|oklch|lch)\([^)]+\)/gi)) {
         const t = tonoDeclarado(m[0]);

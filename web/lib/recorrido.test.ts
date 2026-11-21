@@ -4,7 +4,7 @@ import {
 } from './recorrido';
 
 const base: EstadoRecorrido = {
-  alcance: 'tamizaje-rosa',
+  alcance: 'programa-a',
   fuentes: 0,
   trabajosEnCurso: 0,
   paresPendientes: 0,
@@ -24,7 +24,7 @@ const globalConTodo = (m: Partial<EstadoRecorrido> = {}): EstadoRecorrido => ({
 
 describe('informe de programa', () => {
   test('los pasos son subir, calidad, vista previa, exportar', () => {
-    expect(pasosDe('tamizaje-rosa')).toEqual(['subir', 'calidad', 'vista-previa', 'exportar']);
+    expect(pasosDe('programa-a')).toEqual(['subir', 'calidad', 'vista-previa', 'exportar']);
   });
 
   test('sin archivos el paso actual es subir y calidad está bloqueada', () => {
@@ -71,11 +71,16 @@ describe('informe global', () => {
   });
 
   test('bloqueado hasta que los dos programas tengan archivos', () => {
-    const e = globalConTodo({ programasConArchivos: 1, programasFaltantes: ['Salud que Florece'] });
+    const e = globalConTodo({ programasConArchivos: 1, programasFaltantes: ['Programa B'] });
     expect(puedeEntrar(e, 'calidad')).toBe(false);
-    expect(motivoBloqueo(e, 'calidad')).toBe('Falta subir archivos de Salud que Florece.');
-    const e0 = globalConTodo({ programasConArchivos: 0, programasFaltantes: ['Tamizaje Rosa', 'Salud que Florece'] });
-    expect(motivoBloqueo(e0, 'calidad')).toBe('Falta subir archivos de Tamizaje Rosa y Salud que Florece.');
+    expect(motivoBloqueo(e, 'calidad')).toBe('Falta subir archivos de Programa B.');
+    const e0 = globalConTodo({ programasConArchivos: 0, programasFaltantes: ['Programa A', 'Programa B'] });
+    expect(motivoBloqueo(e0, 'calidad')).toBe('Falta subir archivos de Programa A y Programa B.');
+  });
+
+  test('cero programas con archivos también bloquea', () => {
+    const e = globalConTodo({ programasConArchivos: 0, programasFaltantes: [] });
+    expect(puedeEntrar(e, 'calidad')).toBe(false);
   });
 
   test('con los dos programas, calidad abre y rige el resto de la cadena', () => {

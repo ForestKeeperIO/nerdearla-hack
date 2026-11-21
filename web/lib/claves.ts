@@ -60,6 +60,14 @@ export const perServicio = (servicio: string) => `${P}per:servicio:${servicio}`;
 /** Set: personas por nivel de certeza (`folio` o `id`). */
 export const perCerteza = (nivel: string) => `${P}per:certeza:${nivel}`;
 
+/**
+ * Set: personas con al menos un registro de ese tipo (atencion, donacion, …).
+ * Extensión propuesta del contrato (13:10): hace falta para contar por separado
+ * a las personas que solo aportan (donantes) de las que reciben (beneficiarias).
+ * Si los conjuntos no existen, el frontend cae a `per:programa`.
+ */
+export const perTipo = (tipo: string) => `${P}per:tipo:${tipo}`;
+
 /** Hash: identificador de persona → fecha de nacimiento AAAA-MM-DD. */
 export const nac = () => `${P}nac`;
 

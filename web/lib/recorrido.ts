@@ -1,7 +1,8 @@
 // Estado del recorrido guiado por informe (alcance). Puro: sin acceso a Valkey.
 // Reglas de docs/superpowers/specs/2026-11-21-impacto-eira-diseno.md.
 
-export type Alcance = 'tamizaje-rosa' | 'salud-que-florece' | 'global';
+/** Id de un programa del catálogo o 'global'. No hay ids fijos: salen de catalogos/iniciativas.json. */
+export type Alcance = string;
 
 export type Paso = 'subir' | 'calidad' | 'vista-previa' | 'exportar';
 
@@ -39,7 +40,7 @@ function requisito(e: EstadoRecorrido, p: Paso): boolean {
     case 'subir':
       return e.alcance !== 'global';
     case 'calidad':
-      if (e.alcance === 'global') return e.programasConArchivos >= 2 && e.programasFaltantes.length === 0;
+      if (e.alcance === 'global') return e.programasConArchivos > 0 && e.programasFaltantes.length === 0;
       return e.fuentes >= 1 && e.trabajosEnCurso === 0;
     case 'vista-previa':
       return e.calidadResuelta;
