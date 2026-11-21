@@ -1,6 +1,8 @@
 # Contrato de Valkey · versión 1
 
-> Adiciones del 21 nov, 13:00 (no rompen compatibilidad): `eira:informe:<alcance>` y las tres claves `eira:huellas:*`. Cada entorno (en blanco, con fuentes reales) usa un número de base distinto de Valkey, indicado en `VALKEY_URL`.
+> Adiciones del 21 nov, 13:00 (no rompen compatibilidad): `eira:informe:<alcance>` y las claves `eira:huellas:*`. Cada entorno (en blanco, con fuentes reales) usa un número de base distinto de Valkey, indicado en `VALKEY_URL`.
+>
+> Segunda pasada del motor: `programa` lleva el id de la iniciativa del catálogo; `unidad` admite `segun_fila`; el trabajo puede traer `estado_clave`; `eira:per:impactadas:<programa>` y `eira:per:donantes:<programa>` reportan por rol; `eira:huellas:contenido` ya no se usa.
 
 Valkey es el único punto de contacto entre el **procesamiento en Python** (leer Excel, deduplicar, unificar programas) y el **frontend** (subir archivos, tableros, calidad, informe). Ninguno llama al otro: los dos leen y escriben estas claves.
 
@@ -32,7 +34,13 @@ Frontend                         Valkey                              Python
 | `eira:trabajo:<trabajoId>` | Hash | Al encolar: `estado=pendiente`, `nombre`, `programa`, `unidad`, `fecha_corte`, `por`, `creado_en` |
 | `eira:decisiones` | Stream | `tipo` (`persona` o `restituir_fila`), `par` o `fuente` + `fila`, `decision` (`misma` o `distinta`), `por` |
 
-`unidad` es una de: `atencion`, `estudio`, `participacion`, `entrega_insumo`.
+`programa` lleva el `id` de la iniciativa de `catalogos/iniciativas.json`
+(`tamizaje-rosa`, `melenas-en-movimiento`, …). `unidad` es una clave de
+`tipos_de_registro` del catálogo (`atencion`, `estudio`, `participacion`,
+`entrega_insumo`, `donacion`, `producto_entregado`, `registro_publico`), o
+`segun_fila`/vacío cuando el tipo se decide por fila con la columna Tipo del
+archivo (Melenas en Movimiento). `estado_clave` es la clave INEGI de la
+entidad de las ciudades del archivo (2 dígitos; por defecto `14`, Jalisco).
 
 ## Lo que escribe Python
 
@@ -68,6 +76,8 @@ Reglas (`regla`): `faltante`, `fecha_invalida`, `fecha_futura`, `ciudad_desconoc
 |---|---|---|
 | `eira:per:todas` | Set | Todos los identificadores de persona |
 | `eira:per:programa:<programa>` | Set | Personas con al menos un registro en ese programa |
+| `eira:per:impactadas:<programa>` | Set | Personas impactadas del programa (roles beneficiaria y participante) |
+| `eira:per:donantes:<programa>` | Set | Donantes del programa (rol donante; se reportan aparte) |
 | `eira:per:ciudad:<ciudad>` | Set | Ídem por ciudad |
 | `eira:per:periodo:<AAAA-MM>` | Set | Ídem por mes |
 | `eira:per:servicio:<servicio>` | Set | Ídem por servicio |
@@ -108,8 +118,10 @@ El trabajo que encola el frontend lleva además el campo `estado_clave` (2 dígi
 | Clave | Tipo | Contenido |
 |---|---|---|
 | `eira:huellas:archivo` | Hash | sha256 de los bytes → id de fuente |
-| `eira:huellas:contenido` | Hash | huella canónica del contenido → id de fuente |
 | `eira:huellas:fila` | Hash | huella de fila → `<fuente>:<fila>` donde se contó |
+
+"Mismo contenido" no usa clave propia: se deduce de que todas las filas del
+archivo ya estaban en `eira:huellas:fila` y pertenecen a una misma fuente.
 
 ### Aviso en vivo
 

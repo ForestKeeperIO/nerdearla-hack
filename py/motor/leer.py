@@ -248,8 +248,12 @@ def leer_reporte(contenido: bytes, nombre: str,
                     except (TypeError, ValueError):
                         pass
                     break
+            # La huella usa todas las celdas: sin persona ni fecha, deduplicar
+            # solo por los campos mapeados colapsaria filas distintas.
+            contenido_fila = "|".join(norm(v) for v in celdas.values())
         else:
             cantidad = 1.0 if asistio else 0.0
+            contenido_fila = ""
 
         filas.append({
             "fila": num_fila, "id_eira": id_crudo if id_valido else "",
@@ -262,13 +266,14 @@ def leer_reporte(contenido: bytes, nombre: str,
             "municipio": lugar["municipio"],
             "asistio": asistio, "fecha": fv,
             "periodo": (fv or "")[:7], "cantidad": float(cantidad),
+            "contenido_fila": contenido_fila,
         })
 
     df = pd.DataFrame(filas, columns=["fila", "id_eira", "id_valido", "nombre_norm",
                                       "servicio", "tipo_texto", "edad", "ciudad",
                                       "estado_clave", "estado", "municipio_clave",
                                       "municipio", "asistio", "fecha", "periodo",
-                                      "cantidad"])
+                                      "cantidad", "contenido_fila"])
     df.attrs["mapeo"] = mapeo
     df.attrs["sin_personas"] = sin_personas
     df.attrs["hoja"] = hoja
