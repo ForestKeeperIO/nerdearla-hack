@@ -71,7 +71,7 @@ export async function POST(request: Request) {
   const tipos = tiposDe(programa);
   const segunFila = motorActivo() === 'motor' && unidad === 'segun_fila';
   if (!segunFila && !tipos.some((t) => t.clave === unidad)) {
-    return NextResponse.json({ ok: false, error: 'El tipo de registro no es válido para este programa.' }, { status: 400 });
+    return NextResponse.json({ ok: false, error: `Elige una unidad admitida para este programa: ${tipos.map(t=>t.plural).join(', ')}.` }, { status: 400 });
   }
 
   const bytes = Buffer.from(await archivoSubido.arrayBuffer());
