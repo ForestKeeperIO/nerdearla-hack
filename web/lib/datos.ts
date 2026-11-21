@@ -222,8 +222,16 @@ export async function coberturaPorCiudad(f: Filtros): Promise<Med<Cobertura[]>> 
 
 function aTrabajo(id: string, h: Record<string, string>): Trabajo {
   const num = (s: string | undefined) => (s ? Number(s) : 0);
+  let mapeo: Trabajo['mapeo'] = [];
+  try {
+    const campos: unknown = JSON.parse(h.mapeo ?? '[]');
+    if (Array.isArray(campos)) mapeo = campos.filter(c => typeof c?.encabezado === 'string' && typeof c?.campo === 'string')
+      .map(c => ({ encabezado: c.encabezado, campo: c.campo }));
+  } catch { /* Los trabajos anteriores pueden no tener mapeo. */ }
   return {
     id,
+    mapeo,
+    estado_clave: h.estado_clave,
     estado: h.estado ?? 'pendiente',
     nombre: h.nombre ?? '',
     programa: h.programa ?? '',

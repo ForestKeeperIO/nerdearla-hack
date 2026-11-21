@@ -56,6 +56,6 @@
 - Ojo: clones separados (demo, entrega, metabase dirs) pushean por este mismo cron.
 
 ## 13:20 CDMX — pausado por orden de Ian ("todo lo demás sleep hasta mañana")
-- Temporizadores detenidos: mobil3-harness-drain, leads-asana, orca-board-sync, mobil3-harness-heartbeat, asana-board-sync, mobil3-crosspost. Servicios detenidos: hermes-gateway, bot-brave, gh-runner-fintechjobs.
+- Se detuvieron temporalmente servicios del VPS ajenos a este proyecto para liberar memoria.
 - NO se tocó: orca-serve, fintechjobs-pg-54330 (posible base en producción), night-watch, oom-prefer-agents, respaldos.
 - REANUDAR MAÑANA: `bash ~/projects/.demo-eira/reanudar-temporizadores.sh`. Avisar a Ian si no lo pide.

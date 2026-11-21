@@ -56,7 +56,7 @@ export async function POST(request: Request) {
       { status: 400 },
     );
   }
-  if (!tiposDe(programa).some((t) => t.clave === unidad)) {
+  if (unidad !== 'segun_fila' && !tiposDe(programa).some((t) => t.clave === unidad)) {
     return NextResponse.json({ ok: false, error: 'El tipo de registro no es válido para este programa.' }, { status: 400 });
   }
 

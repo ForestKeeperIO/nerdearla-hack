@@ -1,141 +1,72 @@
 'use client';
 
-// Barra de filtros multi-selección: una fila de menús desplegables (uno por
-// dimensión) con insignia de conteo, y debajo una fila delgada de fichas con
-// los filtros activos. El estado vive en la URL: compartible y recargable.
-import { useEffect, useRef } from 'react';
-import { useRouter, usePathname, useSearchParams } from 'next/navigation';
-import { ChevronDown, X } from 'lucide-react';
-import {
-  aQuery, DIMENSIONES, ETIQUETA_DIM, etiquetaValor,
-  type Dimension, type FiltrosMulti,
-} from '@/lib/filtros-comun';
+import { useRef, useState, useTransition } from 'react';
+import { useRouter } from 'next/navigation';
+import { Link2, SlidersHorizontal, X } from 'lucide-react';
+import { consultar, type BaseFacetas } from '@/lib/facetas';
+import { aQuery, DIMENSIONES, ETIQUETA_DIM, FILTROS_VACIOS, type Dimension, type FiltrosMulti } from '@/lib/filtros-comun';
+import { Selector } from './selector';
 
-export function FiltrosBarra({
-  opciones,
-  activos,
-}: {
-  /** Valores disponibles por dimensión (vienen de eira:valores:<dim>). */
-  opciones: Record<Dimension, string[]>;
-  activos: FiltrosMulti;
-}) {
+export function FiltrosBarra({ base, activos, corte }: { base: BaseFacetas; activos: FiltrosMulti; corte: string }) {
   const router = useRouter();
-  const pathname = usePathname();
-  const sp = useSearchParams();
-  const raiz = useRef<HTMLDivElement>(null);
-
-  // Un clic fuera cierra los menús abiertos.
-  useEffect(() => {
-    function alClic(e: MouseEvent) {
-      if (!raiz.current?.contains(e.target as Node)) {
-        raiz.current?.querySelectorAll('details[open]').forEach((d) => d.removeAttribute('open'));
-      }
+  const dialog = useRef<HTMLDialogElement>(null);
+  const [pendiente, start] = useTransition();
+  const [copia, copiar] = useState('');
+  const [f, actualizar] = useState(activos);
+  const [previo, anterior] = useState(activos);
+  if (activos !== previo) { anterior(activos); actualizar(activos); }
+  const resultado = consultar(base, f);
+  const todas = consultar(base, FILTROS_VACIOS).filtros;
+  const cuenta = DIMENSIONES.reduce((n,d) => n + f[d].length, 0);
+  function navegar(next: FiltrosMulti) {
+    actualizar(next); copiar('');
+    const q = aQuery(next);
+    start(() => router.replace(q ? `/tablero?${q}` : '/tablero', {scroll:false}));
+  }
+  function cambia(dim: Dimension, vs: string[]) {
+    const next = {...f,[dim]:vs};
+    // Al cambiar el padre se conservan solo los hijos todavía compatibles.
+    for (const hijo of DIMENSIONES.slice(DIMENSIONES.indexOf(dim)+1)) {
+      const opciones = consultar(base, {...next, ...Object.fromEntries(DIMENSIONES.slice(DIMENSIONES.indexOf(hijo)).map(k=>[k,[]]))}).filtros[hijo];
+      next[hijo] = next[hijo].filter(v => opciones.some(o => o.valor === v && o.cuenta !== 0));
     }
-    document.addEventListener('click', alClic);
-    return () => document.removeEventListener('click', alClic);
-  }, []);
-
-  function navegar(f: FiltrosMulti) {
-    const q = aQuery(f);
-    router.replace(q ? `${pathname}?${q}` : pathname, { scroll: false });
+    navegar(next);
   }
-
-  function alterna(dim: Dimension, valor: string, marcado: boolean) {
-    const actual = new Set(activos[dim]);
-    if (marcado) actual.add(valor);
-    else actual.delete(valor);
-    navegar({ ...activos, [dim]: [...actual] });
+  const meses = resultado.filtros.periodo.filter(o => o.cuenta).map(o => o.valor);
+  const desde = new Date(`${corte.slice(0,7)}-01T00:00:00Z`);
+  desde.setUTCMonth(desde.getUTCMonth()-2);
+  const atajos = [
+    {texto:'Todo', valores:[]},
+    {texto:'Este año', valores:meses.filter(v => v.startsWith(corte.slice(0,4)))},
+    {texto:'Últimos 3 meses', valores:meses.filter(v => v >= desde.toISOString().slice(0,7) && v <= corte.slice(0,7))},
+  ];
+  function controles() {
+    return <div className="facetas-fila">{DIMENSIONES.map(d =>
+      <Selector key={d} label={ETIQUETA_DIM[d]} opciones={resultado.filtros[d]} elegidos={f[d]}
+        cambiar={vs => cambia(d,vs)} atajos={d === 'periodo' ? atajos : []} placeholder={d === 'periodo' ? 'Todo el periodo' : 'Todos'} />)}</div>;
   }
-
-  const hayActivos = DIMENSIONES.some((d) => activos[d].length > 0);
-  const totalActivos = DIMENSIONES.reduce((n, d) => n + activos[d].length, 0);
-  const sinOpciones = DIMENSIONES.every((d) => opciones[d].length === 0);
-
-  if (sinOpciones) {
-    return (
-      <p className="etiqueta" role="status">
-        Todavía no hay datos para filtrar: sube los archivos de cada programa primero.
-      </p>
-    );
-  }
-
-  return (
-    <div ref={raiz} data-parte="filtros" aria-label="Filtros del tablero">
-      <div className="filtros-fila" role="toolbar" aria-label="Elegir filtros">
-        {DIMENSIONES.map((dim) =>
-          opciones[dim].length === 0 ? null : (
-            <details key={dim} className="filtro-pop" data-dimension={dim}>
-              <summary className="btn btn--secundario btn--sm filtro-pop__boton">
-                {ETIQUETA_DIM[dim]}
-                {activos[dim].length > 0 && (
-                  <span className="filtro-pop__conteo" aria-label={`${activos[dim].length} seleccionados`}>
-                    {activos[dim].length}
-                  </span>
-                )}
-                <ChevronDown size={14} aria-hidden className="filtro-pop__flecha" />
-              </summary>
-              <div className="filtro-pop__panel" role="group" aria-label={`Opciones de ${ETIQUETA_DIM[dim]}`}>
-                <ul role="list">
-                  {opciones[dim].map((valor) => {
-                    const marcado = activos[dim].includes(valor);
-                    return (
-                      <li key={valor}>
-                        <label className="filtro-opcion" data-marcado={marcado || undefined}>
-                          <input
-                            type="checkbox"
-                            checked={marcado}
-                            onChange={(e) => alterna(dim, valor, e.target.checked)}
-                          />
-                          {etiquetaValor(dim, valor)}
-                        </label>
-                      </li>
-                    );
-                  })}
-                </ul>
-              </div>
-            </details>
-          ),
-        )}
-        {hayActivos && (
-          <button
-            type="button"
-            className="btn btn--quieto btn--sm"
-            onClick={() => navegar({ programa: [], ciudad: [], periodo: [], servicio: [] })}
-          >
-            Quitar todos ({totalActivos})
-          </button>
-        )}
-      </div>
-
-      {hayActivos && (
-        <ul
-          role="list"
-          aria-label="Filtros activos"
-          className="filtros-chips"
-        >
-          {DIMENSIONES.flatMap((dim) =>
-            activos[dim].map((valor) => (
-              <li key={`${dim}:${valor}`}>
-                <button
-                  type="button"
-                  className="filtros-chip"
-                  onClick={() => alterna(dim, valor, false)}
-                  aria-label={`Quitar filtro ${ETIQUETA_DIM[dim]}: ${etiquetaValor(dim, valor)}`}
-                >
-                  <span className="filtros-chip__dim">{ETIQUETA_DIM[dim]}</span>
-                  {etiquetaValor(dim, valor)}
-                  <X size={12} aria-hidden />
-                </button>
-              </li>
-            )),
-          )}
-        </ul>
-      )}
-
-      {/* El parámetro actual queda accesible para lectores de pantalla y depuración. */}
-      <p className="sr-only" aria-live="polite">
-        {sp.size > 0 ? `Filtros activos: ${sp.toString()}` : 'Sin filtros.'}
-      </p>
+  const chips = <div className="facetas-chips">{DIMENSIONES.flatMap(d => f[d].map(v =>
+    <button type="button" key={`${d}:${v}`} onClick={() => cambia(d,f[d].filter(x => x !== v))}>
+      {ETIQUETA_DIM[d]}: {todas[d].find(o => o.valor === v)?.texto ?? 'No disponible'} <X size={14} aria-label="Quitar" />
+    </button>))}{cuenta > 0 && <button className="quitar-todo" type="button" onClick={() => navegar(FILTROS_VACIOS)}>Limpiar todo</button>}</div>;
+  const estados = todas.estado.filter(o => f.estado.includes(o.valor)).map(o=>o.texto);
+  const n = resultado.municipios.length;
+  const resumen = `${resultado.registros} ${resultado.registros === 1 ? 'registro' : 'registros'} en ${n} ${n === 1 ? 'municipio' : 'municipios'}${estados.length ? ` de ${estados.join(', ')}` : ''}.`;
+  return <div data-parte="filtros">
+    <div className="facetas-escritorio">{controles()}</div>
+    <button type="button" className="abrir-filtros" onClick={() => dialog.current?.showModal()}><SlidersHorizontal size={17} aria-hidden />Filtros ({cuenta})</button>
+    <dialog className="hoja-filtros" ref={dialog} aria-label="Filtros del tablero">
+      <div className="hoja-titulo"><h2>Filtros</h2><button type="button" aria-label="Cerrar filtros" onClick={() => dialog.current?.close()}><X size={20} /></button></div>
+      {controles()}{chips}<p role="status">{resumen}</p><button className="mesa-boton" type="button" onClick={() => dialog.current?.close()}>Ver resultados</button>
+    </dialog>
+    {cuenta > 0 && chips}
+    <div className="facetas-pie"><p aria-live="polite" aria-atomic="true">
+      {pendiente ? 'Actualizando…' : resumen}{(f.servicio.length > 0 || f.periodo.length > 0) && ` Actividad: ${resultado.unidades.map(u => `${u.cantidad} ${u.nombre}`).join('; ') || 'sin resultados'}.`}
+      {resultado.sinCruce > 0 && ` No se pudo verificar el municipio de ${resultado.sinCruce} registros de actividad; se excluyen del desglose territorial.`}
+    </p>
+      <button type="button" onClick={async () => { try { await navigator.clipboard.writeText(window.location.href); copiar('Enlace copiado'); }
+        catch { copiar('Copia la dirección de la barra del navegador'); } }}><Link2 size={15} aria-hidden />{copia || 'Copiar enlace de esta vista'}</button>
     </div>
-  );
+    {cuenta > 0 && <p className="mesa-nota">Personas, donantes y edad: solo programa. Territorio, servicio y periodo: actividad y municipios. El cruce por lugar incluye solo registros identificados con municipio verificable.</p>}
+  </div>;
 }

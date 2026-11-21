@@ -3,8 +3,8 @@ import { exigirPaso } from '@/lib/guardia';
 import { fechaCorteDe, fuentesDe } from '@/lib/informe';
 import {
   edadPromedioIds, filtrosDe, rolesDe,
-  personasEnMasDeUnPrograma, personasPorCiudadIds, personasTxt, resumenTiposDe,
-  sinIdentificar, type Med, type ResumenTipo,
+  personasEnMasDeUnPrograma, personasTxt, resumenTiposDe,
+  sinIdentificar, type ResumenTipo,
 } from '@/lib/datos';
 import { fechaEs } from '@/lib/comun';
 import { nombrePrograma, pluralRol, pluralTipo, rolDe } from '@/lib/catalogo';
@@ -12,18 +12,16 @@ import { aprobarCifras } from '@/lib/acciones';
 import { presenciaDe } from '@/lib/territorio';
 import { MarcoInforme } from '@/components/marco';
 import { PieDePaso } from '@/components/pie-de-paso';
-import { ComoSeCalculo } from '@/components/como';
 import { PresenciaTerritorial } from '@/components/presencia';
-import { BarList } from '@/components/ui/bar-list';
 
 export const dynamic = 'force-dynamic';
 
-function Cifra({ valor, rotulo, med }: { valor: string; rotulo: string; med?: Med<unknown> }) {
+function Cifra({ valor, rotulo, regla }: { valor: string; rotulo: string; regla: string }) {
   return (
     <div>
       <p className="cifra">{valor}</p>
       <p className="rotulo-cifra">{rotulo}</p>
-      {med && <ComoSeCalculo med={med} />}
+      <details className="calculo"><summary>Cómo se calculó</summary><p>{regla}</p></details>
     </div>
   );
 }
@@ -74,10 +72,10 @@ export default async function PaginaVistaPrevia({ params }: { params: Promise<{ 
   })));
 
   const f = await filtrosDe(alcance);
-  const [sinId, edad, porCiudad] = await Promise.all([
+  const [sinId, edad, presencia] = await Promise.all([
     sinIdentificar(f),
     edadPromedioIds(idsUnicos, corte),
-    personasPorCiudadIds(idsUnicos),
+    presenciaDe(alcance),
   ]);
   const enAmbos = esGlobal ? await personasEnMasDeUnPrograma(programaIds) : null;
 
@@ -85,7 +83,6 @@ export default async function PaginaVistaPrevia({ params }: { params: Promise<{ 
     ? `${personasTxt(totalImpactadas)} – ${personasTxt(totalImpactadas + sinId.valor)}`
     : personasTxt(totalImpactadas);
   const metabase = impactoPublico({ programa: esGlobal ? [] : [alcance] });
-  const presencia = await presenciaDe(alcance);
 
   return (
     <MarcoInforme
@@ -98,37 +95,23 @@ export default async function PaginaVistaPrevia({ params }: { params: Promise<{ 
       <div className="tarjeta" style={{ padding: 0, overflow: 'hidden' }}>
         <div className="banda-cifras">
           <Cifra
-            valor={rango}
-            rotulo={
-              esGlobal
-                ? `personas impactadas (suma de los programas${sinId.valor > 0 ? '; rango: hay registros sin identificar' : ''})`
-                : sinId.valor > 0
-                  ? 'personas impactadas (rango: hay registros sin identificar)'
-                  : 'personas impactadas'
-            }
-            med={porPrograma[0]?.medIds}
+            valor={personasTxt(totalImpactadas)}
+            rotulo={esGlobal ? 'personas impactadas identificadas (suma por programa)' : 'personas impactadas identificadas'}
+            regla={`Cada persona identificada cuenta una vez por programa en el que recibió atención o participó. Corte: ${fechaEs(corte)}.`}
           />
           <Cifra
             valor={edad.valor.promedio === null ? '—' : `${edad.valor.promedio.toLocaleString('es-MX')}`}
             rotulo={edad.valor.promedio === null ? 'edad promedio (sin datos de nacimiento)' : `edad promedio, en años (${edad.valor.n} con fecha de nacimiento)`}
-            med={edad}
+            regla={`Promedio de las edades al ${fechaEs(corte)}, sin repetir personas y sin incluir fechas de nacimiento desconocidas.`}
           />
           {enAmbos ? (
-            <Cifra valor={personasTxt(enAmbos.valor)} rotulo="personas aparecen en más de un programa (dato informativo; no se resta)" med={enAmbos} />
+            <Cifra valor={personasTxt(enAmbos.valor)} rotulo="personas aparecen en más de un programa (dato informativo; no se resta)" regla="Cada persona identificada en dos o más programas cuenta una vez en este cruce." />
           ) : (
-            <Cifra valor={String(porCiudad.valor.filter((c) => c.personas > 0).length)} rotulo="ciudades con personas impactadas" />
+            <Cifra valor={String(presencia?.municipios ?? 0)} rotulo="municipios con actividad" regla="Se cuentan las claves oficiales de municipios con registros, no las distintas formas de escribir una ciudad." />
           )}
         </div>
 
-        <div style={{ borderTop: 'var(--border)', padding: 'var(--sp-6)' }}>
-          <h2 style={{ fontSize: 15 }}>Desglose por ciudad</h2>
-          <div style={{ marginTop: 'var(--sp-3)' }}>
-            <BarList
-              datos={porCiudad.valor.filter((c) => c.personas > 0).map((c) => ({ nombre: c.ciudad, valor: c.personas, texto: personasTxt(c.personas) }))}
-            />
-          </div>
-          <ComoSeCalculo med={porCiudad} />
-        </div>
+        {sinId.valor > 0 && <p className="nota-rango">Hay {sinId.valor} registros sin identificar. Rango posible: {rango}; el extremo superior no es una cifra confirmada.</p>}
       </div>
 
       {/* Programa: cada tipo de registro por separado */}

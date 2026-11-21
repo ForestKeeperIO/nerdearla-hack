@@ -3,7 +3,9 @@
 import { revalidatePath } from 'next/cache';
 import { redirect } from 'next/navigation';
 import { emitirDecision } from './datos';
-import { escribirInforme, esAlcance } from './informe';
+import { escribirInforme, esAlcance, paresDe } from './informe';
+import { pares } from './claves';
+import { valkey } from './valkey';
 import type { Alcance } from './recorrido';
 
 const POR = 'Presidencia';
@@ -14,22 +16,29 @@ function base(alcance: Alcance) {
 
 /** Decisión sobre un par de personas: XADD eira:decisiones (tipo persona). */
 export async function decidirPar(alcance: string, parId: string, decision: 'misma' | 'distinta') {
-  if (!esAlcance(alcance)) return;
-  if (decision !== 'misma' && decision !== 'distinta') return;
-  await emitirDecision({ tipo: 'persona', par: parId, decision, por: POR });
-  revalidatePath(base(alcance), 'layout');
+  return decidirPares(alcance, [parId], decision);
 }
 
 /** Decisión en masa sobre pares seleccionados: un XADD por par en eira:decisiones
     (mismo camino que la decisión individual — el procesador los aplica igual). */
 export async function decidirPares(alcance: string, parIds: string[], decision: 'misma' | 'distinta') {
-  if (!esAlcance(alcance)) return;
-  if (decision !== 'misma' && decision !== 'distinta') return;
-  for (const parId of parIds.filter((id) => typeof id === 'string' && id.length > 0)) {
+  if (!esAlcance(alcance) || !Array.isArray(parIds) || !['misma','distinta'].includes(decision)) return false;
+  const pendientes = new Set((await paresDe(alcance)).valor.filter(p => p.estado === 'pendiente').map(p => p.id));
+  const ids = [...new Set(parIds)].filter(id => pendientes.has(id));
+  for (const parId of ids) {
     await emitirDecision({ tipo: 'persona', par: parId, decision, por: POR });
+  }
+  // XADD confirma la recepción, no la decisión. La lista y la banda se vuelven
+  // a renderizar con el hash que escribió el procesador, nunca con un total local.
+  let aplicado = ids.length === 0;
+  for (let i = 0; i < 12 && !aplicado; i++) {
+    await new Promise(resolve => setTimeout(resolve, 400));
+    const filas = await valkey().hmget(pares(), ...ids);
+    aplicado = filas.every(s => s !== null && JSON.parse(s).estado === decision);
   }
   revalidatePath(base(alcance), 'layout');
   revalidatePath('/tablero');
+  return aplicado;
 }
 
 /** "Contar de todos modos" una fila omitida: XADD eira:decisiones (tipo restituir_fila). */

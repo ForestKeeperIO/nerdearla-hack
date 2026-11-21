@@ -1,9 +1,12 @@
 import type { Metadata } from "next";
 import Link from "next/link";
+import { Suspense } from "react";
 import { Montserrat, IBM_Plex_Mono, Rosarivo } from "next/font/google";
 import "./globals.css";
+import "./atlas.css";
 import { TooltipProvider } from "@/components/ui/tooltip";
 import { NavPrincipal } from "@/components/nav-principal";
+import { AccionesTablero } from "@/components/acciones-tablero";
 
 const montserrat = Montserrat({ variable: "--font-montserrat", subsets: ["latin"] });
 const plexMono = IBM_Plex_Mono({ variable: "--font-plex-mono", subsets: ["latin"], weight: ["400", "500"] });
@@ -16,31 +19,15 @@ export const metadata: Metadata = {
 };
 
 export default async function RootLayout({ children }: LayoutProps<"/">) {
-  const entorno = process.env.NOMBRE_ENTORNO ?? "Demostración";
   return (
     <html lang="es" className={`${montserrat.variable} ${plexMono.variable} ${rosarivo.variable} h-full antialiased`}>
       <body className="min-h-full">
         <TooltipProvider>
-          <header
-            className="no-imprimir sticky top-0 z-20"
-            style={{
-              borderBottom: "var(--border)",
-              background: "color-mix(in oklab, var(--papel) 92%, transparent)",
-              backdropFilter: "blur(6px)",
-            }}
-          >
-            <div className="container mastil" style={{ minHeight: 56 }}>
-              <Link
-                href="/"
-                className="no-underline"
-                style={{ fontFamily: "var(--font-display)", fontSize: 16, color: "var(--tinta)", letterSpacing: "-0.01em", whiteSpace: "nowrap" }}
-              >
-                EIRA <span className="mastil-marca">Movimiento Rosa</span>
-              </Link>
+          <header className="no-imprimir atlas-mastil">
+            <div className="atlas-mastil-interior">
+              <Link href="/" className="atlas-firma" aria-label="EIRA, inicio">EIRA</Link>
               <NavPrincipal />
-              <span className="mono etiqueta ml-auto hidden sm:inline" title="Entorno de demostración">
-                {entorno}
-              </span>
+              <Suspense fallback={null}><AccionesTablero /></Suspense>
             </div>
           </header>
           <main className="container contenido">{children}</main>

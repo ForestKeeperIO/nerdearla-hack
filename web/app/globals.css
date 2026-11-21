@@ -50,6 +50,7 @@
 }
 
 @layer base {
+  [data-slot="sidebar-wrapper"] { --sidebar-width: 16rem; --sidebar-width-icon: 3rem; }
   html, body { overflow-x: clip; }
   .btn:active { transform: translateY(1px); }
   a:active, button:active { opacity: 0.92; }
@@ -94,7 +95,7 @@
   white-space: nowrap;
 }
 .estado--listo { color: var(--tinta); background: var(--papel-2); }
-.estado--aviso { color: var(--aviso); background: var(--rubor); }
+.estado--aviso { color: var(--aviso-texto); background: var(--rubor); }
 .estado--error { color: var(--error); background: var(--rubor); }
 .estado--info { color: var(--tinta-suave); background: var(--papel-2); }
 
@@ -153,7 +154,7 @@
 .btn--secundario:hover:not(:disabled) { background: var(--papel-2); }
 .btn--quieto { background: transparent; color: var(--tinta-tenue); }
 .btn--quieto:hover:not(:disabled) { color: var(--tinta); background: var(--papel-2); }
-.btn--sm { min-height: 36px; padding: 0 var(--sp-4); font-size: var(--fs-small); }
+.btn--sm { min-height: 44px; padding: 0 var(--sp-4); font-size: var(--fs-small); }
 
 /* Desplegable "Cómo se calculó": discreto, el detalle técnico vive aquí. */
 details.calculo summary {

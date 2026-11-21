@@ -39,7 +39,7 @@ export function NavInformes({ items }: { items: ItemInforme[] }) {
                 <span className="truncate font-medium leading-snug">{it.titulo}</span>
                 <span
                   className="text-xs leading-snug"
-                  style={{ color: it.bloqueado ? 'var(--aviso)' : 'var(--tinta-tenue)' }}
+                  style={{ color: it.bloqueado ? 'var(--aviso-texto)' : 'var(--tinta-tenue)' }}
                 >
                   {it.estadoTexto}
                 </span>

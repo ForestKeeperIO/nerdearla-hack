@@ -11,6 +11,7 @@ import {
 export function IndicadorPasos({ estado, actual }: { estado: EstadoRecorrido; actual: Paso }) {
   const pasos = pasosDe(estado.alcance);
   const iActual = indicePaso(estado.alcance, actual);
+  const proximoBloqueado = pasos.find(p => !puedeEntrar(estado,p));
 
   return (
     <>
@@ -30,7 +31,7 @@ export function IndicadorPasos({ estado, actual }: { estado: EstadoRecorrido; ac
               </span>
               <span>
                 <span className="pasos__nombre">{TITULO_PASO[p]}</span>
-                {motivo && <span className="pasos__motivo">{motivo}</span>}
+                {motivo && <span className="visually-hidden">Bloqueado: {motivo}</span>}
               </span>
             </>
           );
@@ -52,7 +53,7 @@ export function IndicadorPasos({ estado, actual }: { estado: EstadoRecorrido; ac
         })}
       </nav>
       {/* Versión compacta: <640px */}
-      <div className="pasos-compacto" aria-hidden="true">
+      <div className="pasos-compacto" aria-label="Paso actual">
         <p className="etiqueta" style={{ margin: 0 }}>
           Paso {iActual + 1} de {pasos.length}: {TITULO_PASO[actual]}
         </p>
@@ -60,6 +61,7 @@ export function IndicadorPasos({ estado, actual }: { estado: EstadoRecorrido; ac
           <span style={{ width: `${((iActual + 1) / pasos.length) * 100}%` }} />
         </div>
       </div>
+      {proximoBloqueado && <p className="etiqueta pasos-ayuda">{motivoBloqueo(estado,proximoBloqueado)}</p>}
     </>
   );
 }
