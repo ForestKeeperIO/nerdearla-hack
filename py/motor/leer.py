@@ -3,8 +3,13 @@
 Detecta la fila de encabezados (aunque el archivo traiga titulo arriba),
 mapea columnas por un diccionario de encabezados conocidos y normaliza a:
 
-    fila, id_eira, id_valido, nombre_norm, servicio, edad, ciudad,
-    municipio_clave, asistio, fecha, periodo, cantidad
+    fila, id_eira, id_valido, nombre_norm, servicio, tipo_texto, edad,
+    ciudad, estado_clave, estado, municipio_clave, municipio,
+    asistio, fecha, periodo, cantidad
+
+El lugar se resuelve contra el catalogo INEGI nacional: clave de municipio
+directa si el archivo la trae, o la ciudad dentro del estado del trabajo
+(o el de la columna de estado, que manda), con alias de uso comun.
 
 Devuelve (DataFrame, anomalias). El DataFrame trae en attrs:
     mapeo: lista de {encabezado, campo, probabilidad}
@@ -22,6 +27,8 @@ from pathlib import Path
 
 import pandas as pd
 
+from db import catalogo
+
 # --- Diccionario de encabezados ------------------------------------------------
 
 CAMPOS = {
@@ -30,31 +37,38 @@ CAMPOS = {
            "id participante", "id paciente", "id usuaria"},
     "nombre": {"nombre", "nombre completo", "nombrecompleto", "participante",
                "paciente", "usuaria", "nombre de la paciente", "beneficiaria",
-               "nombre y apellidos"},
+               "nombre y apellidos", "donante", "donadora"},
     "servicio": {"estudio", "tipo de servicio", "servicio", "taller",
                  "tipo servicio", "estudio o servicio", "estudio/servicio",
                  "tipo de estudio", "servicio otorgado"},
-    "edad": {"edad"},
+    "tipo": {"tipo", "tipo de registro", "tipo registro", "movimiento",
+             "tipo de movimiento"},
+    "edad": {"edad", "edad anios", "edad años"},
     "ciudad": {"ciudad", "municipio", "localidad", "municipio o localidad"},
+    "estado": {"estado", "entidad", "entidad federativa",
+               "estado de residencia", "entidad de residencia"},
+    "municipio_clave": {"cvegeo", "cvegeo resid", "cve geo", "cvegeo residencia",
+                        "cvegeo de residencia", "clave geoestadistica",
+                        "clave geoestadistica del municipio"},
+    "entidad_clave": {"clave entidad", "cve entidad", "cve ent",
+                      "clave de entidad"},
+    "municipio_corto": {"clave municipio", "cve municipio", "cve mun",
+                        "clave de municipio"},
     "asistio": {"asistencia", "asistio", "asistió"},
     "fecha": {"fecha", "fecha evento", "fecha_evento", "fechaevento",
               "fecha de evento", "fecha servicio", "fecha de servicio",
               "fecha atencion", "fecha de atencion"},
 }
 
+# Encabezados que significan "cuantas cosas cuenta esta fila" en reportes sin
+# identificador de persona.
+CAMPOS_CONTEO = {"total", "cantidad", "conteo", "registros", "casos",
+                 "defunciones", "defunciones mujeres", "defunciones_mujeres",
+                 "egresos", "personas", "eventos", "unidades",
+                 "estudios realizados", "estudios_realizados", "n"}
+
 MESES = ("ene", "feb", "mar", "abr", "may", "jun",
          "jul", "ago", "sep", "oct", "nov", "dic")
-
-MUNICIPIOS: dict[str, tuple[str, str]] = {}  # nombre normalizado -> (oficial, cvegeo)
-
-
-def _cargar_municipios() -> None:
-    ruta = Path(__file__).resolve().parents[2] / "publicos" / "jalisco_mun_denominadores_2020.csv"
-    if MUNICIPIOS or not ruta.exists():
-        return
-    with ruta.open(encoding="utf-8") as f:
-        for r in _csv.DictReader(f):
-            MUNICIPIOS[norm(r["nom_mun"])] = (r["nom_mun"], r["cvegeo"])
 
 
 def norm(texto) -> str:
@@ -67,7 +81,7 @@ def norm(texto) -> str:
 
 
 def _norm_encabezado(texto) -> str:
-    return re.sub(r"[_\-./]+", " ", norm(texto))
+    return re.sub(r"[_\-./]+", " ", norm(texto)).strip()
 
 
 def _parse_fecha(v):
@@ -134,8 +148,8 @@ def _leer_tabla(contenido: bytes, nombre: str) -> tuple[pd.DataFrame, str]:
     return mejor, mejor_hoja
 
 
-def leer_reporte(contenido: bytes, nombre: str) -> tuple[pd.DataFrame, list[dict]]:
-    _cargar_municipios()
+def leer_reporte(contenido: bytes, nombre: str,
+                 estado_clave: str = "14") -> tuple[pd.DataFrame, list[dict]]:
     tabla, hoja = _leer_tabla(contenido, nombre)
 
     # Fila de encabezados: la de mayor puntaje entre las primeras 10.
@@ -161,6 +175,7 @@ def leer_reporte(contenido: bytes, nombre: str) -> tuple[pd.DataFrame, list[dict
             mapeo.append({"encabezado": enc, "campo": campo, "probabilidad": 0.97})
 
     sin_personas = "id" not in usados and "nombre" not in usados
+    trae_ciudad = "ciudad" in usados
 
     anomalias, filas = [], []
     for idx, raw in datos.iterrows():
@@ -196,13 +211,16 @@ def leer_reporte(contenido: bytes, nombre: str) -> tuple[pd.DataFrame, list[dict
                               "detalle": "Formato de fecha no reconocido"})
 
         ciudad_cruda = str(col("ciudad") or "").strip()
-        municipio = MUNICIPIOS.get(norm(ciudad_cruda))
-        if ciudad_cruda and col_campo and any(c == "ciudad" for c in col_campo.values()):
-            if not municipio:
-                anomalias.append({"fila": num_fila, "regla": "ciudad_desconocida",
-                                  "campo": "ciudad",
-                                  "detalle": "Municipio no reconocido en el catalogo"})
-        ciudad = municipio[0] if municipio else (ciudad_cruda or "")
+        lugar = catalogo.resolver_lugar(
+            ciudad_cruda, estado_clave,
+            estado_texto=str(col("estado") or ""),
+            municipio_clave=str(col("municipio_clave") or ""),
+            entidad_clave=str(col("entidad_clave") or ""),
+            municipio_corto=str(col("municipio_corto") or ""))
+        if trae_ciudad and ciudad_cruda and not lugar["resuelto"]:
+            anomalias.append({"fila": num_fila, "regla": "ciudad_desconocida",
+                              "campo": "ciudad",
+                              "detalle": "Municipio no reconocido en el catalogo"})
 
         av = norm(col("asistio"))
         asistio = av not in NO  # vacio u otro valor cuentan como asistencia
@@ -215,31 +233,42 @@ def leer_reporte(contenido: bytes, nombre: str) -> tuple[pd.DataFrame, list[dict
             except (TypeError, ValueError):
                 pass
 
+        tipo_texto = str(col("tipo") or "").strip()
+
         if sin_personas:
+            # Sin identificador: una fila cuenta 1, salvo que una columna
+            # traiga el conteo agregado ("defunciones_mujeres", "total", …).
             cantidad = 1.0
             for e, v in celdas.items():
-                if col_campo.get(e) in ("edad", "fecha") or v is None:
+                if col_campo.get(e) is not None or v is None:
                     continue
-                try:
-                    cantidad = float(str(v).replace(",", "."))
+                if _norm_encabezado(e) in CAMPOS_CONTEO:
+                    try:
+                        cantidad = float(str(v).replace(",", "."))
+                    except (TypeError, ValueError):
+                        pass
                     break
-                except (TypeError, ValueError):
-                    continue
         else:
             cantidad = 1.0 if asistio else 0.0
 
         filas.append({
             "fila": num_fila, "id_eira": id_crudo if id_valido else "",
             "id_valido": id_valido, "nombre_norm": nombre_norm,
-            "servicio": str(col("servicio") or "").strip(), "edad": edad,
-            "ciudad": ciudad, "municipio_clave": municipio[1] if municipio else "",
+            "servicio": str(col("servicio") or "").strip() or tipo_texto,
+            "tipo_texto": tipo_texto, "edad": edad,
+            "ciudad": ciudad_cruda,
+            "estado_clave": lugar["estado_clave"], "estado": lugar["estado"],
+            "municipio_clave": lugar["municipio_clave"],
+            "municipio": lugar["municipio"],
             "asistio": asistio, "fecha": fv,
             "periodo": (fv or "")[:7], "cantidad": float(cantidad),
         })
 
     df = pd.DataFrame(filas, columns=["fila", "id_eira", "id_valido", "nombre_norm",
-                                      "servicio", "edad", "ciudad", "municipio_clave",
-                                      "asistio", "fecha", "periodo", "cantidad"])
+                                      "servicio", "tipo_texto", "edad", "ciudad",
+                                      "estado_clave", "estado", "municipio_clave",
+                                      "municipio", "asistio", "fecha", "periodo",
+                                      "cantidad"])
     df.attrs["mapeo"] = mapeo
     df.attrs["sin_personas"] = sin_personas
     df.attrs["hoja"] = hoja
