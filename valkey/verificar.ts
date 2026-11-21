@@ -66,9 +66,9 @@ export async function verificar(v: Valkey): Promise<Resultado[]> {
       `${miembros.length} miembros, ${fuera.length} fuera`);
   }
 
-  // 4. El cruce exacto entre los dos programas del demo.
-  const progA = process.env.VERIFICAR_PROGRAMA_A ?? 'Tamizaje Rosa';
-  const progB = process.env.VERIFICAR_PROGRAMA_B ?? 'Salud que Florece';
+  // 4. El cruce exacto entre las dos iniciativas del demo.
+  const progA = process.env.VERIFICAR_PROGRAMA_A ?? 'tamizaje-rosa';
+  const progB = process.env.VERIFICAR_PROGRAMA_B ?? 'melenas-en-movimiento';
   const cruce = await v.sintercard(2, perPrograma(progA), perPrograma(progB));
   marca(`SINTERCARD ${progA} ∩ ${progB} = ${expCruce}`, cruce === expCruce, `cruce=${cruce}`);
 
