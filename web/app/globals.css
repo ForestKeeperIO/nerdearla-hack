@@ -197,3 +197,19 @@ details.calculo .calculo__cuerpo {
   border: 1px solid var(--linea-fuerte); border-radius: var(--r-sm);
   background: var(--superficie); padding: 0 var(--sp-3); font-size: var(--fs-small);
 }
+
+/* Paso compacto en pantallas angostas (review: el stepper se encimaba <640px). */
+.pasos-compacto { display: none; }
+@media (max-width: 639px) {
+  .pasos { display: none; }
+  .pasos-compacto { display: block; }
+}
+.pasos-compacto__barra {
+  height: 4px; background: var(--linea); border-radius: 2px; overflow: hidden;
+  margin-top: var(--sp-2);
+}
+.pasos-compacto__barra > span { display: block; height: 100%; background: var(--vino); }
+.pasos__motivo {
+  display: block; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+  max-width: 22ch;
+}
