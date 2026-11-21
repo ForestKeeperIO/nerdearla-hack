@@ -3,6 +3,8 @@ import { resolve } from 'node:path';
 import { CAMPOS, type Campo, type Seleccion } from './seleccion-tablero';
 import type { Opciones } from './filtros-comun';
 import { alias } from './facetas';
+import { motorActivo } from './claves';
+import { rolesDe } from './datos';
 
 const columnas = { estado: 'r.estado_clave', municipio: 'r.municipio_clave', programa: 'r.iniciativa_id', servicio: 'r.servicio' };
 const nombres = { estado: 'r.estado', municipio: 'm.municipio', programa: 'i.nombre', servicio: 'r.servicio' };
@@ -26,8 +28,13 @@ function seleccion(f: Seleccion, excepto?: Campo) {
 export type Punto = { clave: string; nombre: string; n: number };
 export type Lugar = Punto & { estado: string; entidad: string };
 
-export function leerTablero(f: Seleccion) {
-  const db = new DatabaseSync(process.env.IMPACTO_DB || resolve('..', 'data', 'impacto.sqlite'), { readOnly: true });
+export async function leerTablero(f: Seleccion) {
+  const selma = motorActivo() === 'selma';
+  const ruta = selma ? process.env.EIRA_TABLERO_DB : process.env.IMPACTO_DB || resolve('..', 'data', 'impacto.sqlite');
+  if (!ruta) throw new Error('Falta EIRA_TABLERO_DB para el tablero de Selma');
+  const soloProgramas = !f.estado.length && !f.municipio.length && !f.servicio.length && !f.desde && !f.hasta;
+  const roles = selma && soloProgramas ? await rolesDe(f.programa) : null;
+  const db = new DatabaseSync(ruta, { readOnly: true });
   try {
     // Una transacción de lectura: ni un archivo nuevo ni una decisión de par
     // pueden cambiar la población entre el titular, su desglose y las facetas.
@@ -74,7 +81,8 @@ export function leerTablero(f: Seleccion) {
       (SELECT COUNT(*) ${fuente} WHERE r.contado=1 AND i.clase <> 'fuente_publica'
       AND r.persona_ef IS NULL) sinId, (SELECT MAX(fecha_corte) FROM fuentes) corte`).get() as
       { pares: number; sinId: number; corte: string | null };
-    return { ...kpi, ...calidad, lugares, meses, servicios, edades, opciones,
+    return { ...kpi, ...(roles && { personas: roles.totalImpactadas, donantes: roles.totalDonantes }),
+      ...calidad, lugares, meses, servicios, edades, opciones,
       conDonantes: !f.programa.length || f.programa.includes('melenas-en-movimiento') };
   } finally { db.close(); }
 }

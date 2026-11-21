@@ -4,7 +4,7 @@
 import { valkey } from './valkey';
 import {
   anom, bitacora, cnt, decisiones, den, fuente, fuentes, nac, omitidas, pares,
-  perCerteza, perCiudad, perDonantes, perImpactadas, perPeriodo, perPrograma, perServicio, perTipo, perTodas,
+  clavesRoles, perCerteza, perCiudad, perPeriodo, perPrograma, perServicio, perTipo, perTodas,
   sinid, trabajo, trabajos, valores,
 } from './claves';
 
@@ -460,10 +460,10 @@ export async function rolesDe(seleccion: string[]) {
   const presentes = (await programasPresentes()).valor;
   const programas = presentes.filter((p) => !seleccion.length || seleccion.includes(p));
   const porPrograma = await Promise.all(programas.map(async (id) => {
-    const clave = perImpactadas(id);
+    const { impactadas: clave, donantes: claveDonantes } = clavesRoles(id);
     const [medIds, donantes] = await Promise.all([
       medir(`SMEMBERS ${clave}`, () => valkey().smembers(clave)),
-      valkey().smembers(perDonantes(id)),
+      valkey().smembers(claveDonantes),
     ]);
     return { id, ids: medIds.valor, medIds, donantes };
   }));

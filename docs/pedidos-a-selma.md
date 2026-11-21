@@ -2,6 +2,8 @@
 
 Reproducción en staging con `13a806d`, archivos ficticios. Los números de línea son de `py/procesador/` en ese commit.
 
+Actualización: para la demo la integración ya publica presencia usando la ficha del trabajo y elimina bytes terminales por evento. Son recomendaciones para una futura solución nativa, no bloqueos del corte con los archivos de `datos_demo`. No activar dos escritores de presencia.
+
 | Prioridad | Dónde | Qué necesitamos y cómo comprobarlo |
 |---|---|---|
 | Bloquea los Excel de `reportes/` | `mapeo.py:26`, `iniciativas.py:17-24`, `analizar.py:187-196` | Leer el encabezado exacto `Tipo` y resolver los valores del catálogo, incluidos `Donación de trenza` y `Entrega de peluca`. Subido por `/api/subir` con `unidad=donacion`, el Excel nuestro produjo **80 donaciones y 0 entregas** en SQLite; las celdas dicen 60 y 20. Su archivo homónimo de `datos_demo` sí se lee como 40 filas de donación y 20 entregas. No cambiar el rol ni inventar beneficiarias en el tablero. |

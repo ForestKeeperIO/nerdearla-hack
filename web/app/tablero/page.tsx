@@ -22,7 +22,7 @@ function Cifra({ titulo, valor, unidad, corte, regla, id }: {
 }
 
 export default async function Tablero({ searchParams }: PageProps<'/tablero'>) {
-  const q = await searchParams, f = seleccionDe(q), d = leerTablero(f);
+  const q = await searchParams, f = seleccionDe(q), d = await leerTablero(f);
   const corte = d.corte || '';
   return <div className="atlas">
     <header className="atlas-titulo"><h1>Tablero de impacto</h1>

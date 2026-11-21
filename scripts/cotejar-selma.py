@@ -15,18 +15,26 @@ class Texto(HTMLParser):
         super().__init__()
         self.fragmentos = []
         self.oculto = False
+        self.indicadores = {}
+        self.indicador = None
 
     def handle_starttag(self, tag, attrs):
         if tag in ("script", "style"):
             self.oculto = True
+        if tag == "b":
+            self.indicador = dict(attrs).get("data-kpi")
 
     def handle_endtag(self, tag):
         if tag in ("script", "style"):
             self.oculto = False
+        if tag == "b":
+            self.indicador = None
 
     def handle_data(self, dato):
         if dato.strip() and not self.oculto:
             self.fragmentos.append(dato.strip())
+            if self.indicador:
+                self.indicadores[self.indicador] = dato.strip()
 
 
 def leer(url):
@@ -44,9 +52,9 @@ def main():
         raise SystemExit("Sin fuentes: comparar ceros no prueba una integración")
     p = Texto()
     p.feed(leer(app + "/tablero"))
-    kpi = p.fragmentos[p.fragmentos.index("Personas impactadas") + 1]
-    csv_global = csv.DictReader(io.StringIO(leer(app + "/informe/global/informe.csv")))
-    informe = next(r["valor"] for r in csv_global if r["indicador"] == "personas_impactadas")
+    kpi = p.indicadores["personas"]
+    csv_global = {r["indicador"]: r["valor"] for r in csv.DictReader(io.StringIO(leer(app + "/informe/global/informe.csv")))}
+    informe = csv_global["personas_impactadas"]
     card = next(c for c in json.loads(leer(dashboard))["dashcards"]
                 if (c.get("card") or {}).get("name") == "Personas impactadas")
     respuesta = json.loads(leer(f"{dashboard}/dashcard/{card['id']}/card/{card['card_id']}"))
@@ -63,6 +71,10 @@ def main():
     kpi_decimal = kpi.replace(",", "") if re.fullmatch(r"[0-9]{1,3}(,[0-9]{3})+", kpi) else kpi
     if not kpi_decimal == mb == informe == esperado:
         raise SystemExit("NO CORTAR: los lectores discrepan")
+    municipios = v.hlen("eira:presencia:global")
+    print(f"Presencia: Valkey={municipios}; mapa/tablero={p.indicadores['municipios']}; CSV={csv_global.get('presencia_municipios')}")
+    if not municipios or str(municipios) != p.indicadores["municipios"] or str(municipios) != csv_global.get("presencia_municipios"):
+        raise SystemExit("NO CORTAR: la presencia no concuerda")
 
 
 if __name__ == "__main__":

@@ -5,7 +5,7 @@ PartOf=eira-selma.service
 
 [Service]
 EnvironmentFile=%h/.config/eira/selma.env
-ExecStart=/bin/bash -c 'cd "$EIRA_ADAPTADOR" && exec "$SELMA_PYTHON" -m db.exportar_selma --seguir'
+ExecStart=/bin/bash -c 'cd "$EIRA_ADAPTADOR" && exec "$SELMA_PYTHON" -m db.exportar_selma --eventos'
 UMask=0077
 Restart=on-failure
 RestartSec=3

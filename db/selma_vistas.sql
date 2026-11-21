@@ -76,3 +76,28 @@ GROUP BY s.id, a.regla;
 CREATE TEMP VIEW v_pares_pendientes AS
 SELECT id, a_etiqueta AS etiqueta_a, b_etiqueta AS etiqueta_b, motivo, NULL AS probabilidad
 FROM pares WHERE estado='pendiente';
+
+-- Atlas filtrable, en una base distinta de la de Metabase. El ordinal solo
+-- identifica dentro de la foto; no exportamos HMAC, nombres, filas ni fechas de nacimiento.
+CREATE TEMP VIEW atlas_personas AS
+SELECT persona, row_number() OVER (ORDER BY persona) AS ordinal
+FROM (SELECT DISTINCT persona FROM actividad WHERE persona IS NOT NULL);
+CREATE TEMP VIEW atlas_registros AS
+SELECT a.iniciativa AS iniciativa_id, a.servicio, a.periodo, p.ordinal AS persona_ef,
+       CASE WHEN a.impactada THEN 'impactada' ELSE 'donante' END AS rol_persona,
+       1 AS contado, CASE WHEN a.objetos THEN a.cantidad ELSE 1 END AS cantidad,
+       coalesce(l.clave,'') AS municipio_clave, coalesce(l.municipio,'') AS municipio,
+       coalesce(substr(l.clave,1,2),'') AS estado_clave, coalesce(l.estado,'') AS estado
+FROM actividad a LEFT JOIN atlas_personas p ON p.persona=a.persona
+LEFT JOIN lugares l ON l.fuente=a.fuente AND l.ciudad=a.ciudad;
+CREATE TEMP VIEW atlas_edades AS
+WITH nacimientos AS (SELECT persona, max(nac) AS nac FROM actividad
+ WHERE impactada AND persona IS NOT NULL AND nac<>'' GROUP BY persona),
+corte AS (SELECT max(fecha_corte) AS fecha FROM fuentes)
+SELECT p.ordinal AS persona, cast(substr(fecha,1,4) AS integer)-cast(substr(nac,1,4) AS integer)
+       -(substr(fecha,6)<substr(nac,6)) AS edad
+FROM nacimientos n JOIN atlas_personas p USING(persona), corte WHERE nac<=fecha;
+CREATE TEMP VIEW atlas_municipios AS SELECT DISTINCT clave, municipio FROM lugares;
+CREATE TEMP VIEW atlas_roles AS SELECT 'impactada' AS clave, 1 AS cuenta_como_impactada UNION ALL SELECT 'donante',0;
+CREATE TEMP VIEW atlas_cortes AS SELECT DISTINCT fecha_corte FROM fuentes;
+CREATE TEMP VIEW atlas_pendientes AS SELECT 1 AS pendiente FROM pares WHERE estado='pendiente';
