@@ -2,10 +2,10 @@
 .demo-guia { position: fixed; inset: 0; z-index: 90; pointer-events: none; font-family: var(--bento-fuente, var(--font-eira-bento), var(--font-ui)); }
 .demo-foco {
   position: fixed; border-radius: 18px; border: 2px solid var(--vino);
-  box-shadow: 0 0 0 200vmax rgba(46, 30, 30, .34), 0 0 0 6px rgba(255, 169, 184, .45);
+  box-shadow: 0 0 0 200vmax color-mix(in srgb,var(--tinta) 36%,transparent), 0 0 0 6px color-mix(in srgb,var(--rosa) 45%,transparent);
   transition: top .45s var(--ease), left .45s var(--ease), width .45s var(--ease), height .45s var(--ease);
 }
-.demo-velo { position: fixed; inset: 0; background: rgba(46, 30, 30, .34); }
+.demo-velo { position: fixed; inset: 0; background: color-mix(in srgb,var(--tinta) 36%,transparent); }
 .demo-globo {
   position: fixed; pointer-events: auto; box-sizing: border-box;
   background: var(--superficie); color: var(--tinta);
