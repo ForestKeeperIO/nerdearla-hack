@@ -108,6 +108,9 @@ export function ListaVivo({ alcance, inicial, lectura = false }: { alcance: stri
                 <span className="etiqueta" style={{ display: 'block' }}>
                   Listo · {f.filas_nuevas} {f.filas_nuevas===1?'fila nueva':'filas nuevas'}, {f.filas_omitidas} {f.filas_omitidas===1?'omitida':'omitidas'}{datos.paresPorFuente!==undefined && `, ${datos.paresPorFuente[f.id]||0} pares detectados con esta carga`}.
                 </span>
+                {/* El mensaje del procesador dice lo que los números no: filas de totales excluidas, de qué archivo venían las omitidas. */}
+                {(() => { const m = datos.trabajos.find(t => t.fuente === f.id && t.estado === 'listo')?.mensaje;
+                  return m ? <span className="etiqueta" style={{ display: 'block' }}>{m}</span> : null; })()}
                 <MapeoProcesado columnas={mapeoPorFuente.get(f.id)} nombre={f.nombre} />
               </div>
               <span className="fila__dato"><StarRating valor={f.estrellas} etiqueta={`${f.estrellas} / 5`} /></span>

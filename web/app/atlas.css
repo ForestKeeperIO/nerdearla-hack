@@ -89,7 +89,9 @@ body:has(.atlas) footer .etiqueta { color:var(--tinta-suave); font:12px var(--be
 .bento-pares footer { margin:16px 0 0; border-top:var(--border); padding-top:12px }
 .bento-salto svg { width:16px; height:16px }
 .atlas-ranking ol,.bento-cargas ul { list-style:none; margin:0; padding:0 }
-.atlas-ranking ol:has(li:nth-child(7)),.bento-unidades { max-height:300px; overflow:auto }
+.bento-unidades { max-height:300px; overflow:auto }
+/* Hasta 8 municipios sin barra interna: una carga nueva (p. ej. Chapala, el 7.º) se ve sin desplazarse. Filas de 51 px. */
+.atlas-ranking ol:has(li:nth-child(9)) { max-height:408px; overflow:auto }
 .atlas-ranking li a,.bento-unidades dl > div { display:grid; grid-template-columns:1fr auto; gap:8px; align-items:baseline; padding-block:8px; text-decoration:none; font-size:14px }
 .atlas-ranking li span { display:flex; gap:4px; align-items:center }
 .atlas-ranking li svg { color:var(--tinta-tenue) }
