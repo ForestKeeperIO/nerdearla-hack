@@ -310,50 +310,49 @@ Valkey 6391 base 15, SQLite temporal, `IMPACTO_HMAC_KEY=eira-pruebas`.
 
 ---
 
-# NOTAS — Metabase (rama metabase, Tarea 4, segunda pasada)
+# NOTAS — Metabase (rama metabase, tercera pasada, 2026-11-21 ~14:10 CDMX)
 
-## Estado
+## Estado (comprobado, no heredado)
 
-- Metabase OSS **v0.65.6** corriendo en http://127.0.0.1:3200 (JAR en `.metabase/`,
-  base interna `.metabase/metabase.db.mv.db`, bitácora `.metabase/metabase.log`,
-  credenciales generadas en `.metabase/credenciales.json` — todo ignorado por git).
-- La base `data/impacto.sqlite` usa el **esquema real del motor**
-  (`db/esquema.sql`, ya en main); `metabase/esquema_prueba.sql` se retiró.
-- Tableros públicos, por entorno (colecciones «Impacto EIRA · Real» / «· En
-  blanco»; los títulos ya no llevan sufijo de entorno):
-  - Impacto: http://127.0.0.1:3200/public/dashboard/f62686a5-b630-4c72-948a-502228267c11
-    - Filtrado: `?programa=tamizaje-rosa` | `?programa=melenas-en-movimiento`
-  - Calidad: http://127.0.0.1:3200/public/dashboard/f0b06799-74ef-4c7a-8485-ee1f4840c4a9
-  - Entorno `blanco` y plantilla `impacto_por_programa` en
-    `metabase/enlaces.json` → `entornos.<entorno>`.
-- El filtro `programa` está conectado a las 6 preguntas de Impacto
-  (variable `{{programa}}` opcional). Verificado por la API pública: sin
-  filtro da 77 personas impactadas, con `tamizaje-rosa` da 60.
-- Paleta de EIRA en las series (vino/ciruela/pizarra), tarjetas a las 24
-  columnas, tabla «Presencia por municipio» al final (sin cobertura %).
-- **Iframe: permitido** (`frame-ancestors *`, sin `X-Frame-Options`).
-- Pruebas: `uv run --with requests,pytest pytest metabase/test_metabase.py` → 8/8.
-- Capturas: `docs/capturas/metabase-impacto{,-tamizaje,-melenas}.png` y
-  `metabase-calidad.png` (Playwright, chromium_headless_shell-1254).
+- Metabase OSS v0.65.6 en `:3200` (proceso desde este clon, `.metabase/`), con
+  túnel propio de cloudflared. La dirección pública vigente está en
+  `.metabase/url-publica` y en `metabase/enlaces.json`; el PID del túnel en
+  `.metabase/tunel.pid`. Si el túnel se reinicia cambia la dirección: volver a
+  correr `provisionar.py` con `METABASE_URL_PUBLICA=<nueva>`.
+- **Un solo juego de enlaces públicos** (sin inicio de sesión), el del entorno
+  «principal» = `blanco`, cuya conexión lee la base que escribe el motor de la
+  aplicación en línea: `/home/ian/projects/.demo-eira/datos/demo.sqlite`.
+  - Impacto: `<url>/public/dashboard/886327d0-b72a-4442-84bf-f1e55eaf9255`
+    (filtros por URL: `programa`, `mes` = AAAA-MM, `municipio`, `servicio`)
+  - Calidad: `<url>/public/dashboard/06ab8121-a7c5-499e-97f2-4d70fc4527b8`
+- El entorno `real` (colección «Impacto EIRA · Real», con el tablero «Contexto
+  público») sigue provisionado sobre `data/impacto.sqlite`, pero **sin enlace
+  público**: solo se ve con sesión de administración.
+- `data/impacto.sqlite` ya no son filas a mano: `metabase/construir_demo.py`
+  pasa `reportes/` y `reportes-reales/` por el motor real (Valkey base 11,
+  solo claves `eira:*`). `datos_prueba.py` se retiró.
+- La raíz de la dirección pública es el inicio de sesión de administración.
+  Credenciales: `~/.config/nerdearla/metabase.env` (claves
+  `METABASE_ADMIN_EMAIL`, `METABASE_ADMIN_PASSWORD`) y
+  `.metabase/credenciales.json` (claves `email`, `password`).
+- Pruebas: `uv run --with requests,pytest pytest metabase/test_metabase.py` → 9/9.
+- Capturas (instancia real, por la dirección pública, Chromium sin interfaz):
+  `docs/capturas/metabase-impacto{,-tamizaje,-melenas}.png`, `metabase-calidad.png`.
 
-## Detener / reiniciar
+## Avisos
 
-```bash
-pkill -f '.metabase/metabase.jar'
-bash metabase/arrancar.sh   # espera a /api/health; primera vez ~1-2 min
-```
-
-## Pendientes / avisos
-
-- La lista de valores del filtro «Programa» es ESTÁTICA
-  (`values_source_config.values` en `metabase/tableros.json`): si el catálogo
-  de iniciativas crece, hay que agregar el id ahí (la URL con otro id de
-  programa igual filtra, solo falta en el desplegable).
-- Metabase tarda ~90 s en arrancar la primera vez (migraciones Liquibase).
-- Al ponerlo detrás de un túnel: `METABASE_URL_PUBLICA=<url del túnel>` y
-  reprovisionar para que los enlaces públicos usen esa dirección.
-- `data/impacto.sqlite` sigue siendo ficticio: cuando el motor real escriba
-  la base, basta reconstruir y reprovisionar `--entorno real --db <ruta>`.
+- Los filtros de mes y tipo de servicio solo mueven las gráficas de actividad
+  (salen de `v_conteos`); el de municipio, las de presencia. Las cifras de
+  personas solo cambian con el programa y la edad promedio con ninguno:
+  `v_personas_por_programa` y `v_edad` no traen esas columnas. Arreglarlo
+  pide vistas nuevas en `db/esquema.sql` (del motor).
+- `v_conteos.ciudad` trae la ciudad como venía escrita («Cd. Guzmán»,
+  «Ciudad Guzmán», «San Ficticio»), no el municipio oficial.
+- El motor da 1 estrella y puntaje 0 a `tamizaje-rosa_v2.xlsx` porque cuenta
+  las 130 filas ya cargadas como problemas (`fila_ya_cargada`).
+- Colores del encabezado de las tablas (azul de Metabase): cambiarlos es
+  función de pago; las series sí usan la paleta de EIRA.
+- El frontend incrusta la clave `impacto` de `enlaces.json` sin `?programa=`.
 
 ---
 
