@@ -12,7 +12,7 @@ import pytest
 REPO = Path(__file__).resolve().parent.parent
 REPORTES = REPO / "reportes"
 
-ARCHIVOS = ["tamizaje-rosa.xlsx", "salud-que-florece.xlsx", "nutricion.xlsx",
+ARCHIVOS = ["tamizaje-rosa.xlsx", "melenas-en-movimiento.xlsx", "nutricion.xlsx",
             "reporte_final_2.xlsx", "tamizaje-rosa-reguardado.xlsx",
             "tamizaje-rosa.csv", "tamizaje-rosa_v2.xlsx"]
 
@@ -31,9 +31,12 @@ def test_encabezados_de_cada_excel():
     t = pd.read_excel(REPORTES / "tamizaje-rosa.xlsx")
     assert list(t.columns) == ["ID", "Nombre", "Estudio", "Edad", "Ciudad",
                                "Asistencia", "Fecha"]
-    s = pd.read_excel(REPORTES / "salud-que-florece.xlsx", header=2)
-    assert list(s.columns) == ["Id usuario", "NOMBRE COMPLETO", "Taller", "EDAD",
-                               "Ciudad", "Asistió", "fecha_evento"]
+    m = pd.read_excel(REPORTES / "melenas-en-movimiento.xlsx", header=2)
+    assert list(m.columns) == ["ID", "Nombre", "Edad", "Ciudad", "Fecha",
+                               "Tipo", "Largo (cm)"]
+    assert len(m) == 81  # 80 filas + fila TOTAL
+    assert m["Tipo"].value_counts().to_dict() == \
+        {"Donación de trenza": 60, "Entrega de peluca": 20}
     n = pd.read_excel(REPORTES / "nutricion.xlsx")
     assert "Tipo de servicio" in n.columns
 
@@ -41,13 +44,15 @@ def test_encabezados_de_cada_excel():
 def test_esperado_tiene_las_cifras_del_plan(esperado):
     a = esperado["archivos"]
     assert a["tamizaje-rosa.xlsx"]["asistencias"] == 120
-    assert a["salud-que-florece.xlsx"]["asistencias"] == 80
+    assert a["melenas-en-movimiento.xlsx"]["donaciones"] == 60
+    assert a["melenas-en-movimiento.xlsx"]["entregas"] == 20
+    assert a["melenas-en-movimiento.xlsx"]["sin_id"] == 12
     assert a["nutricion.xlsx"]["asistencias"] == 40
     g = esperado["globales"]
     assert g["pares_mismo_id"] == 2
     assert g["variantes_de_nombre"] == 3
     assert g["filas_compartidas_nutricion"] == 30
-    assert g["cruce_tamizaje_florece"] == 15
+    assert g["cruce_tamizaje_melenas"] == 15
 
 
 def test_copia_identica_y_reguardado():

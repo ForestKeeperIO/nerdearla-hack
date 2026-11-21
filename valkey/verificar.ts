@@ -47,12 +47,14 @@ export async function verificar(v: Valkey): Promise<Resultado[]> {
   // 2. Los conteos cuadran con lo esperado (semilla por defecto; el motor lo
   // pasa por variables de entorno con sus propios reportes de prueba).
   const expAt = Number(process.env.VERIFICAR_ATENCION ?? 160);
-  const expPa = Number(process.env.VERIFICAR_PARTICIPACION ?? 80);
   const expCruce = Number(process.env.VERIFICAR_CRUCE ?? 15);
+  const expPa = process.env.VERIFICAR_PARTICIPACION;
   const atencion = await sumaHash(v, cnt('atencion'));
-  const participacion = await sumaHash(v, cnt('participacion'));
   marca(`suma de eira:cnt:atencion = ${expAt}`, atencion === expAt, `suma=${atencion}`);
-  marca(`suma de eira:cnt:participacion = ${expPa}`, participacion === expPa, `suma=${participacion}`);
+  if (expPa !== undefined) {
+    const participacion = await sumaHash(v, cnt('participacion'));
+    marca(`suma de eira:cnt:participacion = ${expPa}`, participacion === Number(expPa), `suma=${participacion}`);
+  }
 
   // 3. Toda persona de cada programa está en el conjunto global.
   const todas = new Set(await v.smembers(perTodas()));
@@ -64,9 +66,11 @@ export async function verificar(v: Valkey): Promise<Resultado[]> {
       `${miembros.length} miembros, ${fuera.length} fuera`);
   }
 
-  // 4. El cruce exacto entre los dos primeros programas.
-  const cruce = await v.sintercard(2, perPrograma('Tamizaje Rosa'), perPrograma('Salud que Florece'));
-  marca(`SINTERCARD Tamizaje Rosa ∩ Salud que Florece = ${expCruce}`, cruce === expCruce, `cruce=${cruce}`);
+  // 4. El cruce exacto entre los dos programas del demo.
+  const progA = process.env.VERIFICAR_PROGRAMA_A ?? 'Tamizaje Rosa';
+  const progB = process.env.VERIFICAR_PROGRAMA_B ?? 'Salud que Florece';
+  const cruce = await v.sintercard(2, perPrograma(progA), perPrograma(progB));
+  marca(`SINTERCARD ${progA} ∩ ${progB} = ${expCruce}`, cruce === expCruce, `cruce=${cruce}`);
 
   // 5. Ningún valor contiene un nombre completo ficticio.
   let cursor = '0';
