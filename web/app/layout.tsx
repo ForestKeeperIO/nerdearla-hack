@@ -8,6 +8,7 @@ import "./atlas.css";
 import "./demo.css";
 import { TooltipProvider } from "@/components/ui/tooltip";
 import { NavPrincipal } from "@/components/nav-principal";
+import { GraciasJurado } from "@/components/gracias-jurado";
 import { DemoGuiado } from "@/components/demo-guiado";
 
 const montserrat = Montserrat({ variable: "--font-montserrat", subsets: ["latin"] });
@@ -43,6 +44,7 @@ export default async function RootLayout({ children }: LayoutProps<"/">) {
             <p className="etiqueta">Datos ficticios de demostración — EIRA Movimiento Rosa A.C.</p>
           </footer>
           <DemoGuiado />
+          <GraciasJurado />
         </TooltipProvider>
       </body>
     </html>
