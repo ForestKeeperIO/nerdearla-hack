@@ -24,7 +24,8 @@ export async function generarReporte(tipo:string,consulta:string) {
     const catalogo=new Set(await v.smembers(valores('servicio')));
     if(f.servicio.some(s=>!catalogo.has(s))) redirect('/reportes?aviso=seleccion');
   }
-  const revision=await revisionFuentes(), r=await informeSeleccion(q);
+  const revision=await revisionFuentes(), r=await informeSeleccion(q).catch(()=>null);
+  if(!r) redirect(`/reportes?${params}&aviso=cambio`);
   if(!r.disponible || !r.fuentes.length) redirect(`/reportes?${params}&aviso=sin-datos`);
   if(revision!==await revisionFuentes()) redirect(`/reportes?${params}&aviso=cambio`);
   const id=randomUUID(), en=Date.now(), key=reporteGuardado(id);

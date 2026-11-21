@@ -21,7 +21,7 @@ function Barras({ items }: {items: {label:string;n:number}[]}) {
   return <ul className="rayas">{items.map(s=><li key={s.label}><span>{s.label}</span><b>{cifra(s.n)}</b><i aria-hidden="true" style={{width:s.n>=5?`${100*s.n/max}%`:'0%'}}/></li>)}</ul>;
 }
 
-export function HojaReporte({tipo,q,r,guardada}:{tipo:string;q:QueryReporte;r:InformeSeleccion;guardada?:Portada}) {
+export function HojaReporte({tipo,q,r,guardada,presentes=[]}:{tipo:string;q:QueryReporte;r:InformeSeleccion;guardada?:Portada;presentes?:string[]}) {
   const {programa,f,params:url,periodo} = contextoReporte(q);
   const territorio = tipo==='territorial';
   const pdf=guardada?`${rutaEdicion(guardada.id)}/pdf`:`/reportes/${tipo}/informe.pdf?${url}`;
@@ -36,8 +36,9 @@ export function HojaReporte({tipo,q,r,guardada}:{tipo:string;q:QueryReporte;r:In
   const nacional = q.mapa==='mexico' || q.mapa==='mx' || (!q.mapa && municipios.some(m=>m.estado_clave!=='14'));
   const excluidas = r.fuentes.reduce((a,f)=>a+f.filas_omitidas,0);
   const ocultos = (excepto:string[])=>[...url.entries()].filter(([k])=>!excepto.includes(k)).map(([k,v])=><input key={k} type="hidden" name={k} value={v}/>);
+  const programas = informesActivos().filter(p=>presentes.includes(p.id)||presentes.includes(p.nombre)||f.programa.includes(p.id));
   const form = <form className="lector-filtros no-imprimir">{ocultos(['programa','mun'])}
-    <label>Programa<select name="programa" defaultValue={f.programa.join(',')||'global'}>{f.programa.length>1 && <option value={f.programa.join(',')}>{nombre}</option>}{[...informesActivos().map(p=>[p.id,p.nombre]),['global','Global']].map(([id,n])=><option key={id} value={id}>{n}</option>)}</select></label>
+    <label>Programa<select name="programa" defaultValue={f.programa.join(',')||'global'}>{f.programa.length>1 && <option value={f.programa.join(',')}>{nombre}</option>}{[...programas.map(p=>[p.id,p.nombre]),['global','Global']].map(([id,n])=><option key={id} value={id}>{n}</option>)}</select></label>
     <button className="btn btn--secundario">Consultar</button></form>;
   return <div className="archivo-eira hoja">
     {q.imprimir==='1' && <ImprimirAlAbrir/>}
