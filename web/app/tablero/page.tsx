@@ -4,6 +4,7 @@
 // calculó" siempre visibles; las unidades NUNCA se suman entre sí.
 import { Suspense } from 'react';
 import Link from 'next/link';
+import { TriangleAlert } from 'lucide-react';
 import { FiltrosBarra } from '@/components/filtros-barra';
 import { ComoSeCalculo } from '@/components/como';
 import { BarList } from '@/components/ui/bar-list';
@@ -34,7 +35,7 @@ const PARAM_DIM: Record<string, string> = {
 function enlaceMetabase(f: { programa: string[]; ciudad: string[]; periodo: string[]; servicio: string[] }): string | null {
   for (const ruta of [join(process.cwd(), '..', 'metabase', 'enlaces.json'), join(process.cwd(), 'metabase', 'enlaces.json')]) {
     try {
-      const j = JSON.parse(readFileSync(ruta, 'utf8')) as { entornos?: Record<string, Record<string, string>> } & Record<string, string>;
+      const j = JSON.parse(readFileSync(/*turbopackIgnore: true*/ ruta, 'utf8')) as { entornos?: Record<string, Record<string, string>> } & Record<string, string>;
       // El dashboard canónico es el del entorno en marcha (ENTORNO=blanco|real).
       const base = j.entornos?.[entorno()]?.impacto ?? j.impacto;
       if (!base) return null;
@@ -74,7 +75,7 @@ export default async function Tablero({ searchParams }: { searchParams: Promise<
 
   return (
     <div>
-      <p className="etiqueta mono" style={{ letterSpacing: '0.02em' }}>Global · todos los programas</p>
+      <p className="etiqueta">Global, todos los programas</p>
       <h1 className="mt-2">Tablero de impacto</h1>
       <p className="lead mt-3" style={{ maxWidth: '58ch' }}>
         Las cifras exactas de personas y servicios al corte del {fechaEs(corte)}.
@@ -92,13 +93,23 @@ export default async function Tablero({ searchParams }: { searchParams: Promise<
           activos={f}
         />
       </Suspense>
+      <p className="etiqueta" style={{ marginTop: 'var(--sp-2)' }}>
+        {hayFiltros(f)
+          ? `Filtros activos: ${f.programa.length + f.ciudad.length + f.periodo.length + f.servicio.length}. Recalculan las cifras, el desglose y la tabla de esta página. En las gráficas de Metabase, hoy solo aplica el filtro Programa.`
+          : 'Los filtros recalculan todas las cifras de esta página. En las gráficas de Metabase, hoy solo aplica el filtro Programa.'}
+      </p>
 
-      {/* Advertencias de calidad: lo que falta por decidir antes de confiar en la cifra. */}
+      {/* Advertencias de calidad: banda neutral de una línea con la acción a la derecha. */}
       {(pendientes.length > 0 || sinId.valor > 0) && (
-        <section aria-label="Advertencias de calidad" role="alert" className="estado estado--aviso mt-6" style={{ display: 'flex', flexWrap: 'wrap', gap: 'var(--sp-3)', alignItems: 'center', padding: 'var(--sp-3) var(--sp-4)' }}>
-          {pendientes.length > 0 && <span>{pendientes.length} {pendientes.length === 1 ? 'par posiblemente duplicado' : 'pares posiblemente duplicados'} por decidir.</span>}
-          {sinId.valor > 0 && <span>{sinId.valor} {sinId.valor === 1 ? 'registro no identificado' : 'registros no identificados'} (no cuentan como personas).</span>}
-          <Link href="/informe/tamizaje-rosa/calidad" className="btn btn--secundario btn--sm no-underline" style={{ marginLeft: 'auto' }}>
+        <section aria-label="Advertencias de calidad" role="alert" className="aviso-banda mt-4">
+          <TriangleAlert size={16} aria-hidden />
+          <span>
+            {[
+              pendientes.length > 0 && `${pendientes.length} ${pendientes.length === 1 ? 'par posiblemente duplicado' : 'pares posiblemente duplicados'} por decidir`,
+              sinId.valor > 0 && `${sinId.valor} ${sinId.valor === 1 ? 'registro no identificado' : 'registros no identificados'} (no cuentan como personas)`,
+            ].filter(Boolean).join('. ')}.
+          </span>
+          <Link href="/informe/tamizaje-rosa/calidad" className="btn btn--secundario btn--sm no-underline aviso-banda__accion">
             Revisar en Calidad
           </Link>
         </section>
@@ -171,13 +182,13 @@ export default async function Tablero({ searchParams }: { searchParams: Promise<
       <section aria-label="Posibles duplicados" className="tarjeta mt-8">
         <h2 style={{ fontSize: 16 }}>Posibles duplicados por decidir</h2>
         <p className="etiqueta" style={{ marginTop: 'var(--sp-1)', marginBottom: 'var(--sp-3)' }}>
-          Elige varios pares y decide de una vez; también puedes resolverlos uno a uno en Informes → Calidad.
+          Elige varios pares y decide de una vez; también puedes resolverlos uno a uno en Informes, paso Calidad.
         </p>
         <ParesMasa alcance="global" pares={pendientes} nombreFuente={nombreFuente} />
       </section>
 
       <p className="etiqueta mt-6">
-        Fuente: reportes Excel de las coordinaciones (ficticios de demostración) ·{' '}
+        Fuente: reportes Excel de las coordinaciones (ficticios de demostración) —{' '}
         <Link href="/informe" style={{ color: 'inherit', textDecoration: 'underline' }}>Ver informes</Link>
       </p>
     </div>

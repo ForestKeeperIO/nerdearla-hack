@@ -1,17 +1,25 @@
 {
+  "_nota": "Un solo juego de tableros: los que leen la base que escribe el motor. Las claves por entorno apuntan al mismo juego. La dirección base es un túnel temporal; cambia si se reinicia Metabase o su túnel.",
+  "base_de_datos": "SQLite del motor (IMPACTO_DB)",
+  "filtros": [
+    "programa",
+    "mes",
+    "municipio",
+    "servicio"
+  ],
+  "impacto": "https://conclusions-potatoes-dealt-scanners.trycloudflare.com/public/dashboard/886327d0-b72a-4442-84bf-f1e55eaf9255",
+  "impacto_por_programa": "https://conclusions-potatoes-dealt-scanners.trycloudflare.com/public/dashboard/886327d0-b72a-4442-84bf-f1e55eaf9255?programa={programa}",
+  "calidad": "https://conclusions-potatoes-dealt-scanners.trycloudflare.com/public/dashboard/06ab8121-a7c5-499e-97f2-4d70fc4527b8",
   "entornos": {
-    "real": {
-      "impacto": "http://127.0.0.1:3200/public/dashboard/f62686a5-b630-4c72-948a-502228267c11",
-      "calidad": "http://127.0.0.1:3200/public/dashboard/f0b06799-74ef-4c7a-8485-ee1f4840c4a9",
-      "impacto_por_programa": "http://127.0.0.1:3200/public/dashboard/f62686a5-b630-4c72-948a-502228267c11?programa={programa}"
-    },
     "blanco": {
-      "impacto": "http://127.0.0.1:3200/public/dashboard/886327d0-b72a-4442-84bf-f1e55eaf9255",
-      "calidad": "http://127.0.0.1:3200/public/dashboard/06ab8121-a7c5-499e-97f2-4d70fc4527b8",
-      "impacto_por_programa": "http://127.0.0.1:3200/public/dashboard/886327d0-b72a-4442-84bf-f1e55eaf9255?programa={programa}"
+      "impacto": "https://conclusions-potatoes-dealt-scanners.trycloudflare.com/public/dashboard/886327d0-b72a-4442-84bf-f1e55eaf9255",
+      "impacto_por_programa": "https://conclusions-potatoes-dealt-scanners.trycloudflare.com/public/dashboard/886327d0-b72a-4442-84bf-f1e55eaf9255?programa={programa}",
+      "calidad": "https://conclusions-potatoes-dealt-scanners.trycloudflare.com/public/dashboard/06ab8121-a7c5-499e-97f2-4d70fc4527b8"
+    },
+    "real": {
+      "impacto": "https://conclusions-potatoes-dealt-scanners.trycloudflare.com/public/dashboard/886327d0-b72a-4442-84bf-f1e55eaf9255",
+      "impacto_por_programa": "https://conclusions-potatoes-dealt-scanners.trycloudflare.com/public/dashboard/886327d0-b72a-4442-84bf-f1e55eaf9255?programa={programa}",
+      "calidad": "https://conclusions-potatoes-dealt-scanners.trycloudflare.com/public/dashboard/06ab8121-a7c5-499e-97f2-4d70fc4527b8"
     }
-  },
-  "impacto": "http://127.0.0.1:3200/public/dashboard/f62686a5-b630-4c72-948a-502228267c11",
-  "calidad": "http://127.0.0.1:3200/public/dashboard/f0b06799-74ef-4c7a-8485-ee1f4840c4a9",
-  "impacto_por_programa": "http://127.0.0.1:3200/public/dashboard/f62686a5-b630-4c72-948a-502228267c11?programa={programa}"
+  }
 }

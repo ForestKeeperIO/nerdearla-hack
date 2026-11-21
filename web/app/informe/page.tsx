@@ -45,8 +45,8 @@ export default async function Portada() {
           Sube los Excel de cada coordinación y el informe de impacto se arma solo:
           sin contar dos veces el mismo archivo, la misma fila ni la misma persona.
         </p>
-        <p className="etiqueta mono" style={{ marginTop: 'var(--sp-3)', letterSpacing: '0.06em', textTransform: 'uppercase' }}>
-          Subir → Calidad → Vista previa → Exportar
+        <p className="etiqueta mono" style={{ marginTop: 'var(--sp-3)' }}>
+          Subir, calidad, vista previa y exportar.
         </p>
         <div style={{ marginTop: 'var(--sp-6)' }}>
           <Link href={cta.href} className="btn btn--primario no-underline">{cta.texto}</Link>

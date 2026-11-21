@@ -54,7 +54,7 @@ export function IndicadorPasos({ estado, actual }: { estado: EstadoRecorrido; ac
       {/* Versión compacta: <640px */}
       <div className="pasos-compacto" aria-hidden="true">
         <p className="etiqueta" style={{ margin: 0 }}>
-          Paso {iActual + 1} de {pasos.length} · {TITULO_PASO[actual]}
+          Paso {iActual + 1} de {pasos.length}: {TITULO_PASO[actual]}
         </p>
         <div className="pasos-compacto__barra">
           <span style={{ width: `${((iActual + 1) / pasos.length) * 100}%` }} />

@@ -25,35 +25,36 @@ export default async function RootLayout({ children }: LayoutProps<"/">) {
       <body className="min-h-full">
         <TooltipProvider>
           <header
-            className="no-imprimir sticky top-0 z-20 flex items-center gap-4 px-4"
+            className="no-imprimir sticky top-0 z-20"
             style={{
-              minHeight: 52,
               borderBottom: "var(--border)",
               background: "color-mix(in oklab, var(--papel) 92%, transparent)",
               backdropFilter: "blur(6px)",
             }}
           >
-            <Link
-              href="/"
-              className="no-underline"
-              style={{ fontFamily: "var(--font-display)", fontSize: 16, color: "var(--tinta)", letterSpacing: "-0.01em" }}
-            >
-              EIRA · Impacto
-            </Link>
-            <NavPrincipal />
-            <span className="mono etiqueta ml-auto hidden sm:inline" title="Entorno de demostración">
-              {entorno}
-            </span>
-            <Link href={`/informe/${primerPrograma}/subir`} className="btn btn--primario btn--sm no-underline">
-              Subir archivos
-            </Link>
+            <div className="container flex items-center gap-4" style={{ minHeight: 52 }}>
+              <Link
+                href="/"
+                className="no-underline"
+                style={{ fontFamily: "var(--font-display)", fontSize: 16, color: "var(--tinta)", letterSpacing: "-0.01em", whiteSpace: "nowrap" }}
+              >
+                EIRA Impacto
+              </Link>
+              <NavPrincipal />
+              <span className="mono etiqueta ml-auto hidden sm:inline" title="Entorno de demostración">
+                {entorno}
+              </span>
+              <Link href={`/informe/${primerPrograma}/subir`} className="btn btn--primario btn--sm no-underline">
+                Subir archivos
+              </Link>
+            </div>
           </header>
           <main className="container flex-1" style={{ paddingBlock: "var(--sp-10)" }}>{children}</main>
           <footer
             className="no-imprimir container"
             style={{ paddingBlock: "var(--sp-8)", borderTop: "var(--border)", marginTop: "var(--sp-12)" }}
           >
-            <p className="etiqueta">Datos ficticios de demostración · EIRA Movimiento Rosa A.C.</p>
+            <p className="etiqueta">Datos ficticios de demostración — EIRA Movimiento Rosa A.C.</p>
           </footer>
         </TooltipProvider>
       </body>
