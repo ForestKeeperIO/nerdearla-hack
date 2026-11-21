@@ -86,6 +86,9 @@ export const campoConteo = (programa: string, ciudad: string, periodo: string, s
 /** Set: valores vistos de una dimensión (`programa`, `ciudad`, `periodo`, `servicio`). */
 export const valores = (dimension: string) => `${P}valores:${dimension}`;
 
+/** Hash: clave de municipio INEGI (5 dígitos) → número de registros, por alcance. */
+export const presencia = (alcance: string) => `${P}presencia:${alcance}`;
+
 // --- Decisiones pendientes y bitácora ---
 
 /** Hash: id de par → JSON { id, estado, motivo, a: { fuente, fila, etiqueta }, b: { … } }. */

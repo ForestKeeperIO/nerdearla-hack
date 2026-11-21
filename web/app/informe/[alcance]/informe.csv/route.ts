@@ -4,6 +4,7 @@ import {
 } from '@/lib/datos';
 import { esAlcance, fechaCorteDe, fuentesDe } from '@/lib/informe';
 import { nombrePrograma, pluralTipo, programasDemo } from '@/lib/catalogo';
+import { presenciaDe } from '@/lib/territorio';
 
 export const dynamic = 'force-dynamic';
 
@@ -116,6 +117,24 @@ export async function GET(_req: Request, { params }: { params: Promise<{ alcance
       `Personas únicas en ${c.ciudad}`,
       corte, nombres, advert,
     ]);
+  }
+
+  const presencia = await presenciaDe(alcance);
+  if (presencia) {
+    filas.push([
+      'presencia_municipios', presencia.municipios, 'municipio',
+      `Presencia en ${presencia.municipios} municipios de ${presencia.estados.length} ${presencia.estados.length === 1 ? 'estado' : 'estados'}`,
+      corte, nombres, advert,
+    ]);
+    for (const e of presencia.estados) {
+      for (const m of e.activos) {
+        filas.push([
+          `registros_municipio_${m.clave}`, m.registros, 'registro',
+          `Registros en ${m.nombre}, ${e.estado}`,
+          corte, nombres, advert,
+        ]);
+      }
+    }
   }
 
   const csv = '﻿' + filas.map((r) => r.map(celda).join(',')).join('\r\n') + '\r\n';

@@ -79,7 +79,7 @@
 .estado--listo { color: var(--tinta); background: var(--papel-2); }
 .estado--aviso { color: var(--aviso); background: var(--rubor); }
 .estado--error { color: var(--error); background: var(--rubor); }
-.estado--tinta-suave { color: var(--tinta-suave); background: var(--papel-2); }
+.estado--info { color: var(--tinta-suave); background: var(--papel-2); }
 
 /* Fila editorial (Revelatio): índice mono a la izquierda, título, dato a la derecha, hairline. */
 .fila {

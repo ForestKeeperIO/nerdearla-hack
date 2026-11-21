@@ -8,8 +8,8 @@ import { StarRating } from '@/components/ui/star-rating';
 type Datos = { trabajos: Trabajo[]; fuentes: Fuente[] };
 
 function estadoTrabajo(t: Trabajo): { texto: string; clase: string } {
-  if (t.estado === 'pendiente') return { texto: 'En espera', clase: 'estado--tinta-suave' };
-  if (t.estado === 'procesando') return { texto: 'Leyendo…', clase: 'estado--tinta-suave' };
+  if (t.estado === 'pendiente') return { texto: 'En espera', clase: 'estado--info' };
+  if (t.estado === 'procesando') return { texto: 'Leyendo…', clase: 'estado--info' };
   if (t.estado === 'error') return { texto: 'No se pudo leer', clase: 'estado--error' };
   if (t.estado === 'duplicado') {
     if (t.nivel_duplicado === 'mismo_contenido') return { texto: 'Ya se cargó (mismo contenido)', clase: 'estado--aviso' };
@@ -20,7 +20,7 @@ function estadoTrabajo(t: Trabajo): { texto: string; clase: string } {
     if (t.nivel_duplicado === 'traslape_parcial') return { texto: 'Listo, con filas ya contadas', clase: 'estado--aviso' };
     return { texto: 'Listo', clase: 'estado--listo' };
   }
-  return { texto: t.estado, clase: 'estado--tinta-suave' };
+  return { texto: t.estado, clase: 'estado--info' };
 }
 
 /** Lista en vivo de trabajos y archivos importados del informe (cada 2 s). */
