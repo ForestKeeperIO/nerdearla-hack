@@ -45,17 +45,6 @@ function transferir(datos:FormData, progreso:(porcentaje:number)=>void) {
   });
 }
 
-/** Propone el tipo de registro cuando el nombre del archivo lo sugiere. */
-function tipoSugerido(nombre: string, tipos: TipoOpcion[]): string {
-  const n = nombre.toLowerCase();
-  for (const t of tipos) {
-    if (n.includes(t.clave.replace('_', ' ')) || n.includes(t.clave) || n.includes(t.etiqueta.toLowerCase())) {
-      return t.clave;
-    }
-  }
-  return tipos[0]?.clave ?? '';
-}
-
 export function SubirArchivos({
   alcance,
   tipos,
@@ -86,7 +75,7 @@ export function SubirArchivos({
     const nuevos: ArchivoLocal[] = aceptados.map((f) => ({
       id: siguiente.current++,
       file: f,
-      unidad: tipoSugerido(f.name, tipos),
+      unidad: tipos[0]?.clave ?? '',
       estado: '14',
       envio: 'sin_enviar',
     }));
