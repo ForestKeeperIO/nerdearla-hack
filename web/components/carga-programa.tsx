@@ -49,7 +49,7 @@ export async function CargaPrograma({ programa:a }: {programa:string}) {
         </form>
       )}
 
-      <SubirArchivos key={alcance} alcance={alcance} tipos={tipos} fechaCorte={fechaCorte} estados={estadosCatalogo()}
+      <SubirArchivos revisarEncabezados={motorActivo() === 'selma'} key={alcance} alcance={alcance} tipos={tipos} fechaCorte={fechaCorte} estados={estadosCatalogo()}
         programas={informesActivos().map(({id,nombre,tipos_de_registro})=>({id,nombre,tipos_de_registro}))} lectura={soloLectura()} />
 
       <div className="mt-10">

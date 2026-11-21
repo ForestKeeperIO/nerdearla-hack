@@ -7,6 +7,8 @@ import { useDropzone, type FileRejection } from 'react-dropzone';
 import { FileSpreadsheet, Trash2, UploadCloud, XCircle } from 'lucide-react';
 import { toast } from 'sonner';
 import { Selector } from './selector';
+import { RevisionEncabezados } from './tabla-encabezados';
+import { revisarArchivo, type Revision } from '@/lib/encabezados';
 import { resolverNombre, SIN_ALTA } from '@/lib/programa-libre';
 import { explicarErrorCarga } from '@/lib/error-carga';
 
@@ -23,6 +25,8 @@ type ArchivoLocal = {
   envio: 'sin_enviar' | 'enviando' | 'error';
   progreso?: number;
   error?: string;
+  revision?: Revision;
+  errorRevision?: string;
 };
 
 function textoError(r: FileRejection): string {
@@ -54,6 +58,7 @@ export function SubirArchivos({
   estados,
   programas,
   lectura=false,
+  revisarEncabezados,
 }: {
   alcance: string;
   tipos: TipoOpcion[];
@@ -61,6 +66,7 @@ export function SubirArchivos({
   estados: EstadoOpcion[];
   programas: {id:string; nombre:string; tipos_de_registro:string[]}[];
   lectura?: boolean;
+  revisarEncabezados: boolean;
 }) {
   const router=useRouter();
   const [archivos, setArchivos] = useState<ArchivoLocal[]>([]);
@@ -98,7 +104,11 @@ export function SubirArchivos({
       reemplazar.current = null;
       setArchivos((a) => [...a.filter(x => x.id !== id), ...nuevos]);
     }
-  }, [tipos]);
+    if (revisarEncabezados) for (const a of nuevos.filter(a => a.envio === 'sin_enviar')) {
+      revisarArchivo(a.file).then(revision => cambiar(a.id, { revision })).catch(() =>
+        cambiar(a.id, { errorRevision: 'No se pudo leer la primera fila. Guarda una copia como .xlsx sin contraseña o CSV y vuelve a elegirla.' }));
+    }
+  }, [tipos, revisarEncabezados]);
 
   const { getRootProps, getInputProps, isDragActive, open } = useDropzone({
     onDrop: agregar,
@@ -119,7 +129,7 @@ export function SubirArchivos({
 
   async function enviar() {
     const pendientes = archivos.filter((a) => a.envio === 'sin_enviar' && a.unidad);
-    if (!pendientes.length || enviando || lectura || (libre && !libreValido)) return;
+    if (!pendientes.length || bloqueadoPorEncabezados || enviando || lectura || (libre && !libreValido)) return;
     setEnviando(true);
     let bien = 0;
     let mal = 0;
@@ -150,6 +160,7 @@ export function SubirArchivos({
   }
 
   const enviables = archivos.filter((a) => a.envio === 'sin_enviar' && a.unidad).length;
+  const bloqueadoPorEncabezados = revisarEncabezados && archivos.some(a => a.envio === 'sin_enviar' && a.revision?.faltan !== 0);
 
   return (
     <section aria-label="Subir archivos">
@@ -186,7 +197,8 @@ export function SubirArchivos({
       {archivos.length > 0 && (
         <ul className="mt-4" style={{ listStyle: 'none', padding: 0 }}>
           {archivos.map((a) => (
-            <li key={a.id} className="fila" style={{ gap: 'var(--sp-4)' }}>
+            <li key={a.id}>
+              <div className="fila" style={{ gap: 'var(--sp-4)' }}>
               <FileSpreadsheet className="size-5" style={{ color: 'var(--tinta-tenue)', flexShrink: 0 }} aria-hidden="true" />
               <span className="fila__cuerpo" style={{ display: 'flex', flexWrap: 'wrap', alignItems: 'center', gap: 'var(--sp-4)' }}>
                 <span style={{ minWidth: 0, flex: 1 }}>
@@ -217,6 +229,9 @@ export function SubirArchivos({
                   </button>
                 )}
               </span>
+              </div>
+              {revisarEncabezados && a.envio === 'sin_enviar' && <RevisionEncabezados
+                revision={a.revision} error={a.errorRevision} nombre={a.file.name} />}
             </li>
           ))}
         </ul>
@@ -224,7 +239,7 @@ export function SubirArchivos({
 
       {archivos.some((a) => a.envio === 'sin_enviar') && (
         <div className="mt-4">
-          <button type="button" className="btn btn--primario" onClick={enviar} disabled={lectura || enviando || enviables === 0 || (libre && !libreValido)}>
+          <button type="button" className="btn btn--primario" onClick={enviar} disabled={bloqueadoPorEncabezados || lectura || enviando || enviables === 0 || (libre && !libreValido)}>
             {enviando ? 'Enviando…' : `Subir ${enviables} archivo${enviables > 1 ? 's' : ''}`}
           </button>
         </div>
