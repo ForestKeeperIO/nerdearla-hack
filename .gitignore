@@ -4,18 +4,11 @@ node_modules/
 dist/
 .env
 .valkey/
-<<<<<<< HEAD
 .metabase/
 .demo/
 __pycache__/
 *.pyc
 .venv/
 reportes/agregado_publico.csv
-=======
-
-# Procesamiento en Python
-py/.estado/
-__pycache__/
 .pytest_cache/
->>>>>>> Procesamiento en Python: leer, deduplicar y escribir en Valkey
 py/.estado/
