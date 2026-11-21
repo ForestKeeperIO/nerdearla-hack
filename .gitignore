@@ -5,6 +5,7 @@ dist/
 .env
 .valkey/
 .metabase/
+.demo/
 __pycache__/
 *.pyc
 .venv/
