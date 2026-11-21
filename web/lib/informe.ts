@@ -2,13 +2,16 @@
 import { valkey } from './valkey';
 import { informe as claveInforme } from './claves';
 import { listarFuentes, listarPares, listarTrabajos } from './datos';
-import { nombrePrograma, programasDemo, valoresPrograma } from './catalogo';
+import { informesActivos, nombrePrograma, programasDemo, tiposDe, valoresPrograma } from './catalogo';
 import type { Alcance, EstadoRecorrido } from './recorrido';
 
-export const ALCANCES: Alcance[] = ['tamizaje-rosa', 'salud-que-florece', 'global'];
+/** Los informes que se muestran: los del catálogo para este entorno, más el Global. */
+export function alcancesDemo(): Alcance[] {
+  return [...informesActivos().map((i) => i.id), 'global'];
+}
 
 export function esAlcance(s: string): s is Alcance {
-  return (ALCANCES as string[]).includes(s);
+  return alcancesDemo().includes(s);
 }
 
 export type Informe = {
@@ -78,7 +81,7 @@ export async function estadoRecorrido(alcance: Alcance): Promise<EstadoRecorrido
   const programasFaltantes: string[] = [];
   if (alcance === 'global') {
     for (const p of programasDemo()) {
-      const tiene = (await fuentesDe(p.id as Alcance)).valor.length > 0;
+      const tiene = (await fuentesDe(p.id)).valor.length > 0;
       if (tiene) programasConArchivos++;
       else programasFaltantes.push(p.nombre);
     }
@@ -94,6 +97,14 @@ export async function estadoRecorrido(alcance: Alcance): Promise<EstadoRecorrido
     programasConArchivos,
     programasFaltantes,
   };
+}
+
+/** Tipos de registro que puede traer un informe: los del programa, o todos los del demo en el Global. */
+export function tiposDelAlcance(alcance: Alcance): string[] {
+  if (alcance !== 'global') return tiposDe(alcance).map((t) => t.clave);
+  const visto = new Set<string>();
+  for (const p of programasDemo()) for (const t of tiposDe(p.id)) visto.add(t.clave);
+  return [...visto];
 }
 
 /** Fecha de corte del informe: la guardada, o la más reciente de sus fuentes. */

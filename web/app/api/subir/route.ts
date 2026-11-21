@@ -1,8 +1,9 @@
 import { NextResponse } from 'next/server';
 import { randomBytes } from 'node:crypto';
 import { valkey } from '@/lib/valkey';
-import { archivo, trabajo, trabajos } from '@/lib/claves';
-import { UNIDADES } from '@/lib/comun';
+import { archivo, informe, trabajo, trabajos } from '@/lib/claves';
+import { tiposDe } from '@/lib/catalogo';
+import { esAlcance } from '@/lib/informe';
 
 export const dynamic = 'force-dynamic';
 
@@ -45,14 +46,14 @@ export async function POST(request: Request) {
       { status: 400 },
     );
   }
-  if (!programa || !/^\d{4}-\d{2}-\d{2}$/.test(fechaCorte)) {
+  if (!programa || programa === 'global' || !esAlcance(programa) || !/^\d{4}-\d{2}-\d{2}$/.test(fechaCorte)) {
     return NextResponse.json(
       { ok: false, error: 'Falta el programa o la fecha de corte.' },
       { status: 400 },
     );
   }
-  if (!UNIDADES.includes(unidad as (typeof UNIDADES)[number])) {
-    return NextResponse.json({ ok: false, error: 'La unidad no es válida.' }, { status: 400 });
+  if (!tiposDe(programa).some((t) => t.clave === unidad)) {
+    return NextResponse.json({ ok: false, error: 'El tipo de registro no es válido para este programa.' }, { status: 400 });
   }
 
   const bytes = Buffer.from(await archivoSubido.arrayBuffer());
@@ -74,12 +75,12 @@ export async function POST(request: Request) {
   // Un archivo nuevo reabre la revisión: Calidad y Vista previa del programa y del Global.
   const ahora = new Date().toISOString();
   for (const alcanceInforme of [programa, 'global']) {
-    const clave = `eira:informe:${alcanceInforme}`;
+    const clave = informe(alcanceInforme);
     if (!(await v.exists(clave))) await v.hset(clave, 'creado_en', ahora);
     await v.hset(clave, 'calidad_resuelta', '0', 'cifras_aprobadas', '0');
   }
-  if (!(await v.hget(`eira:informe:${programa}`, 'fecha_corte'))) {
-    await v.hset(`eira:informe:${programa}`, 'fecha_corte', fechaCorte);
+  if (!(await v.hget(informe(programa), 'fecha_corte'))) {
+    await v.hset(informe(programa), 'fecha_corte', fechaCorte);
   }
   await v.xadd(
     trabajos(), '*',

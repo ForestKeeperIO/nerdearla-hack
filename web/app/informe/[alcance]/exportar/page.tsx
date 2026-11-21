@@ -1,11 +1,11 @@
 import { exigirPaso } from '@/lib/guardia';
 import { fechaCorteDe, fuentesDe, tituloInforme } from '@/lib/informe';
 import {
-  conteoUnidad, edadPromedio, filtrosDe, NOMBRE_UNIDAD, personasDePrograma,
-  personasEntre, personasPorCiudad, personasTxt, personasUnicas, sinIdentificar,
-  unidadesConDatos,
+  edadPromedioIds, filtrosDe, impactadasIdsDe, noImpactadasIdsDe,
+  personasEnMasDeUnPrograma, personasPorCiudadIds, personasTxt, resumenTiposDe,
+  sinIdentificar, type ResumenTipo,
 } from '@/lib/datos';
-import { programasDemo } from '@/lib/catalogo';
+import { nombrePrograma, pluralRol, pluralTipo, programasDemo, rolDe } from '@/lib/catalogo';
 import { MarcoInforme } from '@/components/marco';
 import { PieDePaso } from '@/components/pie-de-paso';
 import { BotonImprimir } from '@/components/imprimir';
@@ -17,37 +17,59 @@ export default async function PaginaExportar({ params }: { params: Promise<{ alc
   const { alcance, estado } = await exigirPaso(a, 'exportar');
   const esGlobal = alcance === 'global';
 
-  const f = await filtrosDe(alcance);
   const corte = await fechaCorteDe(alcance);
   const fuentes = await fuentesDe(alcance);
   const nombresFuentes = fuentes.valor.map((x) => x.nombre).join('; ') || 'sin archivos';
 
-  const [personas, sinId, porCiudad, unidades] = await Promise.all([
-    personasUnicas(f), sinIdentificar(f), personasPorCiudad(f), unidadesConDatos(),
-  ]);
-  const edad = await edadPromedio(f, corte);
-  const conteos = await Promise.all(unidades.valor.map((u) => conteoUnidad(u, f)));
-  const unidadesConCifra = unidades.valor.map((u, i) => ({ u, n: conteos[i].valor })).filter((x) => x.n > 0);
+  const demos = programasDemo();
+  const programaIds = esGlobal ? demos.map((d) => d.id) : [alcance];
+  const porPrograma = await Promise.all(
+    programaIds.map(async (id) => {
+      const [ids, resumen, noImp] = await Promise.all([
+        impactadasIdsDe(id),
+        resumenTiposDe(id),
+        noImpactadasIdsDe(id),
+      ]);
+      return { id, nombre: nombrePrograma(id), ids: ids.valor, resumen, noImpactadas: noImp.valor.length };
+    }),
+  );
 
-  let enAmbos = 0;
-  let porPrograma: { nombre: string; personas: number }[] = [];
-  if (esGlobal) {
-    const demos = programasDemo();
-    enAmbos = (await personasEntre(demos[0].id, demos[1].id)).valor;
-    porPrograma = await Promise.all(
-      demos.map(async (p) => ({ nombre: p.nombre, personas: (await personasDePrograma(p.id)).valor })),
-    );
-  }
+  const totalImpactadas = porPrograma.reduce((s, p) => s + p.ids.length, 0);
+  const idsUnicos = [...new Set(porPrograma.flatMap((p) => p.ids))];
+
+  const f = await filtrosDe(alcance);
+  const [sinId, edad, porCiudad] = await Promise.all([
+    sinIdentificar(f),
+    edadPromedioIds(idsUnicos, corte),
+    personasPorCiudadIds(idsUnicos),
+  ]);
+  const enAmbos = esGlobal ? (await personasEnMasDeUnPrograma(programaIds)).valor : 0;
+  const totalNoImpactadas = porPrograma.reduce((s, p) => s + p.noImpactadas, 0);
 
   const hoy = new Date().toLocaleDateString('es-MX', { day: 'numeric', month: 'long', year: 'numeric' });
   const notas: string[] = [
-    `Personas identificadas de forma exacta, sin duplicados, en los archivos importados. Fuentes: ${nombresFuentes}. Fecha de corte: ${corte}.`,
+    `Personas identificadas de forma exacta, sin duplicados dentro de cada programa, en los archivos importados. Fuentes: ${nombresFuentes}. Fecha de corte: ${corte}.`,
     sinId.valor > 0
       ? `Hay además ${sinId.valor.toLocaleString('es-MX')} registros sin persona identificada: el total real está entre las dos cifras.`
       : 'Todos los registros quedaron con persona identificada.',
     `Edad calculada con las fechas de nacimiento registradas, a la fecha de corte ${corte}.`,
   ];
-  if (esGlobal) notas.push('En el total global, cada persona cuenta una sola vez aunque aparezca en varios programas.');
+  if (esGlobal) {
+    notas.push('El total global es la suma de las personas impactadas de cada programa: quien aparece en dos programas cuenta dos veces. Dentro de un mismo programa cada persona cuenta una sola vez.');
+    if (totalNoImpactadas > 0) notas.push('Las personas que solo aportan (donantes y otros roles) se reportan aparte y no cuentan como impactadas.');
+  }
+
+  const filaTipo = (programaId: string, r: ResumenTipo) => (
+    <li key={r.tipo} className="fila" style={{ paddingBlock: 'var(--sp-2)' }}>
+      <span className="fila__cuerpo">
+        {pluralTipo(r.tipo)}
+        {r.personas !== null && (
+          <span className="etiqueta"> — {personasTxt(r.personas)} {pluralRol(rolDe(programaId, r.tipo))}{!r.cuenta ? ' (no cuentan como impactadas)' : ''}</span>
+        )}
+      </span>
+      <span className="fila__dato mono"><strong>{r.conteo.toLocaleString('es-MX')}</strong></span>
+    </li>
+  );
 
   return (
     <MarcoInforme
@@ -70,11 +92,11 @@ export default async function PaginaExportar({ params }: { params: Promise<{ alc
         </header>
 
         <section style={{ marginTop: 'var(--sp-6)' }} aria-labelledby="i-personas">
-          <h3 id="i-personas">Personas impactadas</h3>
+          <h3 id="i-personas">Personas impactadas{esGlobal ? ' (suma de los programas)' : ''}</h3>
           <p className="cifra cifra--sm" style={{ marginTop: 'var(--sp-2)' }}>
             {sinId.valor > 0
-              ? <>entre {personasTxt(personas.valor)} y {personasTxt(personas.valor + sinId.valor)}<sup aria-label="notas 1 y 2"> 1, 2</sup></>
-              : <>{personasTxt(personas.valor)}<sup aria-label="nota 1"> 1</sup></>}
+              ? <>entre {personasTxt(totalImpactadas)} y {personasTxt(totalImpactadas + sinId.valor)}<sup aria-label="notas 1 y 2"> 1, 2</sup></>
+              : <>{personasTxt(totalImpactadas)}<sup aria-label="nota 1"> 1</sup></>}
           </p>
           <ul style={{ listStyle: 'none', padding: 0, margin: 'var(--sp-3) 0 0' }}>
             <li className="fila" style={{ paddingBlock: 'var(--sp-2)' }}>
@@ -86,41 +108,31 @@ export default async function PaginaExportar({ params }: { params: Promise<{ alc
             </li>
             {esGlobal && (
               <li className="fila" style={{ paddingBlock: 'var(--sp-2)' }}>
-                <span className="fila__cuerpo">De ellas, en los dos programas<sup aria-label="nota 4"> 4</sup></span>
+                <span className="fila__cuerpo">Personas en más de un programa<sup aria-label="nota 4"> 4</sup></span>
                 <span className="fila__dato mono"><strong>{personasTxt(enAmbos)}</strong></span>
+              </li>
+            )}
+            {esGlobal && totalNoImpactadas > 0 && (
+              <li className="fila" style={{ paddingBlock: 'var(--sp-2)' }}>
+                <span className="fila__cuerpo">Personas que solo aportan (no impactadas)<sup aria-label="nota 5"> 5</sup></span>
+                <span className="fila__dato mono"><strong>{personasTxt(totalNoImpactadas)}</strong></span>
               </li>
             )}
           </ul>
         </section>
 
-        {esGlobal && porPrograma.length > 0 && (
-          <section style={{ marginTop: 'var(--sp-6)' }} aria-labelledby="i-programas">
-            <h3 id="i-programas">Por programa</h3>
+        {porPrograma.map((p) => (
+          <section key={p.id} style={{ marginTop: 'var(--sp-6)' }} aria-labelledby={`i-${p.id}`}>
+            <h3 id={`i-${p.id}`}>{esGlobal ? p.nombre : 'Registros por tipo'}</h3>
+            {esGlobal && (
+              <p className="etiqueta">{personasTxt(p.ids.length)} personas impactadas</p>
+            )}
             <ul style={{ listStyle: 'none', padding: 0, margin: 'var(--sp-2) 0 0' }}>
-              {porPrograma.map((p) => (
-                <li key={p.nombre} className="fila" style={{ paddingBlock: 'var(--sp-2)' }}>
-                  <span className="fila__cuerpo">{p.nombre}</span>
-                  <span className="fila__dato mono"><strong>{personasTxt(p.personas)} personas</strong></span>
-                </li>
-              ))}
+              {p.resumen.map((r) => filaTipo(p.id, r))}
             </ul>
+            {p.resumen.length === 0 && <p className="etiqueta" style={{ marginTop: 'var(--sp-2)' }}>Sin registros.</p>}
           </section>
-        )}
-
-        {unidadesConCifra.length > 0 && (
-          <section style={{ marginTop: 'var(--sp-6)' }} aria-labelledby="i-unidades">
-            <h3 id="i-unidades">Registros por tipo</h3>
-            <p className="etiqueta">Tipos distintos: no se suman entre sí.</p>
-            <ul style={{ listStyle: 'none', padding: 0, margin: 'var(--sp-2) 0 0' }}>
-              {unidadesConCifra.map(({ u, n }) => (
-                <li key={u} className="fila" style={{ paddingBlock: 'var(--sp-2)' }}>
-                  <span className="fila__cuerpo">{NOMBRE_UNIDAD[u]}</span>
-                  <span className="fila__dato mono"><strong>{n.toLocaleString('es-MX')}</strong></span>
-                </li>
-              ))}
-            </ul>
-          </section>
-        )}
+        ))}
 
         <section style={{ marginTop: 'var(--sp-6)' }} aria-labelledby="i-ciudades">
           <h3 id="i-ciudades">Desglose por ciudad</h3>
@@ -139,7 +151,7 @@ export default async function PaginaExportar({ params }: { params: Promise<{ alc
           <ul style={{ marginTop: 'var(--sp-2)', paddingLeft: 'var(--sp-5, 20px)', color: 'var(--ink-soft)', fontSize: 'var(--fs-small)' }}>
             <li>Datos ficticios de demostración.</li>
             <li>Toda cifra de personas menor a 5 se muestra como «&lt;5».</li>
-            <li>Los tipos de registro (atenciones, estudios, participaciones, entregas de insumo) no se suman entre sí.</li>
+            <li>Los tipos de registro no se suman entre sí.</li>
             <li>Los pares de personas aún sin decidir cuentan como una sola persona cada uno.</li>
           </ul>
         </section>

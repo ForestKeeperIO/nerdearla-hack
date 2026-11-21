@@ -10,17 +10,22 @@ export type TipoRegistro = {
   cuenta_personas: boolean;
 };
 
+export type Rol = { clave: string; etiqueta: string; cuenta_como_impactada: boolean };
+
 export type Iniciativa = {
   id: string;
   nombre: string;
   clase: string;
   descripcion: string;
   tipos_de_registro: string[];
+  rol_por_defecto: string | null;
+  roles_por_tipo?: Record<string, string>;
   estado: 'confirmado' | 'por_confirmar';
   en_demo: boolean;
+  solo_entorno?: string;
 };
 
-type Catalogo = { tipos_de_registro: TipoRegistro[]; iniciativas: Iniciativa[] };
+type Catalogo = { tipos_de_registro: TipoRegistro[]; roles_de_persona: Rol[]; iniciativas: Iniciativa[] };
 
 let cache: Catalogo | null = null;
 
@@ -32,7 +37,7 @@ export function catalogo(): Catalogo {
   ];
   for (const ruta of candidatos) {
     try {
-      cache = JSON.parse(readFileSync(ruta, 'utf8')) as Catalogo;
+      cache = JSON.parse(readFileSync(/* turbopackIgnore: true */ ruta, 'utf8')) as Catalogo;
       return cache;
     } catch {
       // intenta la siguiente ruta
@@ -41,9 +46,24 @@ export function catalogo(): Catalogo {
   throw new Error('No se encontró catalogos/iniciativas.json');
 }
 
-/** Programas del demo (en_demo = true), en el orden del catálogo. */
+/** Entorno en marcha: 'blanco' | 'real' (variable ENTORNO). */
+export function entorno(): string {
+  return process.env.ENTORNO ?? 'blanco';
+}
+
+/**
+ * Informes que salen en la portada: los marcados en_demo más los del entorno
+ * en marcha (solo_entorno = 'real' aparece solo cuando ENTORNO=real).
+ * Nada de ids fijos: agregar un informe es agregar una entrada al catálogo.
+ */
+export function informesActivos(): Iniciativa[] {
+  const env = entorno();
+  return catalogo().iniciativas.filter((i) => i.en_demo || i.solo_entorno === env);
+}
+
+/** Programas del demo (en_demo): son los que abren al Global. */
 export function programasDemo(): Iniciativa[] {
-  return catalogo().iniciativas.filter((i) => i.en_demo && i.clase === 'programa');
+  return catalogo().iniciativas.filter((i) => i.en_demo);
 }
 
 export function iniciativa(id: string): Iniciativa | undefined {
@@ -70,4 +90,24 @@ export function tiposDe(id: string): TipoRegistro[] {
 
 export function etiquetaTipo(clave: string): string {
   return catalogo().tipos_de_registro.find((t) => t.clave === clave)?.etiqueta ?? clave;
+}
+
+export function pluralTipo(clave: string): string {
+  return catalogo().tipos_de_registro.find((t) => t.clave === clave)?.plural ?? clave;
+}
+
+export function tipoRegistro(clave: string): TipoRegistro | undefined {
+  return catalogo().tipos_de_registro.find((t) => t.clave === clave);
+}
+
+/** Rol de la persona en un tipo de registro de un programa (roles_por_tipo o rol_por_defecto). */
+export function rolDe(programaId: string, tipoClave: string): Rol | undefined {
+  const ini = iniciativa(programaId);
+  const clave = ini?.roles_por_tipo?.[tipoClave] ?? ini?.rol_por_defecto;
+  return catalogo().roles_de_persona.find((r) => r.clave === clave);
+}
+
+/** Plural sencillo de una etiqueta de rol: 'Donante' → 'donantes'. */
+export function pluralRol(rol: Rol | undefined): string {
+  return (rol?.etiqueta ?? 'Persona').toLowerCase() + 's';
 }

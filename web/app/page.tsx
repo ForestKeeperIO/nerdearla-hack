@@ -1,5 +1,5 @@
 import Link from 'next/link';
-import { ALCANCES, estadoRecorrido, tituloInforme } from '@/lib/informe';
+import { alcancesDemo, estadoRecorrido, tituloInforme } from '@/lib/informe';
 import { indicePaso, motivoBloqueo, pasoActual, pasosDe, puedeEntrar, TITULO_PASO, type EstadoRecorrido } from '@/lib/recorrido';
 import { iniciativa } from '@/lib/catalogo';
 import { Lock } from 'lucide-react';
@@ -27,7 +27,7 @@ function avance(e: EstadoRecorrido): { texto: string; accion: string; ruta: stri
 }
 
 export default async function Portada() {
-  const estados = await Promise.all(ALCANCES.map((a) => estadoRecorrido(a)));
+  const estados = await Promise.all(alcancesDemo().map((a) => estadoRecorrido(a)));
 
   return (
     <div>
@@ -49,7 +49,7 @@ export default async function Portada() {
                   {tituloInforme(e.alcance)}
                 </span>
                 <span className="etiqueta" style={{ display: 'block', marginTop: 2 }}>
-                  {ini?.descripcion ?? 'Junta los dos programas y cuenta a cada persona una sola vez.'}
+                  {ini?.descripcion ?? 'Junta todos los programas: cada programa suma sus personas al total.'}
                 </span>
                 <span className="etiqueta" style={{ display: 'block', marginTop: 4, color: a.ruta ? 'var(--ink-soft)' : 'var(--warn)' }}>
                   {a.texto}

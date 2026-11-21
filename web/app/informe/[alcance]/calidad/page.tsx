@@ -1,11 +1,10 @@
 import { exigirPaso } from '@/lib/guardia';
 import { fuentesDe, paresDe } from '@/lib/informe';
 import {
-  anomaliasDe, filasCompartidas, omitidasDe, personasEntre, personasTxt,
+  anomaliasDe, cruceProgramas, filasCompartidas, omitidasDe, personasTxt,
   type Anomalia, type Med,
 } from '@/lib/datos';
-import { programasDemo } from '@/lib/catalogo';
-import { decidirPar, resolverCalidad, restituirFila } from '@/lib/acciones';
+import { resolverCalidad, restituirFila } from '@/lib/acciones';
 import { MarcoInforme } from '@/components/marco';
 import { PieDePaso } from '@/components/pie-de-paso';
 import { MismaPersona } from '@/components/misma-persona';
@@ -71,11 +70,11 @@ export default async function PaginaCalidad({ params }: { params: Promise<{ alca
   );
 
   // Lo que solo se ve al juntar programas (Global).
-  let enAmbos: Med<number> | null = null;
+  let cruces: Med<{ par: [string, string]; n: number }[]> | null = null;
   let compartidas: Med<number> | null = null;
   if (esGlobal) {
-    const [p1, p2] = programasDemo();
-    [enAmbos, compartidas] = await Promise.all([personasEntre(p1.id, p2.id), filasCompartidas()]);
+    [cruces, compartidas] = await Promise.all([cruceProgramas({}), filasCompartidas()]);
+    cruces = { ...cruces, valor: cruces.valor.filter((c) => c.n > 0) };
   }
 
   return (
@@ -85,23 +84,25 @@ export default async function PaginaCalidad({ params }: { params: Promise<{ alca
       titulo="Calidad de los datos"
       bajada={
         esGlobal
-          ? 'Lo que solo se ve al juntar los programas: personas que aparecen en los dos y filas que dos coordinaciones registraron igual.'
+          ? 'Lo que solo se ve al juntar los programas: personas que aparecen en más de uno y filas que dos coordinaciones registraron igual.'
           : 'La calificación de cada archivo, lo que le falta y los casos que solo una persona puede decidir.'
       }
     >
-      {esGlobal && enAmbos && compartidas && (
+      {esGlobal && cruces && compartidas && (
         <div className="tarjeta" style={{ marginBottom: 'var(--sp-6)' }}>
           <div className="flex flex-wrap gap-10">
-            <div>
-              <p className="cifra cifra--sm">{personasTxt(enAmbos.valor)}</p>
-              <p className="etiqueta" style={{ marginTop: 'var(--sp-1)' }}>personas aparecen en los dos programas</p>
-            </div>
+            {cruces.valor.map((c) => (
+              <div key={c.par.join('·')}>
+                <p className="cifra cifra--sm">{personasTxt(c.n)}</p>
+                <p className="etiqueta" style={{ marginTop: 'var(--sp-1)' }}>personas en {c.par[0]} y {c.par[1]}</p>
+              </div>
+            ))}
             <div>
               <p className="cifra cifra--sm">{compartidas.valor.toLocaleString('es-MX')}</p>
               <p className="etiqueta" style={{ marginTop: 'var(--sp-1)' }}>filas registradas igual por dos coordinaciones (se cuentan una vez)</p>
             </div>
           </div>
-          <ComoSeCalculo med={enAmbos} />
+          <ComoSeCalculo med={cruces} />
         </div>
       )}
 
