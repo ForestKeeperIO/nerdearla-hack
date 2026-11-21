@@ -6,6 +6,7 @@ import { FileSpreadsheet } from 'lucide-react';
 import type { Fuente, Trabajo } from '@/lib/comun';
 import { explicarErrorCarga } from '@/lib/error-carga';
 import { StarRating } from '@/components/ui/star-rating';
+import { MapeoProcesado } from './tabla-encabezados';
 
 type Datos = { trabajos: Trabajo[]; fuentes: Fuente[]; paresPorFuente?:Record<string,number> };
 
@@ -62,6 +63,8 @@ export function ListaVivo({ alcance, inicial, lectura = false }: { alcance: stri
   }, [alcance,router]);
 
   const vacio = datos.trabajos.length === 0 && datos.fuentes.length === 0;
+  const mapeoPorFuente = new Map(datos.trabajos.filter(t => t.estado === 'listo' && t.mapeo?.length)
+    .map(t => [t.fuente, t.mapeo]));
 
   return (
     <div>
@@ -86,12 +89,13 @@ export function ListaVivo({ alcance, inicial, lectura = false }: { alcance: stri
             return (
               <li key={t.id} className="fila">
                 <FileSpreadsheet className="size-5" style={{ color: 'var(--tinta-tenue)', flexShrink: 0 }} aria-hidden="true" />
-                <span className="fila__cuerpo">
+                <div className="fila__cuerpo">
                   <span style={{ display: 'block', fontWeight: 500 }}>{t.nombre}</span>
                   {detalle && <span className="etiqueta" style={{ display: 'block' }}>{detalle}</span>}
                   {fallo && !lectura && <button type="button" className="btn btn--secundario btn--sm"
                     onClick={() => document.getElementById('elegir-archivo-carga')?.click()}>Volver a subir</button>}
-                </span>
+                  <MapeoProcesado columnas={t.mapeo} nombre={t.nombre} />
+                </div>
                 <span className="fila__dato"><span className={`estado ${e.clase}`}>{e.texto}</span></span>
               </li>
             );
@@ -99,12 +103,13 @@ export function ListaVivo({ alcance, inicial, lectura = false }: { alcance: stri
           {datos.fuentes.map((f) => (
             <li key={f.id} className="fila">
               <FileSpreadsheet className="size-5" style={{ color: 'var(--tinta-tenue)', flexShrink: 0 }} aria-hidden="true" />
-              <span className="fila__cuerpo">
+              <div className="fila__cuerpo">
                 <span style={{ display: 'block', fontWeight: 500 }}>{f.nombre}</span>
                 <span className="etiqueta" style={{ display: 'block' }}>
                   Listo · {f.filas_nuevas} {f.filas_nuevas===1?'fila nueva':'filas nuevas'}, {f.filas_omitidas} {f.filas_omitidas===1?'omitida':'omitidas'}{datos.paresPorFuente!==undefined && `, ${datos.paresPorFuente[f.id]||0} pares detectados con esta carga`}.
                 </span>
-              </span>
+                <MapeoProcesado columnas={mapeoPorFuente.get(f.id)} nombre={f.nombre} />
+              </div>
               <span className="fila__dato"><StarRating valor={f.estrellas} etiqueta={`${f.estrellas} / 5`} /></span>
             </li>
           ))}

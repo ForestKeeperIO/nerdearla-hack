@@ -226,7 +226,9 @@ function aTrabajo(id: string, h: Record<string, string>): Trabajo {
   try {
     const campos: unknown = JSON.parse(h.mapeo ?? '[]');
     if (Array.isArray(campos)) mapeo = campos.filter(c => typeof c?.encabezado === 'string' && typeof c?.campo === 'string')
-      .map(c => ({ encabezado: c.encabezado, campo: c.campo }));
+      .map(c => ({ encabezado: c.encabezado, campo: c.campo,
+        probabilidad: typeof c.probabilidad === 'number' && c.probabilidad >= 0 && c.probabilidad <= 1
+          ? c.probabilidad : undefined }));
   } catch { /* Los trabajos anteriores pueden no tener mapeo. */ }
   return {
     id,
