@@ -1,4 +1,4 @@
-/* Hallmark · fe-tablero 2026-11-21 · theme: EIRA (by request, paleta-eira.md) · surface: absolute · posture: restrained, rosas solo matiz · nav: header tabs · footer: hairline mast */
+/* Hallmark · shape: app screen · theme: Pliego de impacto EIRA · nav: top tabs · signature: signed statistical plate · v2.0.0 */
 /* critica: eyebrows tracked caps, middle-dots y flechas eliminados (Floor 9-10) */
 /* waive 7b: --superficie #ffffff es el token oficial de la paleta EIRA (paleta-eira.md, decisión de Ian) */
 /* waive 24b: 3px en .estado/.mosaico corregido a 4px en este pase */
@@ -8,6 +8,7 @@
 @import url("./base.css");
 @import "tailwindcss";
 @import "tw-animate-css";
+@import "./tablero.css";
 
 @theme inline {
   --color-background: var(--papel);
@@ -183,7 +184,7 @@ details.calculo summary:hover { color: var(--vino); }
   min-width: 220px; max-width: min(320px, calc(100vw - 32px));
   max-height: 300px; overflow-y: auto;
   background: var(--superficie); border: var(--border);
-  border-radius: var(--r-sm); box-shadow: 0 8px 24px rgb(46 46 46 / 0.10);
+  border-radius: var(--r-sm); box-shadow: var(--shadow-modal);
   padding: var(--sp-1);
 }
 .filtro-pop__panel ul { list-style: none; margin: 0; padding: 0; }
@@ -218,7 +219,7 @@ details.calculo summary:hover { color: var(--vino); }
 .aviso-banda {
   display: flex; flex-wrap: wrap; align-items: center; gap: var(--sp-2) var(--sp-3);
   padding: var(--sp-2) var(--sp-4);
-  border: var(--border); border-left: 3px solid var(--aviso);
+  border: var(--border);
   border-radius: var(--r-sm); background: var(--superficie);
   font-size: var(--fs-small); color: var(--tinta);
 }

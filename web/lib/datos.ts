@@ -4,7 +4,7 @@
 import { valkey } from './valkey';
 import {
   anom, bitacora, cnt, decisiones, den, fuente, fuentes, nac, omitidas, pares,
-  perCerteza, perCiudad, perPeriodo, perPrograma, perServicio, perTipo, perTodas,
+  perCerteza, perCiudad, perDonantes, perImpactadas, perPeriodo, perPrograma, perServicio, perTipo, perTodas,
   sinid, trabajo, trabajos, valores,
 } from './claves';
 
@@ -447,54 +447,24 @@ export async function filasCompartidas(): Promise<Med<number>> {
 
 // --- Personas por tipo de registro (donante vs. beneficiaria) ------------------
 
-/**
- * Ids de personas impactadas de un programa: las que tienen un registro de un
- * tipo que cuenta personas (cuenta_personas en el catálogo). Se calcula con los
- * conjuntos eira:per:tipo:* dentro del conjunto del programa; si el motor aún
- * no escribe esos conjuntos, cae al conjunto del programa entero.
- */
-export async function impactadasIdsDe(programaId: string): Promise<Med<string[]>> {
-  const v = valkey();
-  const prog = await valorProgramaGuardado(programaId);
-  const clavePrograma = perPrograma(prog);
-  const tipos = tiposDe(programaId).filter((t) => t.cuenta_personas);
-  const clavesTipo: string[] = [];
-  for (const t of tipos) {
-    const k = perTipo(t.clave);
-    if (await v.exists(k)) clavesTipo.push(k);
-  }
-  const comando = clavesTipo.length
-    ? `SUNION ${clavesTipo.join(' ')} ∩ SMEMBERS ${clavePrograma}`
-    : `SMEMBERS ${clavePrograma}`;
-  return medir(comando, async () => {
-    const delPrograma = new Set(await v.smembers(clavePrograma));
-    // Programa del catálogo sin tipos que cuenten personas: no hay impactadas.
-    if (tiposDe(programaId).length > 0 && tipos.length === 0) return [];
-    if (clavesTipo.length === 0) return [...delPrograma];
-    const union = await v.sunion(...clavesTipo);
-    return union.filter((id) => delPrograma.has(id));
-  });
-}
-
-/** Ids de personas del programa que NO cuentan como impactadas (donantes, voluntarias). */
-export async function noImpactadasIdsDe(programaId: string): Promise<Med<string[]>> {
-  const v = valkey();
-  const prog = await valorProgramaGuardado(programaId);
-  const tipos = tiposDe(programaId).filter((t) => !t.cuenta_personas);
-  const clavesTipo: string[] = [];
-  for (const t of tipos) {
-    const k = perTipo(t.clave);
-    if (await v.exists(k)) clavesTipo.push(k);
-  }
-  const comando = clavesTipo.length
-    ? `SUNION ${clavesTipo.join(' ')} ∩ SMEMBERS ${perPrograma(prog)}`
-    : '(sin conjuntos por tipo)';
-  return medir(comando, async () => {
-    if (clavesTipo.length === 0) return [];
-    const delPrograma = new Set(await v.smembers(perPrograma(prog)));
-    const union = await v.sunion(...clavesTipo);
-    return union.filter((id) => delPrograma.has(id));
-  });
+/** No se infiere el rol de otras actividades de la misma persona. */
+export async function rolesDe(seleccion: string[]) {
+  const presentes = (await programasPresentes()).valor;
+  const programas = presentes.filter((p) => !seleccion.length || seleccion.includes(p));
+  const porPrograma = await Promise.all(programas.map(async (id) => {
+    const clave = perImpactadas(id);
+    const [medIds, donantes] = await Promise.all([
+      medir(`SMEMBERS ${clave}`, () => valkey().smembers(clave)),
+      valkey().smembers(perDonantes(id)),
+    ]);
+    return { id, ids: medIds.valor, medIds, donantes };
+  }));
+  return {
+    porPrograma,
+    totalImpactadas: porPrograma.reduce((n, p) => n + p.ids.length, 0),
+    idsUnicos: [...new Set(porPrograma.flatMap((p) => p.ids))],
+    totalDonantes: new Set(porPrograma.flatMap((p) => p.donantes)).size,
+  };
 }
 
 /** Personas de un tipo de registro concreto (donantes de trenza, beneficiarias de peluca). */

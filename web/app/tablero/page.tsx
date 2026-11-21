@@ -1,196 +1,99 @@
-// Tablero global con filtros multi-selección (headless: datos y semántica,
-// sin dirección visual). Los filtros viven en la URL y alimentan las mismas
-// funciones de indicadores que el resto de la app. Corte, fuente y "cómo se
-// calculó" siempre visibles; las unidades NUNCA se suman entre sí.
-import { Suspense } from 'react';
 import Link from 'next/link';
-import { TriangleAlert } from 'lucide-react';
+import { Download, ExternalLink, Info } from 'lucide-react';
+import { Actualizar } from '@/components/actualizar';
 import { FiltrosBarra } from '@/components/filtros-barra';
-import { ComoSeCalculo } from '@/components/como';
-import { BarList } from '@/components/ui/bar-list';
-import {
-  conteoUnidadMulti, edadPromedioMulti, filtrosDeQuery, hayFiltros,
-  personasPorCiudadMulti, personasUnicasMulti,
-} from '@/lib/filtros';
-import { valoresDe, sinIdentificar, listarFuentes } from '@/lib/datos';
-import { fechaCorteDe, paresDe } from '@/lib/informe';
 import { ParesMasa } from '@/components/pares-masa';
+import { catalogo, nombrePrograma } from '@/lib/catalogo';
 import { fechaEs, personasTxt } from '@/lib/comun';
-import { entorno } from '@/lib/catalogo';
-import { readFileSync } from 'node:fs';
-import { join } from 'node:path';
+import { edadPromedioIds, listarFuentes, rolesDe, sinIdentificar, valoresDe } from '@/lib/datos';
+import { conteoUnidadMulti, filtrosDeQuery } from '@/lib/filtros';
+import { fechaCorteDe, paresDe } from '@/lib/informe';
+import { impactoPublico } from '@/lib/metabase';
+import { presenciaDe } from '@/lib/territorio';
 
 export const dynamic = 'force-dynamic';
 
-/** Dashboard público de Metabase (metabase/enlaces.json). El embed público
-    acepta los parámetros programa, mes, municipio y servicio; se alimentan
-    desde la misma barra de filtros. */
-const PARAM_DIM: Record<string, string> = {
-  programa: 'programa',
-  periodo: 'mes',
-  ciudad: 'municipio',
-  servicio: 'servicio',
-};
-
-function enlaceMetabase(f: { programa: string[]; ciudad: string[]; periodo: string[]; servicio: string[] }): string | null {
-  for (const ruta of [join(process.cwd(), '..', 'metabase', 'enlaces.json'), join(process.cwd(), 'metabase', 'enlaces.json')]) {
-    try {
-      const j = JSON.parse(readFileSync(/*turbopackIgnore: true*/ ruta, 'utf8')) as { entornos?: Record<string, Record<string, string>> } & Record<string, string>;
-      // El dashboard canónico es el del entorno en marcha (ENTORNO=blanco|real).
-      const base = j.entornos?.[entorno()]?.impacto ?? j.impacto;
-      if (!base) return null;
-      const q = new URLSearchParams();
-      for (const [dim, param] of Object.entries(PARAM_DIM)) {
-        for (const v of f[dim as keyof typeof f]) q.append(param, v);
-      }
-      const qs = q.toString();
-      return qs ? `${base}?${qs}` : base;
-    } catch { /* siguiente ruta */ }
-  }
-  return null;
+function Indicador({ nombre, valor, unidad, regla, origen }: {
+  nombre: string; valor: string; unidad: string; regla: string; origen: string;
+}) {
+  return <div className="mesa-dato">
+    <h2>{nombre}</h2>
+    <p className="mesa-numero">{valor}</p>
+    <p className="mesa-unidad">{unidad}</p>
+    <details><summary>Cómo se calculó</summary><p>{regla}</p><p>{origen}</p></details>
+  </div>;
 }
 
-const UNIDADES: { id: string; rotulo: string }[] = [
-  { id: 'atencion', rotulo: 'Atenciones' },
-  { id: 'estudio', rotulo: 'Estudios' },
-  { id: 'participacion', rotulo: 'Participaciones' },
-  { id: 'entrega_insumo', rotulo: 'Entregas de insumo' },
-];
-
 export default async function Tablero({ searchParams }: { searchParams: Promise<Record<string, string | string[] | undefined>> }) {
-  const sp = await searchParams;
-  const f = filtrosDeQuery(sp);
-  const corte = await fechaCorteDe('global');
-
-  const [opcPrograma, opcCiudad, opcPeriodo, opcServicio, personas, edad, porCiudad, pares, sinId, fuentes, ...unidades] =
-    await Promise.all([
-      valoresDe('programa'), valoresDe('ciudad'), valoresDe('periodo'), valoresDe('servicio'),
-      personasUnicasMulti(f), edadPromedioMulti(f, corte), personasPorCiudadMulti(f),
-      paresDe('global'), sinIdentificar({}), listarFuentes(),
-      ...UNIDADES.map((u) => conteoUnidadMulti(u.id, f)),
-    ]);
+  const f = filtrosDeQuery(await searchParams);
+  const tipos = catalogo().tipos_de_registro;
+  const [corte, roles, fuentes, pares, sinId, programas, ciudades, periodos, servicios, unidades] = await Promise.all([
+    fechaCorteDe('global'), rolesDe(f.programa), listarFuentes(), paresDe('global'), sinIdentificar({}),
+    valoresDe('programa'), valoresDe('ciudad'), valoresDe('periodo'), valoresDe('servicio'),
+    Promise.all(tipos.map(async (t) => ({ nombre: t.plural, cantidad: (await conteoUnidadMulti(t.clave, f)).valor }))),
+  ]);
+  const [edad, lugares] = await Promise.all([
+    edadPromedioIds(roles.idsUnicos, corte), Promise.all(roles.porPrograma.map((p) => presenciaDe(p.id))),
+  ]);
+  const municipios = new Map<string, { nombre: string; estado: string; registros: number }>();
+  for (const lugar of lugares) for (const estado of lugar?.estados ?? []) for (const m of estado.activos) {
+    municipios.set(m.clave, { nombre: m.nombre, estado: estado.estado, registros: (municipios.get(m.clave)?.registros ?? 0) + m.registros });
+  }
   const pendientes = pares.valor.filter((p) => p.estado === 'pendiente');
-  const nombreFuente = Object.fromEntries(fuentes.valor.map((x) => [x.id, x.nombre]));
-  const metabase = enlaceMetabase(f);
+  const fuentePorId = Object.fromEntries(fuentes.valor.map((x) => [x.id, x.nombre]));
+  const alcance = f.programa.length === 1 ? nombrePrograma(f.programa[0]) : 'Suma por programa';
+  const archivos = fuentes.valor.filter((x) => !f.programa.length || f.programa.includes(x.programa));
+  const origen = `Corte: ${fechaEs(corte)}. Fuente: ${archivos.map((x) => x.nombre).join(', ') || 'sin archivos'}.`;
+  const metabase = impactoPublico({ programa: f.programa, mes: f.periodo, servicio: f.servicio, municipio: f.ciudad });
+  const exportar = f.programa.length === 1 && roles.porPrograma.length ? f.programa[0] : 'global';
 
-  return (
-    <div>
-      <p className="etiqueta">Global, todos los programas</p>
-      <h1 className="mt-2">Tablero de impacto</h1>
-      <p className="lead mt-3" style={{ maxWidth: '58ch' }}>
-        Las cifras exactas de personas y servicios al corte del {fechaEs(corte)}.
-        Filtra por programa, municipio, periodo o tipo de servicio.
-      </p>
+  return <div className="mesa">
+    <header className="mesa-cabecera">
+      <div><h1>Tablero de impacto</h1>
+        <p>Corte al <time dateTime={corte}>{fechaEs(corte)}</time> · {archivos.length} archivos de coordinación</p>
+      </div>
+      <div className="mesa-acciones"><Actualizar consulta={Date.now()} />
+        <Link href={`/informe/${encodeURIComponent(exportar)}/exportar`} className="mesa-boton"><Download size={16} aria-hidden />Exportar informe</Link>
+      </div>
+    </header>
 
-      <Suspense fallback={<p className="etiqueta">Cargando filtros…</p>}>
-        <FiltrosBarra
-          opciones={{
-            programa: opcPrograma.valor,
-            ciudad: opcCiudad.valor,
-            periodo: opcPeriodo.valor,
-            servicio: opcServicio.valor,
-          }}
-          activos={f}
-        />
-      </Suspense>
-      <p className="etiqueta" style={{ marginTop: 'var(--sp-2)' }}>
-        {hayFiltros(f)
-          ? `Filtros activos: ${f.programa.length + f.ciudad.length + f.periodo.length + f.servicio.length}. Recalculan las cifras, el desglose y la tabla de esta página. En las gráficas de Metabase, hoy solo aplica el filtro Programa.`
-          : 'Los filtros recalculan todas las cifras de esta página. En las gráficas de Metabase, hoy solo aplica el filtro Programa.'}
-      </p>
+    <section aria-label="Filtros" className="mesa-filtros">
+      <FiltrosBarra opciones={{ programa: programas.valor, ciudad: ciudades.valor, periodo: periodos.valor, servicio: servicios.valor }} activos={f} />
+    </section>
+    <section aria-label="Indicadores" className="mesa-indicadores">
+      <Indicador nombre="Personas impactadas" valor={roles.totalImpactadas ? personasTxt(roles.totalImpactadas) : '0'} unidad={alcance}
+        regla="Cada persona identificada cuenta una vez por programa donde recibió atención o participó." origen={origen} />
+      <Indicador nombre="Edad promedio" valor={edad.valor.promedio?.toLocaleString('es-MX', { maximumFractionDigits: 1 }) ?? '—'} unidad={`Años · ${edad.valor.n} con fecha de nacimiento`}
+        regla="Se promedian las edades al corte de las personas impactadas con fecha de nacimiento válida, sin repetirlas." origen={origen} />
+      <Indicador nombre="Presencia territorial" valor={String(municipios.size)} unidad="Municipios con actividad"
+        regla="Se cuenta cada clave oficial de municipio una sola vez entre los registros con lugar reconocido." origen={origen} />
+      <Indicador nombre="Donantes" valor={roles.totalDonantes ? personasTxt(roles.totalDonantes) : '0'} unidad="Personas que donaron"
+        regla="Cada donante identificada cuenta una vez; donar no equivale a recibir atención." origen={origen} />
+    </section>
 
-      {/* Advertencias de calidad: banda neutral de una línea con la acción a la derecha. */}
-      {(pendientes.length > 0 || sinId.valor > 0) && (
-        <section aria-label="Advertencias de calidad" role="alert" className="aviso-banda mt-4">
-          <TriangleAlert size={16} aria-hidden />
-          <span>
-            {[
-              pendientes.length > 0 && `${pendientes.length} ${pendientes.length === 1 ? 'par posiblemente duplicado' : 'pares posiblemente duplicados'} por decidir`,
-              sinId.valor > 0 && `${sinId.valor} ${sinId.valor === 1 ? 'registro no identificado' : 'registros no identificados'} (no cuentan como personas)`,
-            ].filter(Boolean).join('. ')}.
-          </span>
-          <Link href="/informe/tamizaje-rosa/calidad" className="btn btn--secundario btn--sm no-underline aviso-banda__accion">
-            Revisar en Calidad
-          </Link>
-        </section>
-      )}
-
-      <section aria-label="Indicadores" className="tarjeta mt-6" style={{ padding: 0, overflow: 'hidden' }}>
-        <div className="banda-cifras">
-          <div>
-            <p className="cifra">{personasTxt(personas.valor)}</p>
-            <p className="rotulo-cifra">personas alcanzadas{hayFiltros(f) ? ' (con filtros)' : ''}</p>
-            <ComoSeCalculo med={personas} />
-          </div>
-          <div>
-            <p className="cifra">{edad.valor.promedio === null ? '—' : edad.valor.promedio.toFixed(1)}</p>
-            <p className="rotulo-cifra">edad promedio{edad.valor.n > 0 ? ` (n=${edad.valor.n})` : ''} al {fechaEs(corte)}</p>
-            <ComoSeCalculo med={edad} />
-          </div>
-          <div>
-            <p className="cifra">{porCiudad.valor.filter((c) => c.personas > 0).length}</p>
-            <p className="rotulo-cifra">municipios con personas</p>
-          </div>
-        </div>
-        <div style={{ borderTop: 'var(--border)', padding: 'var(--sp-6)' }}>
-          <h2 style={{ fontSize: 15 }}>Servicios por unidad</h2>
-          <p className="etiqueta" style={{ marginTop: 'var(--sp-1)' }}>
-            Las unidades no se suman entre sí: cada una cuenta una cosa distinta.
-          </p>
-          <table style={{ width: '100%', marginTop: 'var(--sp-3)', fontSize: 'var(--fs-small)' }}>
-            <tbody>
-              {UNIDADES.map((u, i) => (
-                <tr key={u.id} style={{ borderTop: 'var(--border)' }}>
-                  <td style={{ padding: 'var(--sp-2) 0' }}>{u.rotulo}</td>
-                  <td className="mono" style={{ textAlign: 'right', padding: 'var(--sp-2) 0' }}>{unidades[i].valor.toLocaleString('es-MX')}</td>
-                </tr>
-              ))}
-            </tbody>
-          </table>
-        </div>
-        <div style={{ borderTop: 'var(--border)', padding: 'var(--sp-6)' }}>
-          <h2 style={{ fontSize: 15 }}>Desglose por municipio</h2>
-          <div style={{ marginTop: 'var(--sp-3)' }}>
-            <BarList
-              datos={porCiudad.valor.filter((c) => c.personas > 0).map((c) => ({ nombre: c.ciudad, valor: c.personas, texto: personasTxt(c.personas) }))}
-            />
-          </div>
-          <ComoSeCalculo med={porCiudad} />
-        </div>
-      </section>
-
-      {/* Gráficas: el tablero público de Metabase, embebido. Recibe los
-          filtros activos como parámetros (programa→programa, municipio→
-          municipio, periodo→mes, servicio→servicio). */}
-      {metabase && (
-        <section aria-label="Gráficas" className="mt-8">
-          <h2 style={{ fontSize: 15 }}>Gráficas del tablero</h2>
-          <iframe
-            src={metabase}
-            title="Tablero público de impacto en Metabase"
-            style={{ width: '100%', minHeight: 520, border: 'var(--border)', borderRadius: 'var(--r-md)', marginTop: 'var(--sp-3)', background: 'var(--superficie)' }}
-          />
-          <p className="etiqueta" style={{ marginTop: 'var(--sp-2)' }}>
-            El dashboard público recibe los filtros de la barra como parámetros de URL
-            (programa, municipio, mes y servicio).
-          </p>
-        </section>
-      )}
-
-      {/* Pares por decidir, con selección múltiple: cada decisión va al
-          Stream eira:decisiones y la aplica el procesador. */}
-      <section aria-label="Posibles duplicados" className="tarjeta mt-8">
-        <h2 style={{ fontSize: 16 }}>Posibles duplicados por decidir</h2>
-        <p className="etiqueta" style={{ marginTop: 'var(--sp-1)', marginBottom: 'var(--sp-3)' }}>
-          Elige varios pares y decide de una vez; también puedes resolverlos uno a uno en Informes, paso Calidad.
-        </p>
-        <ParesMasa alcance="global" pares={pendientes} nombreFuente={nombreFuente} />
-      </section>
-
-      <p className="etiqueta mt-6">
-        Fuente: reportes Excel de las coordinaciones (ficticios de demostración) —{' '}
-        <Link href="/informe" style={{ color: 'inherit', textDecoration: 'underline' }}>Ver informes</Link>
-      </p>
-    </div>
-  );
+    {metabase && archivos.length > 0 && <section className="mesa-graficas" aria-label="Gráficas y presencia por estado">
+      <div className="mesa-seccion"><h2>Actividad y presencia por estado</h2>
+        <a href={metabase} target="_blank" rel="noreferrer">Abrir tablero completo <ExternalLink size={15} aria-hidden /></a></div>
+      <p className="mesa-nota">Metabase: programa en cifras y gráficas; mes y servicio en actividad; municipio en presencia. Las selecciones múltiples no se trasladan a las gráficas.</p>
+      <iframe title="Tablero público de impacto en Metabase" src={metabase} className="mesa-marco" />
+    </section>}
+    {(pendientes.length > 0 || sinId.valor > 0) && <aside className="aviso-banda">
+      <Info aria-hidden size={16} /><span>{pendientes.length} pares por revisar · {sinId.valor} registros sin identificar</span>
+      <a className="aviso-banda__accion" href="#pares">Revisar pares</a>
+    </aside>}
+    <section className="mesa-columna"><h2>Servicios por unidad</h2>
+      <p className="mesa-nota">Cada unidad se informa por separado.</p>
+      <dl>{unidades.filter((u) => u.cantidad > 0).map((u) => <div key={u.nombre}><dt>{u.nombre}</dt><dd>{u.cantidad.toLocaleString('es-MX')}</dd></div>)}</dl>
+      {!unidades.some((u) => u.cantidad > 0) && <p>No hay servicios en esta selección.</p>}
+    </section>
+    <section className="mesa-columna"><h2>Municipios con actividad</h2><p className="mesa-nota">Registros por municipio oficial.</p>
+      <dl>{[...municipios.entries()].sort((a, b) => b[1].registros - a[1].registros).map(([id, m]) => <div key={id}>
+        <dt>{m.nombre}, {m.estado}</dt><dd>{m.registros.toLocaleString('es-MX')}</dd></div>)}</dl>
+      {!municipios.size && <p>No hay municipios reconocidos.</p>}
+    </section>
+    <section id="pares" className="mesa-pares" aria-label="Posibles duplicados"><h2>Pares por decidir</h2>
+      <p className="mesa-nota">Selecciona los pares que recibirán la misma decisión. La revisión incluye todos los programas.</p>
+      <ParesMasa alcance="global" pares={pendientes} nombreFuente={fuentePorId} />
+    </section>
+  </div>;
 }

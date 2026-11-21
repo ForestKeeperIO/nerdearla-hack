@@ -1,14 +1,13 @@
-import { readFileSync } from 'node:fs';
-import { join } from 'node:path';
+import { impactoPublico } from '@/lib/metabase';
 import { exigirPaso } from '@/lib/guardia';
 import { fechaCorteDe, fuentesDe } from '@/lib/informe';
 import {
-  edadPromedioIds, filtrosDe, impactadasIdsDe, noImpactadasIdsDe,
+  edadPromedioIds, filtrosDe, rolesDe,
   personasEnMasDeUnPrograma, personasPorCiudadIds, personasTxt, resumenTiposDe,
   sinIdentificar, type Med, type ResumenTipo,
 } from '@/lib/datos';
 import { fechaEs } from '@/lib/comun';
-import { nombrePrograma, pluralRol, pluralTipo, programasDemo, rolDe } from '@/lib/catalogo';
+import { nombrePrograma, pluralRol, pluralTipo, rolDe } from '@/lib/catalogo';
 import { aprobarCifras } from '@/lib/acciones';
 import { presenciaDe } from '@/lib/territorio';
 import { MarcoInforme } from '@/components/marco';
@@ -19,19 +18,6 @@ import { BarList } from '@/components/ui/bar-list';
 
 export const dynamic = 'force-dynamic';
 
-/** Tablero Metabase del entorno, si la rama metabase ya provisionó. */
-function enlaceMetabase(): string | null {
-  for (const ruta of [join(process.cwd(), '..', 'metabase', 'enlaces.json'), join(process.cwd(), 'metabase', 'enlaces.json')]) {
-    try {
-      const j = JSON.parse(readFileSync(/* turbopackIgnore: true */ ruta, 'utf8')) as { impacto?: string };
-      if (j.impacto) return j.impacto;
-    } catch {
-      // sin tablero todavía: la pantalla funciona sin él
-    }
-  }
-  return null;
-}
-
 function Cifra({ valor, rotulo, med }: { valor: string; rotulo: string; med?: Med<unknown> }) {
   return (
     <div>
@@ -41,15 +27,6 @@ function Cifra({ valor, rotulo, med }: { valor: string; rotulo: string; med?: Me
     </div>
   );
 }
-
-type ResumenPrograma = {
-  id: string;
-  nombre: string;
-  ids: string[];
-  medIds: Med<string[]>;
-  resumen: ResumenTipo[];
-  noImpactadas: number;
-};
 
 /** Una fila por tipo de registro: cuántos registros y cuántas personas, nunca sumados entre tipos. */
 function FilasTipos({ programaId, resumen }: { programaId: string; resumen: ResumenTipo[] }) {
@@ -90,32 +67,11 @@ export default async function PaginaVistaPrevia({ params }: { params: Promise<{ 
   const fuentes = await fuentesDe(alcance);
   const nombresFuentes = fuentes.valor.map((x) => x.nombre).join(' · ');
 
-  const demos = programasDemo();
-  const programaIds = esGlobal ? demos.map((d) => d.id) : [alcance];
-
-  const porPrograma: ResumenPrograma[] = await Promise.all(
-    programaIds.map(async (id) => {
-      const [medIds, resumen, noImp] = await Promise.all([
-        impactadasIdsDe(id),
-        resumenTiposDe(id),
-        noImpactadasIdsDe(id),
-      ]);
-      return {
-        id,
-        nombre: nombrePrograma(id),
-        ids: medIds.valor,
-        medIds,
-        resumen,
-        noImpactadas: noImp.valor.length,
-      };
-    }),
-  );
-
-  // Personas impactadas: en el Global es la SUMA de las de cada programa
-  // (quien está en dos programas cuenta dos veces); la unión solo se usa
-  // para edad promedio y desglose por ciudad.
-  const totalImpactadas = porPrograma.reduce((s, p) => s + p.ids.length, 0);
-  const idsUnicos = [...new Set(porPrograma.flatMap((p) => p.ids))];
+  const { porPrograma: roles, totalImpactadas, idsUnicos, totalDonantes } = await rolesDe(esGlobal ? [] : [alcance]);
+  const programaIds = roles.map((p) => p.id);
+  const porPrograma = await Promise.all(roles.map(async (p) => ({
+    ...p, nombre: nombrePrograma(p.id), resumen: await resumenTiposDe(p.id),
+  })));
 
   const f = await filtrosDe(alcance);
   const [sinId, edad, porCiudad] = await Promise.all([
@@ -128,8 +84,7 @@ export default async function PaginaVistaPrevia({ params }: { params: Promise<{ 
   const rango = sinId.valor > 0
     ? `${personasTxt(totalImpactadas)} – ${personasTxt(totalImpactadas + sinId.valor)}`
     : personasTxt(totalImpactadas);
-  const metabase = enlaceMetabase();
-  const totalNoImpactadas = porPrograma.reduce((s, p) => s + p.noImpactadas, 0);
+  const metabase = impactoPublico({ programa: esGlobal ? [] : [alcance] });
   const presencia = await presenciaDe(alcance);
 
   return (
@@ -183,8 +138,8 @@ export default async function PaginaVistaPrevia({ params }: { params: Promise<{ 
           <FilasTipos programaId={alcance} resumen={porPrograma[0].resumen} />
           <p className="etiqueta" style={{ marginTop: 'var(--sp-3)' }}>
             Son tipos de registro distintos: no se suman entre sí.
-            {porPrograma[0].noImpactadas > 0 && (
-              <> Las personas que solo aportan ({porPrograma[0].resumen.filter((r) => !r.cuenta).map((r) => pluralRol(rolDe(alcance, r.tipo))).join(', ')}) se muestran aparte y no cuentan como impactadas.</>
+            {totalDonantes > 0 && (
+              <> Donantes identificadas: {personasTxt(totalDonantes)}. Donar no cuenta como recibir atención.</>
             )}
           </p>
         </div>
@@ -210,10 +165,9 @@ export default async function PaginaVistaPrevia({ params }: { params: Promise<{ 
               <FilasTipos programaId={p.id} resumen={p.resumen} />
             </div>
           ))}
-          {totalNoImpactadas > 0 && (
+          {totalDonantes > 0 && (
             <p className="etiqueta" style={{ marginTop: 'var(--sp-4)', borderTop: 'var(--border)', paddingTop: 'var(--sp-3)' }}>
-              Aparte de las impactadas: {personasTxt(totalNoImpactadas)} personas solo aportan
-              ({porPrograma.filter((p) => p.noImpactadas > 0).map((p) => p.nombre).join(', ')}) — no cuentan como impactadas.
+              Donantes identificadas: {personasTxt(totalDonantes)}. Donar no cuenta como recibir atención.
             </p>
           )}
         </div>

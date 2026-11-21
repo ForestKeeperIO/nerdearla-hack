@@ -1,9 +1,9 @@
 import {
-  edadPromedioIds, filtrosDe, impactadasIdsDe, noImpactadasIdsDe,
+  edadPromedioIds, filtrosDe, rolesDe,
   personasEnMasDeUnPrograma, personasPorCiudadIds, resumenTiposDe, sinIdentificar,
 } from '@/lib/datos';
 import { esAlcance, fechaCorteDe, fuentesDe } from '@/lib/informe';
-import { nombrePrograma, pluralTipo, programasDemo } from '@/lib/catalogo';
+import { nombrePrograma, pluralTipo } from '@/lib/catalogo';
 import { presenciaDe } from '@/lib/territorio';
 
 export const dynamic = 'force-dynamic';
@@ -25,19 +25,11 @@ export async function GET(_req: Request, { params }: { params: Promise<{ alcance
   const corte = await fechaCorteDe(alcance);
   const fuentes = await fuentesDe(alcance);
 
-  const programaIds = esGlobal ? programasDemo().map((d) => d.id) : [alcance];
-  const porPrograma = await Promise.all(
-    programaIds.map(async (id) => {
-      const [ids, resumen, noImp] = await Promise.all([
-        impactadasIdsDe(id),
-        resumenTiposDe(id),
-        noImpactadasIdsDe(id),
-      ]);
-      return { id, nombre: nombrePrograma(id), ids: ids.valor, resumen, noImpactadas: noImp.valor.length };
-    }),
-  );
-  const totalImpactadas = porPrograma.reduce((s, p) => s + p.ids.length, 0);
-  const idsUnicos = [...new Set(porPrograma.flatMap((p) => p.ids))];
+  const { porPrograma: roles, totalImpactadas, idsUnicos, totalDonantes } = await rolesDe(esGlobal ? [] : [alcance]);
+  const programaIds = roles.map((p) => p.id);
+  const porPrograma = await Promise.all(roles.map(async (p) => ({
+    ...p, nombre: nombrePrograma(p.id), resumen: await resumenTiposDe(p.id),
+  })));
 
   const f = await filtrosDe(alcance);
   const [sinId, edad, porCiudad] = await Promise.all([
@@ -51,6 +43,7 @@ export async function GET(_req: Request, { params }: { params: Promise<{ alcance
 
   const filas: (string | number)[][] = [
     ['indicador', 'valor', 'unidad', 'definicion', 'fecha_corte', 'fuentes', 'advertencias'],
+    ['donantes', totalDonantes > 0 && totalDonantes < 5 ? '<5' : totalDonantes, 'persona', 'Personas identificadas que donaron, contadas una sola vez', corte, nombres, advert],
     [
       'personas_impactadas', totalImpactadas, 'persona',
       esGlobal
@@ -101,10 +94,10 @@ export async function GET(_req: Request, { params }: { params: Promise<{ alcance
         ]);
       }
     }
-    if (p.noImpactadas > 0) {
+    if (p.donantes.length > 0) {
       filas.push([
-        `personas_no_impactadas_${p.id}`, p.noImpactadas < 5 ? '<5' : p.noImpactadas, 'persona',
-        `Personas que solo aportan en ${p.nombre} (no cuentan como impactadas)`,
+        `donantes_${p.id}`, p.donantes.length < 5 ? '<5' : p.donantes.length, 'persona',
+        `Personas que donaron en ${p.nombre}`,
         corte, nombres, advert,
       ]);
     }
