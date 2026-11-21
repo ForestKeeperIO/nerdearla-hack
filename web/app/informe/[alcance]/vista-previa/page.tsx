@@ -163,7 +163,7 @@ export default async function PaginaVistaPrevia({ params }: { params: Promise<{ 
 
       <PieDePaso estado={estado} paso="vista-previa">
         <form action={aprobarCifras.bind(null, alcance)}>
-          <button type="submit" className="btn btn--primario">Confirmar y terminar la carga</button>
+          <button type="submit" className="btn btn--primario">{process.env.EIRA_VISTA_LECTURA === '1' ? 'Terminar la consulta' : 'Confirmar y terminar la carga'}</button>
         </form>
       </PieDePaso>
     </MarcoInforme>

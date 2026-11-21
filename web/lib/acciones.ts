@@ -45,6 +45,7 @@ export async function decidirPares(alcance: string, parIds: string[], intencion:
 
 /** "Contar de todos modos" una fila omitida: XADD eira:decisiones (tipo restituir_fila). */
 export async function restituirFila(alcance: string, fuenteId: string, fila: number) {
+  if (process.env.EIRA_VISTA_LECTURA === '1') return;
   if (!esAlcance(alcance)) return;
   if (!fuenteId || !Number.isFinite(fila)) return;
   await emitirDecision({
@@ -60,6 +61,7 @@ export async function restituirFila(alcance: string, fuenteId: string, fila: num
 /** La usuaria termina Calidad (con o sin decisiones pendientes). */
 export async function resolverCalidad(alcance: string) {
   if (!esAlcance(alcance)) return;
+  if (process.env.EIRA_VISTA_LECTURA === '1') redirect(`${base(alcance)}/vista-previa`);
   await escribirInforme(alcance as Alcance, { calidad_resuelta: '1' });
   revalidatePath(base(alcance), 'layout');
   redirect(`${base(alcance)}/vista-previa`);
@@ -68,6 +70,7 @@ export async function resolverCalidad(alcance: string) {
 /** "Las cifras son correctas": abre Exportar. */
 export async function aprobarCifras(alcance: string) {
   if (!esAlcance(alcance)) return;
+  if (process.env.EIRA_VISTA_LECTURA === '1') redirect('/subir');
   await escribirInforme(alcance as Alcance, { cifras_aprobadas: '1' });
   revalidatePath(base(alcance), 'layout');
   redirect('/subir');
@@ -75,6 +78,7 @@ export async function aprobarCifras(alcance: string) {
 
 /** Fecha de corte del informe, la primera vez que se entra. */
 export async function fijarFechaCorte(alcance: string, formData: FormData) {
+  if (process.env.EIRA_VISTA_LECTURA === '1') return;
   if (!esAlcance(alcance)) return;
   const fecha = String(formData.get('fecha_corte') ?? '');
   if (!/^\d{4}-\d{2}-\d{2}$/.test(fecha)) return;

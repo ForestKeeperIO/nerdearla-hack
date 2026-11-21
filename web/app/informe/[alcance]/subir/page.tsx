@@ -33,7 +33,8 @@ export default async function PaginaSubir({ params }: { params: Promise<{ alcanc
       titulo="Subir archivos"
       bajada={`Arrastra el Excel o CSV de cada coordinación de este programa. Si el mismo archivo, una fila o una persona ya estaban, no se cuentan dos veces.`}
     >
-      {!inf.fecha_corte && (
+      {process.env.EIRA_VISTA_LECTURA === '1' && <p className="sin-lectura">Vista de consulta: puedes revisar los archivos y decidir pares. Las cargas están desactivadas.</p>}
+      {!inf.fecha_corte && process.env.EIRA_VISTA_LECTURA !== '1' && (
         <form action={fijarFechaCorte.bind(null, alcance)} className="tarjeta mb-6" style={{ display: 'flex', flexWrap: 'wrap', alignItems: 'end', gap: 'var(--sp-4)' }}>
           <label style={{ display: 'flex', flexDirection: 'column', gap: 'var(--sp-1)' }}>
             <span style={{ fontWeight: 500 }}>¿Hasta qué fecha llega este informe?</span>
@@ -50,7 +51,7 @@ export default async function PaginaSubir({ params }: { params: Promise<{ alcanc
         </form>
       )}
 
-      <SubirArchivos alcance={alcance} tipos={tipos} fechaCorte={fechaCorte} estados={estadosCatalogo()} />
+      {process.env.EIRA_VISTA_LECTURA !== '1' && <SubirArchivos alcance={alcance} tipos={tipos} fechaCorte={fechaCorte} estados={estadosCatalogo()} />}
 
       <div className="mt-10">
         <ListaVivo alcance={alcance} inicial={{ trabajos: trabajos.valor, fuentes: fuentes.valor }} />

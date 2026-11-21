@@ -150,7 +150,7 @@ export default async function PaginaCalidad({ params }: { params: Promise<{ alca
                             <span className="mono" style={{ color: 'var(--tinta-tenue)' }}>fila {o.fila}</span> — ya estaba en «{nombreFuente[o.ya_en_fuente] ?? o.ya_en_fuente}», fila {o.ya_en_fila}
                           </span>
                           <form action={restituirFila.bind(null, alcance, f.id, o.fila)}>
-                            <button type="submit" className="btn btn--secundario btn--sm">Contar de todos modos</button>
+                            <button type="submit" disabled={process.env.EIRA_VISTA_LECTURA === '1'} className="btn btn--secundario btn--sm">Contar de todos modos</button>
                           </form>
                         </li>
                       ))}
