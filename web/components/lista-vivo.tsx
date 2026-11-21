@@ -10,11 +10,11 @@ type Datos = { trabajos: Trabajo[]; fuentes: Fuente[]; paresPorFuente?:Record<st
 
 function estadoTrabajo(t: Trabajo): { texto: string; clase: string } {
   if (t.estado === 'pendiente') return { texto: 'En espera', clase: 'estado--info' };
-  if (t.estado === 'procesando') return { texto: 'Leyendo…', clase: 'estado--info' };
+  if (t.estado === 'procesando') return { texto: 'Procesando', clase: 'estado--info' };
   if (t.estado === 'error') return { texto: 'No se pudo leer', clase: 'estado--error' };
   if (t.estado === 'duplicado') {
     if (t.nivel_duplicado === 'mismo_contenido') return { texto: 'Ya se cargó (mismo contenido)', clase: 'estado--aviso' };
-    return { texto: 'Ya se cargó', clase: 'estado--aviso' };
+    return { texto: 'Duplicado · ya se cargó', clase: 'estado--aviso' };
   }
   if (t.estado === 'listo') {
     if (t.nivel_duplicado === 'version_nueva') return { texto: 'Versión nueva', clase: 'estado--aviso' };
@@ -33,9 +33,13 @@ export function ListaVivo({ alcance, inicial }: { alcance: string; inicial: Dato
   const version = useRef(firma(inicial));
 
   useEffect(() => {
-    const t = setInterval(async () => {
+    const abort = new AbortController();
+    let leyendo=false;
+    async function releer() {
+      if (leyendo) return;
+      leyendo=true;
       try {
-        const r = await fetch(`/api/trabajos?alcance=${encodeURIComponent(alcance)}`, { cache: 'no-store' });
+        const r = await fetch(`/api/trabajos?alcance=${encodeURIComponent(alcance)}`, { cache: 'no-store',signal:abort.signal });
         const j = (await r.json()) as { ok: boolean } & Datos;
         if (j.ok) {
           setDatos({ trabajos: j.trabajos, fuentes: j.fuentes, paresPorFuente:j.paresPorFuente });
@@ -47,10 +51,12 @@ export function ListaVivo({ alcance, inicial }: { alcance: string; inicial: Dato
           setAlDia(true);
         } else setAlDia(false);
       } catch {
-        setAlDia(false);
-      }
-    }, 2000);
-    return () => clearInterval(t);
+        if (!abort.signal.aborted) setAlDia(false);
+      } finally {leyendo=false;}
+    }
+    const t=setInterval(releer,2000);
+    window.addEventListener('eira:carga-recibida',releer);
+    return () => {abort.abort();clearInterval(t);window.removeEventListener('eira:carga-recibida',releer);};
   }, [alcance,router]);
 
   const vacio = datos.trabajos.length === 0 && datos.fuentes.length === 0;
@@ -89,7 +95,7 @@ export function ListaVivo({ alcance, inicial }: { alcance: string; inicial: Dato
               <span className="fila__cuerpo">
                 <span style={{ display: 'block', fontWeight: 500 }}>{f.nombre}</span>
                 <span className="etiqueta" style={{ display: 'block' }}>
-                  {f.filas_nuevas} filas nuevas, {f.filas_omitidas} omitidas{datos.paresPorFuente!==undefined && `, ${datos.paresPorFuente[f.id]||0} pares detectados con esta carga`}.
+                  Listo · {f.filas_nuevas} filas nuevas, {f.filas_omitidas} omitidas{datos.paresPorFuente!==undefined && `, ${datos.paresPorFuente[f.id]||0} pares detectados con esta carga`}.
                 </span>
               </span>
               <span className="fila__dato"><StarRating valor={f.estrellas} etiqueta={`${f.estrellas} / 5`} /></span>

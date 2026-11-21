@@ -44,7 +44,8 @@ test('el rango ocupa un solo filtro y el CSV conserva el cruce', async ({ page }
   const hoja = page.getByRole('dialog',{name:'Filtros',exact:true});
   await hoja.locator('summary').click();
   await hoja.getByRole('button',{name:'Último mes'}).click();
-  await expect(page).toHaveURL(/desde=\d{4}-\d{2}&hasta=\d{4}-\d{2}/);
+  const corte = (await page.locator('.atlas-titulo time').getAttribute('datetime'))!.slice(0,7);
+  await expect(page).toHaveURL(url => url.searchParams.get('desde')===corte && url.searchParams.get('hasta')===corte);
   await hoja.getByRole('button',{name:'Ver resultados'}).click();
   await expect(abrir).toBeFocused();
   await page.getByRole('button',{name:'Limpiar',exact:true}).click();

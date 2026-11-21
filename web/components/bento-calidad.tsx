@@ -11,7 +11,7 @@ export function ParesBento({ decididos, pendientes }: { decididos: number; pendi
     <div className="bento-medidor">
       <svg viewBox="0 0 192 110" aria-hidden>
         <defs><pattern id="pares-rayado" width="5" height="5" patternUnits="userSpaceOnUse" patternTransform="rotate(35)">
-          <rect width="5" height="5" fill="var(--bento-fondo)"/><rect width="1.5" height="5" fill="var(--tinta-tenue)"/>
+          <rect width="5" height="5" fill="var(--bento-lienzo)"/><rect width="1.5" height="5" fill="var(--tinta-tenue)"/>
         </pattern></defs>
         <path d="M17 98a79 79 0 0 1 158 0" stroke="url(#pares-rayado)" />
         {decididos>0 && <path d="M17 98a79 79 0 0 1 158 0" pathLength="100" stroke="var(--vino)"
