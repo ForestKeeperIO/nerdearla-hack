@@ -8,7 +8,7 @@
 
 **Tech Stack:** Python 3.12 con `uv`, pandas, openpyxl, Splink 4 (motor DuckDB), valkey-py, SQLite, Metabase de código abierto (JAR, Java 21), Valkey 9.2, Next.js (rama `fe`), Vitest y pytest.
 
-**Spec:** `AGENTS.md`, `docs/contrato-valkey.md` (contrato v1, sigue vigente), `docs/contexto/nota-granola-eira.md`, y la sección "Cómo se omiten los duplicados" de `docs/superpowers/plans/2026-11-21-impacto-eira.md`.
+**Spec:** `docs/superpowers/specs/2026-11-21-impacto-eira-diseno.md` (para quién es, el recorrido y lo que debe tener cada pantalla; manda sobre este plan), `AGENTS.md`, `docs/contrato-valkey.md` (contrato v1, sigue vigente), `docs/contexto/nota-granola-eira.md`, y la sección "Cómo se omiten los duplicados" de `docs/superpowers/plans/2026-11-21-impacto-eira.md`.
 
 ## Global Constraints
 
@@ -20,12 +20,15 @@
 - Splink propone, una persona decide: solo se unen sin preguntar las personas con el mismo ID de EIRA y el mismo nombre normalizado. Toda otra coincidencia va a `pares_persona` con su probabilidad.
 - Sin conteos aproximados. Unidades que no se suman: `atencion`, `estudio`, `participacion`, `entrega_insumo`.
 - Licencias: nuestro código es MIT. Metabase es AGPL: se ejecuta como servicio aparte y no se copia código suyo al repositorio. Splink, pandas, DuckDB y Valkey son MIT o BSD.
-- Aspecto del frontend: referencias de details.so, reproduciendo el patrón con código propio (sin copiar su código, tipografías de pago ni imágenes). Nada visual se aplica a todas las pantallas sin aprobación de Ian sobre una pantalla de muestra.
+- Aspecto del frontend: de gama alta, con las referencias de la auditoría de details.so (`docs/referencias/auditoria-componentes.md`, rama `referencias`), reproduciendo el patrón con código propio (sin copiar su código, tipografías de pago ni imágenes).
+- **Ningún rosa, magenta ni fucsia, en ninguna tonalidad**, en el frontend ni en los tableros de Metabase. Paleta neutra con un solo acento que no sea rosa.
+- El recorrido es guiado: no se puede saltar a un paso sin resolver el anterior. No hay barra lateral, ni selector de rol, ni segunda navegación.
+- Dos versiones en línea: una en blanco (sin datos) y otra con reportes reales de fuentes públicas ya procesados. Cada una con su propia base de Valkey (número de base distinto) y su propio archivo SQLite.
 - Texto visible en español. Se dice "Valkey", nunca "Redis"; "seudonimizado", nunca "anónimo".
 - Protocolo de confirmación (de la auditoría de Devin, `docs/contexto/auditoria-sesion.md`): antes de toda acción con efectos (commit, push, despliegue, lanzar un agente o un trabajador) el agente escribe dos líneas, `Entendí: <acción> en <lugar> con <herramienta>.` y `No haré: <alcance excluido>. ¿Confirmas?`, y espera la respuesta. Sin preguntar solo puede leer, buscar, continuar lo ya aprobado en el mismo turno, o revertir algo que hizo sin permiso.
 - Skills: si se invocan dos en un mensaje, se anuncia el orden y se ejecutan una tras otra, reportando tras cada una. Si una skill completa no cabe en el tiempo, se dice antes y se acuerda la versión acotada; no se sustituye por otra cosa.
-- La ejecución de este plan se hace con trabajadores de Orca (skill de orquestación), uno por tarea, cada uno en su propio espacio de trabajo; no con procesos lanzados a mano.
-- Alcance congelado al aprobar G0: Reto 3; motor en Python con pandas y Splink; Valkey con el contrato v1; SQLite como base de reporte; Metabase para tableros; Next.js para el frontend; referencias visuales de details.so. Nada entra después sin una nueva aprobación explícita.
+- Ejecución (decisión de Ian, 12:52): la disciplina es la de la skill executing-plans (bitácora de avance, pruebas antes del código, verificación con evidencia y una revisión final de todo), pero las tareas independientes las implementan agentes de Devin en paralelo, cada uno en su rama, porque así lo pidió Ian. Esa desviación de la skill queda anotada en la bitácora.
+- Alcance congelado al aprobar G0: Reto 3; motor en Python con pandas y Splink; Valkey con el contrato v1; SQLite como base de reporte; Metabase para tableros; Next.js para el frontend; referencias visuales de details.so; sin rosa; recorrido guiado; dos versiones en línea. Nada entra después sin una nueva aprobación explícita.
 
 ## Puertas de control
 
@@ -38,7 +41,7 @@ Nada de lo que está a la derecha empieza antes de pasar la puerta.
 | G2 Reportes de prueba | Los tres reportes y sus derivados existen y cuadran con `esperado.json` | Salida de `pytest reportes` | Automática | Tarea 3 |
 | G3 Motor | Los tres reportes pasan de punta a punta y los duplicados se omiten | Salida de `npm run verificar` y de `pytest motor` | Automática, Ian la ve | Tarea 6 |
 | G4 Metabase | Metabase corre y muestra los tableros con datos | Captura de cada tablero | Ian | Incrustarlos en el frontend |
-| G5 Aspecto | Una pantalla (Subir) rehecha con la referencia de details.so | Captura junto a la referencia | Ian | Aplicar el aspecto a las demás pantallas |
+| G5 Frontend | Recorrido guiado, sin rosa, con el sistema visual de la auditoría | Capturas de cada pantalla y prueba de que no se saltan pasos | Ian | Integrar `fe` a `main` |
 | G6 En línea | El recorrido completo funciona en la dirección pública | Lista de pasos con resultado | Ian | Video y envío |
 | G7 Entrega | README, video de respaldo y Devpost | Enlaces | Ian | — |
 
@@ -201,22 +204,74 @@ def test_contrato(motor): ...                                        # `npm run 
 - [ ] **Step 2:** Implementar. Verificar en la documentación de Metabase, no de memoria: el nombre del motor SQLite en la API, la creación de enlaces públicos y los parámetros de arranque.
 - [ ] **Step 3:** Commit y push de la rama `metabase`. **Puerta G4:** captura de cada tablero con datos de los reportes de prueba, para aprobación de Ian.
 
-### Task 5: Frontend (rama `fe`)
+### Task 5: Frontend rehecho (rama `fe`)
+
+La especificación es `docs/superpowers/specs/2026-11-21-impacto-eira-diseno.md`. Se conserva la capa de datos (`web/lib/`); se rehace la estructura y el aspecto.
 
 **Files:**
-- Modify: `web/components/ui/star-rating.tsx`, `web/app/page.tsx`, `web/app/tablero/page.tsx`, `web/app/globals.css`
-- Create: `docs/referencias/` (capturas de las referencias de details.so usadas)
+- Create: `web/lib/recorrido.ts`, `web/lib/recorrido.test.ts`, `web/app/nuevo/page.tsx`, `web/components/pasos.tsx`, `web/components/pie-de-paso.tsx`
+- Modify: `web/app/layout.tsx`, `web/app/page.tsx`, `web/app/calidad/page.tsx`, `web/app/tablero/page.tsx`, `web/app/informe/page.tsx`, `web/app/globals.css`, `web/components/ui/star-rating.tsx`, `web/lib/claves.ts`, `web/lib/acciones.ts`
+- Delete: `web/components/ui/sidebar.tsx` y lo que solo él usa, el selector de rol, `web/app/registro/`
 
-- [ ] **Step 1:** Corregir el defecto de las estrellas: una calificación de 3 dibuja 3 estrellas llenas del mismo tamaño que las demás. Prueba: `StarRating` con valor 3 produce 3 llenas y 2 vacías.
-- [ ] **Step 2 (pantalla de muestra):** rehacer solo **Subir** tomando como referencia el tratamiento de pasos y de filas de details.so (`/inspo/category/steps`, `/rows`, `/list`). Guardar en `docs/referencias/` la captura de cada referencia usada y, junto a ella, la captura de nuestra pantalla. **Puerta G5:** Ian aprueba o corrige. No tocar las demás pantallas antes.
-- [ ] **Step 3 (tras G5 y G4):** aplicar el aspecto aprobado a Calidad, Vista previa e Informe. En Vista previa, las cifras exactas de Valkey arriba y, debajo, el tablero "Impacto" de Metabase incrustado desde `metabase/enlaces.json`; en Calidad, el tablero "Calidad". Quitar el espacio muerto de las tarjetas.
-- [ ] **Step 4:** `npm run build`, rutas con 200, capturas nuevas en `docs/capturas/`. Commit y push.
+**Interfaces — Produces (`web/lib/recorrido.ts`):**
 
-### Task 6: Demo en línea y entrega (tras G3, G4 y G5)
+```ts
+export type Paso = 'nuevo' | 'subir' | 'calidad' | 'vista-previa' | 'exportar';
+export interface EstadoRecorrido {
+  informe: { nombre: string; audiencia: string; fechaCorte: string } | null;
+  fuentes: number; trabajosEnCurso: number; paresPendientes: number;
+  calidadResuelta: boolean; cifrasAprobadas: boolean;
+}
+export function pasoActual(e: EstadoRecorrido): Paso;                 // el primero sin resolver
+export function puedeEntrar(e: EstadoRecorrido, p: Paso): boolean;
+export function motivoBloqueo(e: EstadoRecorrido, p: Paso): string | null;   // texto para la usuaria
+```
 
-- [ ] **Step 1:** `scripts/demo.sh`: arranca Valkey, crea la base, arranca el motor, Metabase y el frontend, y abre el túnel. Imprime la dirección pública.
-- [ ] **Step 2:** Recorrido en la dirección pública: subir los tres reportes; ver estrellas y mensajes; subir `reporte_final_2.xlsx` y ver "ya se cargó"; subir la versión 2 y ver "se agregan 8"; Calidad: decidir un par; Vista previa: cifras y tablero de Metabase; Exportar. **Puerta G6.**
-- [ ] **Step 3:** README (qué resuelve, cómo levantarlo, arquitectura, implementado / simulado / para piloto, privacidad, costos, licencias de terceros incluida la AGPL de Metabase, cómo se usó Devin), video de respaldo de 90 s y Devpost. **Puerta G7.**
+Reglas: sin informe solo se entra a `nuevo`; `calidad` exige `fuentes ≥ 1` y `trabajosEnCurso = 0`; `vista-previa` exige `calidadResuelta`; `exportar` exige `cifrasAprobadas`. Subir un archivo nuevo pone `calidadResuelta` y `cifrasAprobadas` en falso. Siempre se puede volver a un paso anterior.
+
+- [ ] **Step 1:** Pruebas que fallan en `web/lib/recorrido.test.ts`:
+
+```ts
+const base = { informe: { nombre: 'x', audiencia: 'donantes', fechaCorte: '2026-09-30' }, fuentes: 0, trabajosEnCurso: 0, paresPendientes: 0, calidadResuelta: false, cifrasAprobadas: false };
+test('sin informe solo existe el paso nuevo', () => {
+  const e = { ...base, informe: null };
+  expect(pasoActual(e)).toBe('nuevo'); expect(puedeEntrar(e, 'subir')).toBe(false);
+});
+test('no se puede saltar a calidad sin archivos', () => {
+  expect(puedeEntrar(base, 'calidad')).toBe(false);
+  expect(motivoBloqueo(base, 'calidad')).toBe('Primero sube al menos un archivo.');
+});
+test('con un archivo procesándose calidad sigue bloqueada', () => {
+  expect(puedeEntrar({ ...base, fuentes: 1, trabajosEnCurso: 1 }, 'calidad')).toBe(false);
+});
+test('vista previa exige calidad resuelta; exportar exige cifras aprobadas', () => {
+  const e = { ...base, fuentes: 2 };
+  expect(puedeEntrar(e, 'vista-previa')).toBe(false);
+  expect(puedeEntrar({ ...e, calidadResuelta: true }, 'vista-previa')).toBe(true);
+  expect(puedeEntrar({ ...e, calidadResuelta: true }, 'exportar')).toBe(false);
+  expect(puedeEntrar({ ...e, calidadResuelta: true, cifrasAprobadas: true }, 'exportar')).toBe(true);
+});
+test('siempre se puede volver atrás', () => {
+  expect(puedeEntrar({ ...base, fuentes: 2, calidadResuelta: true, cifrasAprobadas: true }, 'subir')).toBe(true);
+});
+```
+
+Más: `StarRating` con valor 3 dibuja 3 estrellas llenas y 2 vacías, todas del mismo tamaño; ninguna hoja de estilos ni componente contiene un color con tono entre 300° y 360° o entre 0° y 10° (prueba que recorre los tokens), ni las palabras `rose`, `pink`, `fuchsia`, `magenta`.
+
+- [ ] **Step 2:** Implementar `recorrido.ts`, la clave `eira:informe` (Hash: `nombre`, `audiencia`, `fecha_corte`, `creado_en`, `calidad_resuelta`, `cifras_aprobadas`) y la redirección: toda ruta de paso bloqueado lleva a `pasoActual`.
+- [ ] **Step 3:** Rehacer la estructura según la especificación: inicio con "Crear informe"; `nuevo`; indicador de pasos como estado (no como menú) con el motivo de bloqueo; pie con "Continuar a …" y "Volver"; quitar barra lateral, selector de rol y Registro. Textos sin tecnicismos (no se menciona Valkey ni colas en la interfaz; el detalle técnico va en el desplegable "Cómo se calculó").
+- [ ] **Step 4:** Aplicar el sistema visual de `docs/referencias/auditoria-componentes.md` (tokens y tabla "pantalla → componente → referencia"). Si ese archivo aún no existe en `origin/referencias`, usar tinta `#0b1220`, fondo `#fafaf7`, bordes `#e7e5e4` y acento verde bosque `#14532d`, y sustituir por los tokens de la auditoría en cuanto llegue.
+- [ ] **Step 5:** Vista previa con las tres cifras de EIRA primero y, cuando exista `metabase/enlaces.json` (rama `metabase`), el tablero incrustado; si no existe, la pantalla funciona sin él.
+- [ ] **Step 6:** Que la aplicación arranque contra cualquier entorno por variables (`VALKEY_URL` con número de base, `PORT`, `NOMBRE_ENTORNO` que se muestra discretamente en la cabecera: "En blanco" o "Con fuentes reales").
+- [ ] **Step 7:** `npm test`, `npm run build`, recorrido manual con Valkey vacío (se queda en "Crear informe", no deja saltar pasos) y con datos; capturas de cada pantalla en `docs/capturas/`. Commit y push. **Puerta G5:** capturas para Ian.
+
+### Task 6: Dos versiones en línea y entrega (tras G3, G4 y G5)
+
+- [ ] **Step 1:** `scripts/demo.sh <blanco|real>`: para ese entorno arranca el motor y el frontend con su base de Valkey (`/0` para blanco, `/1` para real), su SQLite (`data/blanco.sqlite`, `data/real.sqlite`) y su puerto (3100 y 3101), provisiona sus tableros en Metabase y abre su túnel. Imprime la dirección pública.
+- [ ] **Step 2:** Versión con fuentes reales: crear el informe y procesar los archivos de `reportes-reales/` (rama `fuentes-reales`) por el motor; comprobar sus totales contra `reportes-reales/esperado.json`.
+- [ ] **Step 3:** Versión en blanco: comprobar que abre en "Crear informe" con cero claves `eira:*` salvo `eira:contrato`.
+- [ ] **Step 4:** Recorrido en la versión en blanco: crear informe; intentar entrar a Calidad por dirección directa y ver que regresa a Subir; subir los tres reportes de prueba; ver estrellas y mensajes; subir `reporte_final_2.xlsx` y ver "ya se cargó"; subir la versión 2 y ver "se agregan 8"; Calidad: decidir los pares; Vista previa: cifras y tablero; Exportar. **Puerta G6.**
+- [ ] **Step 5:** README (qué resuelve, para quién, cómo levantarlo, arquitectura, implementado / simulado / para piloto, privacidad, costos, licencias de terceros incluida la AGPL de Metabase, cómo se usó Devin), video de respaldo de 90 s y Devpost. **Puerta G7.**
 
 ---
 
