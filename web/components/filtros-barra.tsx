@@ -62,6 +62,7 @@ export function FiltrosBarra({ base, activos, corte }: { base: BaseFacetas; acti
     {cuenta > 0 && chips}
     <div className="facetas-pie"><p aria-live="polite" aria-atomic="true">
       {pendiente ? 'Actualizando…' : resumen}{(f.servicio.length > 0 || f.periodo.length > 0) && ` Actividad: ${resultado.unidades.map(u => `${u.cantidad} ${u.nombre}`).join('; ') || 'sin resultados'}.`}
+      {resultado.sinCruce > 0 && ` No se pudo verificar el municipio de ${resultado.sinCruce} registros de actividad; se excluyen del desglose territorial.`}
     </p>
       <button type="button" onClick={async () => { try { await navigator.clipboard.writeText(window.location.href); copiar('Enlace copiado'); }
         catch { copiar('Copia la dirección de la barra del navegador'); } }}><Link2 size={15} aria-hidden />{copia || 'Copiar enlace de esta vista'}</button>

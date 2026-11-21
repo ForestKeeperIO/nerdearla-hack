@@ -56,5 +56,7 @@ export function consultar(base: BaseFacetas, f: FiltrosMulti) {
       cuenta: tipos.has(s.programa) && enLugar(s) && acepta(f.servicio,s.servicio) ? s.cantidad : 0, unidad: 'registros identificados' }))),
   };
   return { filtros, municipios, unidades: [...unidades].map(([nombre,cantidad]) => ({ nombre, cantidad })),
+    sinCruce: geografia || restringeActividad ? base.series.filter(s => !s.municipio && acepta(f.programa,s.programa) && enActividad(s))
+      .reduce((n,s) => n+s.cantidad,0) : 0,
     registros: lugares.reduce((n,l) => n + nLugar(l), 0) };
 }
