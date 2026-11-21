@@ -90,6 +90,17 @@ def test_exito_hace_ack(motor):
     assert motor.v.hget(f"eira:trabajo:{tid}", "estado") == "listo"
 
 
+# --- Calidad: una versión nueva no se penaliza por lo ya cargado ----------------
+
+def test_version_nueva_no_pierde_estrellas_por_filas_ya_cargadas(motor):
+    t1 = motor.procesar("tamizaje-rosa.xlsx")
+    t2 = motor.procesar("tamizaje-rosa_v2.xlsx")
+    e1 = int(motor.v.hget(f"eira:fuente:{t1['fuente']}", "estrellas"))
+    e2 = int(motor.v.hget(f"eira:fuente:{t2['fuente']}", "estrellas"))
+    assert t2["nivel_duplicado"] == "version_nueva"
+    assert e2 >= e1, (e1, e2)
+
+
 # --- Privacidad: el Excel crudo no se queda en Valkey ---------------------------
 
 def test_archivo_crudo_se_borra_al_terminar(motor):
