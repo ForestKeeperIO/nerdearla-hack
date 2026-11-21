@@ -7,6 +7,7 @@ const PESTANAS = [
   { href: '/tablero', titulo: 'Tablero' },
   { href: '/reportes', titulo: 'Reportes' },
   { href: '/subir', titulo: 'Subir archivos' },
+  { href: '/como-funciona', titulo: 'Cómo funciona' },
 ];
 
 export function NavPrincipal() {

@@ -1,0 +1,43 @@
+render tier: 35 screenshots in .hallmark/shots (1280x800, 1440x900, 1920x1080 folds; 1440 and 375 full pages)
+/informe/tamizaje-rosa/vista-previa
+  FAIL 26a :1 [1440px] focus ring 1.00:1 against what is behind it on summary "Cómo se calculó" | fix: A ring at 3:1 or better against the surface it is drawn over: --color-focus, or a ring colour per band
+  FAIL 49a :1 [375px] control "Subir archivos" wraps to 2 lines (a) | fix: Shorten the label or set nowrap
+  REFLEX 72 :1 [1440px] text crowds the edge of its box: div bottom -22px; div bottom -45px; div bottom -22px | fix: Pad the box: max(8px, 0.5em) at the sides, max(4px, 0.3em) above and below
+/informe/tamizaje-rosa/subir
+  FAIL 40 :1 [1440px] a field's edge is under 3:1 against what surrounds it: input 1.42:1 | fix: Draw the field in --color-muted, or fill it a step off the surface it sits on
+  FAIL 49a :1 [375px] control "Subir archivos" wraps to 2 lines (a)
+/subir
+  FAIL 40 :1 [1440px] a field's edge is under 3:1 against what surrounds it: input 1.42:1
+  FAIL 49a :1 [375px] control "Subir archivos" wraps to 2 lines (a)
+/informe/tamizaje-rosa/calidad
+  FAIL 49a :1 [320px] control "Fila ya cargada en otro archivo," wraps to 2 lines (button.group/accordion-trigger.relative)
+  FAIL 49a :1 [320px] control "Fecha no reconocida, 3 filas" wraps to 2 lines (button.group/accordion-trigger.relative)
+  FAIL 49a :1 [320px] control "Ciudad no reconocida, 2 filas" wraps to 2 lines (button.group/accordion-trigger.relative)
+  FAIL 49a :1 [320px] control "Fecha posterior al corte, 3 fila" wraps to 2 lines (button.group/accordion-trigger.relative)
+  FAIL 49a :1 [320px] control "Fila repetida dentro del archivo" wraps to 2 lines (button.group/accordion-trigger.relative)
+  FAIL 49a :1 [320px] control "Misma persona, mismo evento" wraps to 2 lines (button.par-boton)
+  FAIL 49a :1 [320px] control "Misma persona, otro evento" wraps to 2 lines (button.par-boton)
+  FAIL 49a :1 [375px] control "Subir archivos" wraps to 2 lines (a)
+  WARN F18 :1 [375px] slot "accordion-trigger-icon" renders at 19 x 19px on a phone | fix: The slot collapsed: give it width: 100% and an aspect-ratio in the stacked layout
+  WARN F18 :1 [1440px] slot "card-header" renders at 479 x 39px | fix: The slot collapsed: give it a width from its track and a real aspect-ratio, never a percentage of a shrink-to-fit parent
+  WARN F19 :1 [1440px] 4 font weights in running use (400, 500, 600, 700) | fix: Three weights at most, display and body together, picked as extremes
+/reportes
+  FAIL 49a :1 [375px] control "Subir archivos" wraps to 2 lines (a)
+  REFLEX 3 :1 [1440px] equal columns of icon-above-heading tiles (section.historial-reportes) | fix: Vary the widths, set the icon inline with the heading, or drop the icons
+  REFLEX 49b :1 [320px] link "Territorial para gobierno y hosp" wraps to 3 lines (a) | fix: Shorten the label or set nowrap
+  REFLEX 49b :1 [320px] link "Impacto para aliados estratégico" wraps to 3 lines (a)
+  REFLEX 49b :1 [320px] link "Impacto por programa" wraps to 2 lines (a)
+  REFLEX 49b :1 [375px] link "Territorial para gobierno y hosp" wraps to 2 lines (a)
+  REFLEX 49b :1 [375px] link "Impacto para aliados estratégico" wraps to 2 lines (a)
+  REFLEX 49b :1 [768px] link "Presencia territorial" wraps to 2 lines (a)
+/reportes/aliados
+  FAIL 49a :1 [375px] control "Subir archivos" wraps to 2 lines (a)
+  WARN F19 :1 [1440px] 4 font weights in running use (400, 500, 600, 700)
+/reportes/territorial
+  FAIL 49a :1 [375px] control "Subir archivos" wraps to 2 lines (a)
+  WARN F19 :1 [1440px] 4 font weights in running use (400, 500, 600, 700)
+web/app/expediente.css
+  WARN 25 :29 measure 32ch on .tapa p (45-75ch range) | fix: Set prose measure between 45 and 75ch; a one-sentence lede or caption from 28ch
+web/app/bento.css
+  WARN F7 :18 same container recipe on 13 selectors (.eira-mastil, .registro .asiento, .expediente-c…...) | fix: Vary weight, radius, or fill by role; not every box is the same box
+sloplint: 17 FAIL, 8 REFLEX, 7 WARN across 4 file(s) and 7 URL(s).

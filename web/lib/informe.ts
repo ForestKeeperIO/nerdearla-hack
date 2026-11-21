@@ -103,7 +103,7 @@ export async function estadoRecorrido(alcance: Alcance): Promise<EstadoRecorrido
 export function tiposDelAlcance(alcance: Alcance): string[] {
   if (alcance !== 'global') return tiposDe(alcance).map((t) => t.clave);
   const visto = new Set<string>();
-  for (const p of programasDemo()) for (const t of tiposDe(p.id)) visto.add(t.clave);
+  for (const p of informesActivos()) for (const t of tiposDe(p.id)) visto.add(t.clave);
   return [...visto];
 }
 

@@ -1,8 +1,9 @@
 import { NextResponse } from 'next/server';
 import { randomBytes } from 'node:crypto';
 import { valkey } from '@/lib/valkey';
-import { archivo, informe, trabajo, trabajos } from '@/lib/claves';
-import { tiposDe } from '@/lib/catalogo';
+import { archivo, informe, motorActivo, trabajo, trabajos } from '@/lib/claves';
+import { informesActivos, tiposDe } from '@/lib/catalogo';
+import { resolverNombre, SIN_ALTA, UNIDADES_LIBRES } from '@/lib/programa-libre';
 import { esAlcance } from '@/lib/informe';
 import { soloLectura } from '@/lib/modo-carga';
 
@@ -20,7 +21,7 @@ export async function POST(request: Request) {
   }
 
   const archivoSubido = form.get('archivo');
-  const programa = String(form.get('programa') ?? '').trim();
+  let programa = String(form.get('programa') ?? '').trim();
   const unidad = String(form.get('unidad') ?? '').trim();
   const fechaCorte = String(form.get('fecha_corte') ?? '').trim();
   const por = String(form.get('por') ?? '').trim() || 'Coordinación';
@@ -52,14 +53,25 @@ export async function POST(request: Request) {
       { status: 400 },
     );
   }
-  if (!programa || programa === 'global' || !esAlcance(programa) || !/^\d{4}-\d{2}-\d{2}$/.test(fechaCorte)) {
-    return NextResponse.json(
-      { ok: false, error: 'Falta el programa o la fecha de corte.' },
-      { status: 400 },
-    );
+  if (programa === 'otro') {
+    const nombreLibre = String(form.get('nombre_programa') ?? '').trim();
+    if (!nombreLibre || nombreLibre.length > 100 || !UNIDADES_LIBRES.some(u => u === unidad)) {
+      return NextResponse.json({ ok: false, error: 'Escribe el nombre del programa (hasta 100 caracteres) y elige una unidad.' }, { status: 400 });
+    }
+    const conocido = resolverNombre(nombreLibre, informesActivos().filter(p => p.clase !== 'fuente_publica'));
+    if (!conocido) return NextResponse.json({ ok: false, error: SIN_ALTA }, { status: 422 });
+    programa = conocido.id;
   }
-  if (unidad !== 'segun_fila' && !tiposDe(programa).some((t) => t.clave === unidad)) {
-    return NextResponse.json({ ok: false, error: 'El tipo de registro no es válido para este programa.' }, { status: 400 });
+  if (programa === 'global' || !esAlcance(programa)) {
+    return NextResponse.json({ ok: false, error: 'Elige un programa habilitado para recibir archivos.' }, { status: 400 });
+  }
+  if (!/^\d{4}-\d{2}-\d{2}$/.test(fechaCorte)) {
+    return NextResponse.json({ ok: false, error: 'Indica la fecha de corte en formato AAAA-MM-DD.' }, { status: 400 });
+  }
+  const tipos = tiposDe(programa);
+  const segunFila = motorActivo() === 'motor' && unidad === 'segun_fila';
+  if (!segunFila && !tipos.some((t) => t.clave === unidad)) {
+    return NextResponse.json({ ok: false, error: `Elige una unidad admitida para este programa: ${tipos.map(t=>t.plural).join(', ')}.` }, { status: 400 });
   }
 
   const bytes = Buffer.from(await archivoSubido.arrayBuffer());

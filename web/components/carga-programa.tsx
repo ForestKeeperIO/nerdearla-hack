@@ -4,6 +4,7 @@ import { fechaCorteDe, fuentesDe, leerInforme, trabajosDe } from '@/lib/informe'
 import { fijarFechaCorte } from '@/lib/acciones';
 import { puedeEntrar, motivoBloqueo } from '@/lib/recorrido';
 import { informesActivos, tiposDe } from '@/lib/catalogo';
+import { motorActivo } from '@/lib/claves';
 import { soloLectura } from '@/lib/modo-carga';
 import { estadosCatalogo } from '@/lib/territorio';
 import { MarcoInforme } from '@/components/marco';
@@ -20,7 +21,7 @@ export async function CargaPrograma({ programa:a }: {programa:string}) {
     fuentesDe(alcance),
   ]);
   const tipos = tiposDe(alcance).map((t) => ({ clave: t.clave, etiqueta: t.etiqueta }));
-  if (tipos.length > 1) tipos.unshift({ clave: 'segun_fila', etiqueta: 'Leer el tipo de cada fila' });
+  if (tipos.length > 1 && motorActivo() === 'motor') tipos.unshift({ clave: 'segun_fila', etiqueta: 'Leer el tipo de cada fila' });
   const fechaCorte = inf.fecha_corte || (await fechaCorteDe(alcance));
   const listo = puedeEntrar(estado, 'calidad');
 
@@ -49,7 +50,7 @@ export async function CargaPrograma({ programa:a }: {programa:string}) {
       )}
 
       <SubirArchivos key={alcance} alcance={alcance} tipos={tipos} fechaCorte={fechaCorte} estados={estadosCatalogo()}
-        programas={informesActivos().map(p=>({valor:p.id,texto:p.nombre}))} lectura={soloLectura()} />
+        programas={informesActivos().map(({id,nombre,tipos_de_registro})=>({id,nombre,tipos_de_registro}))} lectura={soloLectura()} />
 
       <div className="mt-10">
         <ListaVivo alcance={alcance} inicial={{ trabajos: trabajos.valor, fuentes: fuentes.valor }} />
