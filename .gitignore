@@ -1,0 +1,6 @@
+.claude/
+data/
+node_modules/
+dist/
+.env
+.valkey/
