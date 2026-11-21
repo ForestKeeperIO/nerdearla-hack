@@ -7,26 +7,41 @@
         {
           "id": "atenciones",
           "nombre": "Atenciones",
-          "sql": "SELECT SUM(total) AS total FROM v_conteos WHERE unidad = 'atencion'",
+          "sql": "SELECT COALESCE(SUM(total), 0) AS total FROM v_conteos WHERE unidad = 'atencion'",
           "display": "scalar",
-          "visualization_settings": {"scalar.field": "total"},
-          "col": 0, "row": 0, "size_x": 6, "size_y": 4
+          "visualization_settings": {
+            "scalar.field": "total"
+          },
+          "col": 0,
+          "row": 0,
+          "size_x": 6,
+          "size_y": 4
         },
         {
           "id": "participaciones",
           "nombre": "Participaciones",
-          "sql": "SELECT SUM(total) AS total FROM v_conteos WHERE unidad = 'participacion'",
+          "sql": "SELECT COALESCE(SUM(total), 0) AS total FROM v_conteos WHERE unidad = 'participacion'",
           "display": "scalar",
-          "visualization_settings": {"scalar.field": "total"},
-          "col": 6, "row": 0, "size_x": 6, "size_y": 4
+          "visualization_settings": {
+            "scalar.field": "total"
+          },
+          "col": 6,
+          "row": 0,
+          "size_x": 6,
+          "size_y": 4
         },
         {
           "id": "edad_promedio",
           "nombre": "Edad promedio",
-          "sql": "SELECT ROUND(AVG(edad), 1) AS edad_promedio FROM v_edad",
+          "sql": "SELECT COALESCE(ROUND(AVG(edad), 1), 0) AS edad_promedio FROM v_edad",
           "display": "scalar",
-          "visualization_settings": {"scalar.field": "edad_promedio"},
-          "col": 12, "row": 0, "size_x": 6, "size_y": 4
+          "visualization_settings": {
+            "scalar.field": "edad_promedio"
+          },
+          "col": 12,
+          "row": 0,
+          "size_x": 6,
+          "size_y": 4
         },
         {
           "id": "personas_por_programa",
@@ -34,12 +49,24 @@
           "sql": "SELECT programa, personas FROM v_personas_por_programa ORDER BY personas DESC",
           "display": "bar",
           "visualization_settings": {
-            "graph.dimensions": ["programa"],
-            "graph.metrics": ["personas"],
+            "graph.dimensions": [
+              "programa"
+            ],
+            "graph.metrics": [
+              "personas"
+            ],
             "graph.show_values": true,
-            "series_settings": {"personas": {"color": "#2F6B4F", "title": "Personas"}}
+            "series_settings": {
+              "personas": {
+                "color": "#2F6B4F",
+                "title": "Personas"
+              }
+            }
           },
-          "col": 0, "row": 4, "size_x": 9, "size_y": 7
+          "col": 0,
+          "row": 4,
+          "size_x": 9,
+          "size_y": 7
         },
         {
           "id": "personas_por_ciudad",
@@ -47,12 +74,24 @@
           "sql": "SELECT ciudad, personas FROM v_personas_por_ciudad ORDER BY personas DESC",
           "display": "bar",
           "visualization_settings": {
-            "graph.dimensions": ["ciudad"],
-            "graph.metrics": ["personas"],
+            "graph.dimensions": [
+              "ciudad"
+            ],
+            "graph.metrics": [
+              "personas"
+            ],
             "graph.show_values": true,
-            "series_settings": {"personas": {"color": "#2E4A66", "title": "Personas"}}
+            "series_settings": {
+              "personas": {
+                "color": "#2E4A66",
+                "title": "Personas"
+              }
+            }
           },
-          "col": 9, "row": 4, "size_x": 9, "size_y": 7
+          "col": 9,
+          "row": 4,
+          "size_x": 9,
+          "size_y": 7
         },
         {
           "id": "cruce_programas",
@@ -60,15 +99,35 @@
           "sql": "SELECT programa_a AS \"Programa A\", programa_b AS \"Programa B\", personas AS \"Personas en ambos\" FROM v_cruce_programas",
           "display": "table",
           "visualization_settings": {},
-          "col": 0, "row": 11, "size_x": 9, "size_y": 6
+          "col": 0,
+          "row": 11,
+          "size_x": 9,
+          "size_y": 6
         },
         {
           "id": "cobertura",
           "nombre": "Cobertura por ciudad",
           "sql": "SELECT ciudad AS \"Ciudad\", personas AS \"Personas\", mujeres_25_64 AS \"Mujeres 25-64\", porcentaje AS \"Cobertura %\" FROM v_cobertura ORDER BY porcentaje DESC",
           "display": "table",
-          "visualization_settings": {"table.column_formatting": [{"columns": ["Cobertura %"], "type": "range", "min_type": "all", "max_type": "all", "color": "#2F6B4F", "min_value": 0, "max_value": 100}]},
-          "col": 9, "row": 11, "size_x": 9, "size_y": 6
+          "visualization_settings": {
+            "table.column_formatting": [
+              {
+                "columns": [
+                  "Cobertura %"
+                ],
+                "type": "range",
+                "min_type": "all",
+                "max_type": "all",
+                "color": "#2F6B4F",
+                "min_value": 0,
+                "max_value": 100
+              }
+            ]
+          },
+          "col": 9,
+          "row": 11,
+          "size_x": 9,
+          "size_y": 6
         }
       ]
     },
@@ -81,15 +140,23 @@
           "sql": "SELECT fuente AS \"Reporte\", estrellas AS \"Estrellas\", puntaje AS \"Puntaje\" FROM (SELECT DISTINCT fuente, estrellas, puntaje FROM v_calidad) ORDER BY estrellas DESC",
           "display": "table",
           "visualization_settings": {},
-          "col": 0, "row": 0, "size_x": 9, "size_y": 6
+          "col": 0,
+          "row": 0,
+          "size_x": 9,
+          "size_y": 6
         },
         {
           "id": "pares_pendientes",
           "nombre": "Pares de personas por decidir",
           "sql": "SELECT COUNT(*) AS pares_pendientes FROM v_pares_pendientes",
           "display": "scalar",
-          "visualization_settings": {"scalar.field": "pares_pendientes"},
-          "col": 9, "row": 0, "size_x": 9, "size_y": 6
+          "visualization_settings": {
+            "scalar.field": "pares_pendientes"
+          },
+          "col": 9,
+          "row": 0,
+          "size_x": 9,
+          "size_y": 6
         },
         {
           "id": "problemas_por_regla",
@@ -97,12 +164,24 @@
           "sql": "SELECT regla, SUM(problemas) AS problemas FROM v_calidad WHERE regla <> '(sin problemas)' GROUP BY regla ORDER BY problemas DESC",
           "display": "bar",
           "visualization_settings": {
-            "graph.dimensions": ["regla"],
-            "graph.metrics": ["problemas"],
+            "graph.dimensions": [
+              "regla"
+            ],
+            "graph.metrics": [
+              "problemas"
+            ],
             "graph.show_values": true,
-            "series_settings": {"problemas": {"color": "#1F2A37", "title": "Problemas"}}
+            "series_settings": {
+              "problemas": {
+                "color": "#1F2A37",
+                "title": "Problemas"
+              }
+            }
           },
-          "col": 0, "row": 6, "size_x": 9, "size_y": 7
+          "col": 0,
+          "row": 6,
+          "size_x": 9,
+          "size_y": 7
         },
         {
           "id": "omitidas",
@@ -110,12 +189,24 @@
           "sql": "SELECT fuente AS reporte, MAX(filas_omitidas) AS filas_omitidas FROM v_calidad GROUP BY fuente ORDER BY filas_omitidas DESC",
           "display": "bar",
           "visualization_settings": {
-            "graph.dimensions": ["reporte"],
-            "graph.metrics": ["filas_omitidas"],
+            "graph.dimensions": [
+              "reporte"
+            ],
+            "graph.metrics": [
+              "filas_omitidas"
+            ],
             "graph.show_values": true,
-            "series_settings": {"filas_omitidas": {"color": "#2E4A66", "title": "Filas omitidas"}}
+            "series_settings": {
+              "filas_omitidas": {
+                "color": "#2E4A66",
+                "title": "Filas omitidas"
+              }
+            }
           },
-          "col": 9, "row": 6, "size_x": 9, "size_y": 7
+          "col": 9,
+          "row": 6,
+          "size_x": 9,
+          "size_y": 7
         }
       ]
     }
