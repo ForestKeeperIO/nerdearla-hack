@@ -1,8 +1,9 @@
 # Guion del pitch — 2 minutos
 
 Sobre la **versión en blanco** del prototipo (empieza sin datos). Los archivos
-del demo son los reportes de prueba del caso de la guía; si no llegan a tiempo,
-el video de respaldo es el plan A (ver al final).
+del demo son los siete reportes de prueba del caso de la guía (`reportes/` en
+la rama `motor`); el video de respaldo cubre cualquier falla en vivo
+(ver al final).
 
 | Tiempo | En pantalla | Se dice |
 |---|---|---|

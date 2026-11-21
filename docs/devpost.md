@@ -78,6 +78,11 @@ diseño, con una tabla de licencias de cada componente.
 - Cuatro reportes con datos públicos reales de Jalisco (INEGI y Secretaría de
   Salud) con URL, licencia y scripts de derivación, para una segunda versión
   con fuentes reales.
+- Siete reportes de prueba del caso de la guía (120 atenciones, 80
+  participaciones, mismos archivos con otro nombre, versiones y traslapes) con
+  un `esperado.json` que dice qué debe salir.
+- Tableros de Metabase (Impacto y Calidad) provisionados por API con enlaces
+  públicos que se pueden incrustar.
 - Una tabla honesta de Implementado / Simulado / Para piloto en el README.
 
 ## Qué aprendimos
@@ -120,10 +125,12 @@ prevé la propia guía de EIRA.
   identidad de personas: el sistema propone pares con probabilidad, una persona
   decide, y la bitácora conserva la trazabilidad.
 - **Funcionamiento real del prototipo.** Implementado y verificable hoy: la
-  base Valkey con semilla y verificador (9 chequeos OK), el esquema SQLite con
-  6 pruebas en verde, y el frontend que sube Excel a Valkey y muestra calidad,
-  tablero e informe. Lo que no está integrado (motor, Metabase) está marcado
-  como pendiente en el README, no simulado como hecho.
+  base Valkey con semilla y verificador (9 chequeos OK), el esquema SQLite y
+  los reportes de prueba con 11 pruebas en verde, los tableros de Metabase
+  provisionados por API con enlaces públicos, y el frontend que sube Excel a
+  Valkey y muestra calidad, tablero e informe. Lo que no está integrado
+  (motor de deduplicación, tableros incrustados) está marcado como pendiente
+  en el README, no simulado como hecho.
 
 ## Construido con
 

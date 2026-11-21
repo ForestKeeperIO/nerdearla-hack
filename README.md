@@ -12,10 +12,10 @@ Reto 3 de la guía de EIRA para la Nerdearla Vibeathon by Devin (CDMX, 2026-11-2
 
 | Pantalla | Captura |
 |---|---|
-| Subir y calidad de un informe | `docs/capturas/subir-calidad.png` |
-| Vista previa del informe | `docs/capturas/vista-previa.png` |
+| Subir archivos | `docs/capturas/subir.png` |
+| Informe | `docs/capturas/informe.png` |
 
-*(Las capturas se agregan al integrar el frontend; la carpeta `docs/capturas/` ya está reservada.)*
+*(Capturas del frontend tal como está construido en la rama `fe`.)*
 
 ## Cómo levantarlo
 
@@ -31,21 +31,29 @@ VALKEY_URL=redis://127.0.0.1:6391 npm run semilla
 VALKEY_URL=redis://127.0.0.1:6391 npm run verificar
 npm run limpiar   # cuando se quiera vaciar
 
-# 3. Base de reporte SQLite (rama motor)
+# 3. Base de reporte SQLite y reportes de prueba (rama motor)
 uv run python -m db.crear --con-denominadores   # escribe data/impacto.sqlite
-uv run pytest db                                 # 6 pruebas del esquema
+uv run pytest db scripts                        # 11 pruebas (esquema + reportes)
 
-# 4. Frontend (rama fe)
+# 4. Metabase (rama metabase)
+bash metabase/arrancar.sh                        # descarga el JAR y arranca en :3200
+uv run metabase/datos_prueba.py                  # SQLite ficticio de prueba
+uv run --with requests metabase/provisionar.py --entorno blanco --db data/impacto.sqlite
+
+# 5. Frontend (rama fe)
 cd web && npm install
 VALKEY_URL=redis://127.0.0.1:6391 npm run dev     # http://localhost:3000
 ```
 
 Variables: `VALKEY_URL` (con número de base para separar entornos) y
-`VALKEY_PASSWORD`. No hay otros servicios ni credenciales.
+`VALKEY_PASSWORD`. Metabase genera su propia cuenta de administración en
+`.metabase/credenciales.json` (ignorado por git); no hay otros servicios ni
+credenciales.
 
 **Pendiente de integrar** (diseñado, sin código aún): el motor de procesamiento
-(`python -m motor.worker`), los tableros de Metabase (`metabase/arrancar.sh`,
-`metabase/provisionar.py`) y el arranque de los dos entornos (`scripts/demo.sh`).
+(`python -m motor.worker`) y el arranque de los dos entornos (`scripts/demo.sh`).
+La incrustación de los tableros de Metabase en el frontend también está
+pendiente (los enlaces públicos ya existen en `metabase/enlaces.json`).
 
 ## El recorrido
 
@@ -147,8 +155,8 @@ importan:
 | Reportes con datos públicos reales de Jalisco (`reportes-reales/`) | **Implementado** en rama `fuentes-reales` (4 CSV con fuente y fecha) |
 | Motor Python: leer Excel, huellas de archivo/fila, deduplicar personas con Splink, escribir Valkey + SQLite | **Pendiente**: diseñado en el plan, sin código (`py/` solo trae un ejemplo) |
 | Detección de "el mismo archivo con otro nombre" y "la misma persona" de punta a punta | **Pendiente**: definida en el contrato; sin motor que la ejecute |
-| Tableros de Metabase incrustados | **Pendiente**: sin rama ni código |
-| Reportes de prueba del caso de la guía (120 + 80 filas) | **Pendiente**: especificados en el plan, sin generar |
+| Reportes de prueba del caso de la guía (7 archivos: 120 atenciones, 80 participaciones, traslapes y versiones) | **Implementado** en rama `motor` (`reportes/` + `esperado.json`); sus pruebas en verde |
+| Tableros de Metabase (Impacto y Calidad, con enlaces públicos e iframe verificado) | **Implementado** en rama `metabase` sobre un esquema provisional con datos ficticios; falta apuntarlo al esquema de `db/` e incrustarlo en el frontend |
 | Recorrido guiado por informe (dos programas + Global) | **Por verificar al integrar**: la especificación es posterior al frontend construido |
 | Cuentas, contraseñas y permisos por rol | **Simulado**: el prototipo no tiene; es requisito de piloto |
 | Versión "con fuentes reales" ya procesada en línea | **Pendiente**: los archivos existen; falta el motor que los procese |
