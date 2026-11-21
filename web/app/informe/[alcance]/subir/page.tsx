@@ -3,7 +3,7 @@ import { exigirPaso } from '@/lib/guardia';
 import { fechaCorteDe, fuentesDe, leerInforme, trabajosDe } from '@/lib/informe';
 import { fijarFechaCorte } from '@/lib/acciones';
 import { puedeEntrar, motivoBloqueo } from '@/lib/recorrido';
-import { tiposDe } from '@/lib/catalogo';
+import { informesActivos, tiposDe } from '@/lib/catalogo';
 import { estadosCatalogo } from '@/lib/territorio';
 import { MarcoInforme } from '@/components/marco';
 import { PieDePaso } from '@/components/pie-de-paso';
@@ -50,7 +50,8 @@ export default async function PaginaSubir({ params }: { params: Promise<{ alcanc
         </form>
       )}
 
-      <SubirArchivos alcance={alcance} tipos={tipos} fechaCorte={fechaCorte} estados={estadosCatalogo()} />
+      <SubirArchivos key={alcance} alcance={alcance} tipos={tipos} fechaCorte={fechaCorte} estados={estadosCatalogo()}
+        programas={informesActivos().map(i => ({ valor: i.id, texto: i.nombre }))} />
 
       <div className="mt-10">
         <ListaVivo alcance={alcance} inicial={{ trabajos: trabajos.valor, fuentes: fuentes.valor }} />

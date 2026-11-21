@@ -5,6 +5,8 @@ import { useDropzone, type FileRejection } from 'react-dropzone';
 import { FileSpreadsheet, Trash2, UploadCloud, XCircle } from 'lucide-react';
 import { toast } from 'sonner';
 import { Selector } from './selector';
+import { useRouter } from 'next/navigation';
+import type { Opcion } from '@/lib/filtros-comun';
 
 const MAX_BYTES = 10 * 1024 * 1024;
 
@@ -43,14 +45,17 @@ export function SubirArchivos({
   tipos,
   fechaCorte,
   estados,
+  programas,
 }: {
   alcance: string;
   tipos: TipoOpcion[];
   fechaCorte: string;
   estados: EstadoOpcion[];
+  programas: Opcion[];
 }) {
   const [archivos, setArchivos] = useState<ArchivoLocal[]>([]);
   const [enviando, setEnviando] = useState(false);
+  const router = useRouter();
   const siguiente = useRef(1);
 
   const agregar = useCallback((aceptados: File[], rechazados: FileRejection[]) => {
@@ -128,6 +133,12 @@ export function SubirArchivos({
 
   return (
     <section aria-label="Subir archivos">
+      <div className="programa-subida">
+        {enviables || enviando
+          ? <p>Programa de estos archivos: <strong>{programas.find(p => p.valor === alcance)?.texto}</strong></p>
+          : <Selector unico label="Programa" opciones={programas} elegidos={[alcance]}
+              cambiar={([programa]) => { if (programa !== alcance) router.push(`/informe/${encodeURIComponent(programa)}/subir`); }} />}
+      </div>
       <div
         {...getRootProps({
           className: 'tarjeta',
@@ -145,7 +156,7 @@ export function SubirArchivos({
         </p>
         <p className="etiqueta">
           o{' '}
-          <button type="button" onClick={open} className="underline underline-offset-4" style={{ color: 'var(--vino)', minHeight: 'auto', fontWeight: 500 }}>
+          <button type="button" onClick={open} className="underline underline-offset-4" style={{ color: 'var(--vino)', minHeight: 44, fontWeight: 500 }}>
             elige archivos
           </button>{' '}
           (máximo 10 MB cada uno)

@@ -50,6 +50,7 @@ iframe:focus-visible { outline: 3px solid var(--vino); outline-offset: 2px; }
 .facetas-fila { display: grid; grid-template-columns: repeat(5,minmax(0,1fr)); gap: var(--sp-3); }
 .selector { position: relative; min-width: 0; }
 .archivo-selectores { display: grid; grid-template-columns: repeat(2,minmax(0,1fr)); gap: var(--sp-3); width: min(100%,380px); }
+.programa-subida { max-width: 26rem; margin-bottom: var(--sp-4); }
 .pasos-ayuda { margin-top: var(--sp-2); }
 .nota-rango { padding: var(--sp-3) var(--sp-6); border-top: var(--border); font-size: var(--fs-small); }
 .tabla-mapeo { border-collapse: collapse; width: 100%; text-align: left; margin-block: var(--sp-3); font-size: var(--fs-small); }
