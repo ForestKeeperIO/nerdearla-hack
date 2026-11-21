@@ -5,6 +5,7 @@ import { AtlasTerritorial } from '@/components/atlas-territorial';
 import { Distribucion } from '@/components/desgloses-atlas';
 import { CargasBento, ParesBento, ServiciosBento } from '@/components/bento-calidad';
 import { MesesBento } from '@/components/bento-meses';
+import { TableroVivo } from '@/components/tablero-vivo';
 import { fechaEs } from '@/lib/comun';
 import { periodoTexto, seleccionDe } from '@/lib/seleccion-tablero';
 import { impactoPublico } from '@/lib/metabase';
@@ -61,5 +62,6 @@ export default async function Tablero({ searchParams }: PageProps<'/tablero'>) {
     <aside className="atlas-calidad"><CircleHelp size={17} aria-hidden /><p><strong>Calidad</strong> {d.pares} pares pendientes · {d.sinId} filas sin identificar</p>
       <Link href="/informe/global/calidad">Revisar calidad <ArrowUpRight size={15} aria-hidden /></Link></aside>
     {avanzado && <a className="bento-avanzado" href={avanzado} target="_blank" rel="noreferrer" aria-label="Análisis avanzado: abrir el tablero global en Metabase">Análisis avanzado <ArrowUpRight size={15} aria-hidden /></a>}
+    <TableroVivo revision={d.revision}/>
   </div>;
 }

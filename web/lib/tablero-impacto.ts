@@ -29,8 +29,24 @@ export type Cifras = { personas: number; edad: number | null; municipios: number
 export type Carga = { nombre: string; programa: string; fecha: string; estrellas: number | null; puntaje: number | null };
 export type Servicio = Punto & { unidad: string; cantidad: number };
 
+const abrir = () => new DatabaseSync(process.env.IMPACTO_DB || resolve('..', 'data', 'impacto.sqlite'), { readOnly: true });
+
+// Este marcador también se lee dentro de la transacción de la pantalla:
+// una carga confirmada durante el render no queda entre dos suscripciones.
+function revisionDe(db: DatabaseSync) {
+  const r = db.prepare(`SELECT (SELECT COUNT(*) FROM fuentes) fuentes,
+    (SELECT COALESCE(MAX(id),0) FROM bitacora) cambio,
+    (SELECT COUNT(*) FROM v_pares_pendientes) pendientes`).get()!;
+  return `${r.fuentes}:${r.cambio}:${r.pendientes}`;
+}
+
+export function leerRevision() {
+  const db = abrir();
+  try { return revisionDe(db); } finally { db.close(); }
+}
+
 export function leerTablero(f: Seleccion) {
-  const db = new DatabaseSync(process.env.IMPACTO_DB || resolve('..', 'data', 'impacto.sqlite'), { readOnly: true });
+  const db = abrir();
   try {
     // Una transacción de lectura: ni un archivo nuevo ni una decisión de par
     // pueden cambiar la población entre el titular, su desglose y las facetas.
@@ -88,7 +104,7 @@ export function leerTablero(f: Seleccion) {
       (SELECT COUNT(*) ${fuente} WHERE r.contado=1 AND i.clase <> 'fuente_publica'
       AND r.persona_ef IS NULL) sinId, (SELECT MAX(fecha_corte) FROM fuentes) corte`).get() as
       { pares: number; decididos: number; sinId: number; corte: string | null };
-    return { ...kpi, ...calidad, lugares, meses, servicios, unidades, cargas, edades, opciones,
+    return { ...kpi, ...calidad, revision: revisionDe(db), lugares, meses, servicios, unidades, cargas, edades, opciones,
       comparacion: comparacion?.registros ? comparacion : null, anterior,
       conDonantes: !f.programa.length || f.programa.includes('melenas-en-movimiento') };
   } finally { db.close(); }
