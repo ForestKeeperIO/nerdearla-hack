@@ -3,11 +3,11 @@ import { join } from 'node:path';
 import { exigirPaso } from '@/lib/guardia';
 import { fechaCorteDe, fuentesDe } from '@/lib/informe';
 import {
-  conteoUnidad, edadPromedio, filtrosDe, NOMBRE_UNIDAD, personasDePrograma,
-  personasEntre, personasPorCiudad, personasTxt, personasUnicas, sinIdentificar,
-  unidadesConDatos, type Med, type Unidad,
+  edadPromedioIds, filtrosDe, impactadasIdsDe, noImpactadasIdsDe,
+  personasEnMasDeUnPrograma, personasPorCiudadIds, personasTxt, resumenTiposDe,
+  sinIdentificar, type Med, type ResumenTipo,
 } from '@/lib/datos';
-import { programasDemo } from '@/lib/catalogo';
+import { nombrePrograma, pluralRol, pluralTipo, programasDemo, rolDe } from '@/lib/catalogo';
 import { aprobarCifras } from '@/lib/acciones';
 import { MarcoInforme } from '@/components/marco';
 import { PieDePaso } from '@/components/pie-de-paso';
@@ -20,7 +20,7 @@ export const dynamic = 'force-dynamic';
 function enlaceMetabase(): string | null {
   for (const ruta of [join(process.cwd(), '..', 'metabase', 'enlaces.json'), join(process.cwd(), 'metabase', 'enlaces.json')]) {
     try {
-      const j = JSON.parse(readFileSync(ruta, 'utf8')) as { impacto?: string };
+      const j = JSON.parse(readFileSync(/* turbopackIgnore: true */ ruta, 'utf8')) as { impacto?: string };
       if (j.impacto) return j.impacto;
     } catch {
       // sin tablero todavía: la pantalla funciona sin él
@@ -39,49 +39,94 @@ function Cifra({ valor, rotulo, med }: { valor: string; rotulo: string; med?: Me
   );
 }
 
+type ResumenPrograma = {
+  id: string;
+  nombre: string;
+  ids: string[];
+  medIds: Med<string[]>;
+  resumen: ResumenTipo[];
+  noImpactadas: number;
+};
+
+/** Una fila por tipo de registro: cuántos registros y cuántas personas, nunca sumados entre tipos. */
+function FilasTipos({ programaId, resumen }: { programaId: string; resumen: ResumenTipo[] }) {
+  return (
+    <ul style={{ listStyle: 'none', padding: 0, margin: 0 }}>
+      {resumen.map((r) => {
+        const rol = rolDe(programaId, r.tipo);
+        return (
+          <li key={r.tipo} className="fila">
+            <span className="fila__cuerpo">
+              <span style={{ fontWeight: 500 }}>{pluralTipo(r.tipo)}</span>
+              {r.personas !== null && (
+                <span className="etiqueta" style={{ display: 'block' }}>
+                  {personasTxt(r.personas)} {pluralRol(rol)}
+                  {!r.cuenta && ' · no cuentan como personas impactadas'}
+                </span>
+              )}
+              {r.personas === null && !r.cuenta && (
+                <span className="etiqueta" style={{ display: 'block' }}>no cuentan como personas impactadas</span>
+              )}
+            </span>
+            <span className="fila__dato">
+              <strong className="mono" style={{ fontSize: 18 }}>{r.conteo.toLocaleString('es-MX')}</strong>
+            </span>
+          </li>
+        );
+      })}
+    </ul>
+  );
+}
+
 export default async function PaginaVistaPrevia({ params }: { params: Promise<{ alcance: string }> }) {
   const { alcance: a } = await params;
   const { alcance, estado } = await exigirPaso(a, 'vista-previa');
   const esGlobal = alcance === 'global';
 
-  const f = await filtrosDe(alcance);
   const corte = await fechaCorteDe(alcance);
   const fuentes = await fuentesDe(alcance);
   const nombresFuentes = fuentes.valor.map((x) => x.nombre).join(' · ');
 
-  const [personas, sinId, porCiudad, unidades] = await Promise.all([
-    personasUnicas(f), sinIdentificar(f), personasPorCiudad(f), unidadesConDatos(),
+  const demos = programasDemo();
+  const programaIds = esGlobal ? demos.map((d) => d.id) : [alcance];
+
+  const porPrograma: ResumenPrograma[] = await Promise.all(
+    programaIds.map(async (id) => {
+      const [medIds, resumen, noImp] = await Promise.all([
+        impactadasIdsDe(id),
+        resumenTiposDe(id),
+        noImpactadasIdsDe(id),
+      ]);
+      return {
+        id,
+        nombre: nombrePrograma(id),
+        ids: medIds.valor,
+        medIds,
+        resumen,
+        noImpactadas: noImp.valor.length,
+      };
+    }),
+  );
+
+  // Personas impactadas: en el Global es la SUMA de las de cada programa
+  // (quien está en dos programas cuenta dos veces); la unión solo se usa
+  // para edad promedio y desglose por ciudad.
+  const totalImpactadas = porPrograma.reduce((s, p) => s + p.ids.length, 0);
+  const idsUnicos = [...new Set(porPrograma.flatMap((p) => p.ids))];
+
+  const f = await filtrosDe(alcance);
+  const [sinId, edad, porCiudad] = await Promise.all([
+    sinIdentificar(f),
+    edadPromedioIds(idsUnicos, corte),
+    personasPorCiudadIds(idsUnicos),
   ]);
-  const edad = await edadPromedio(f, corte);
-  const conteos = await Promise.all(unidades.valor.map((u) => conteoUnidad(u, f)));
-  const unidadesConCifra = unidades.valor
-    .map((u, i) => ({ u, med: conteos[i] }))
-    .filter((x) => x.med.valor > 0);
+  const enAmbos = esGlobal ? await personasEnMasDeUnPrograma(programaIds) : null;
 
-  // Global: personas en ambos programas y cada programa con sus cifras.
-  let enAmbos: Med<number> | null = null;
-  let porPrograma: { id: string; nombre: string; personas: Med<number>; unidades: { u: Unidad; n: number }[] }[] = [];
-  if (esGlobal) {
-    const demos = programasDemo();
-    enAmbos = await personasEntre(demos[0].id, demos[1].id);
-    porPrograma = await Promise.all(
-      demos.map(async (p) => {
-        const fp = await filtrosDe(p.id);
-        const [pers, uns] = await Promise.all([personasDePrograma(p.id), unidadesConDatos()]);
-        const cs = await Promise.all(uns.valor.map((u) => conteoUnidad(u, fp)));
-        return {
-          id: p.id,
-          nombre: p.nombre,
-          personas: pers,
-          unidades: uns.valor.map((u, i) => ({ u, n: cs[i].valor })).filter((x) => x.n > 0),
-        };
-      }),
-    );
-  }
-
-  const maxPersonas = personas.valor + sinId.valor;
-  const rango = sinId.valor > 0 ? `${personasTxt(personas.valor)} – ${personasTxt(maxPersonas)}` : personasTxt(personas.valor);
+  const rango = sinId.valor > 0
+    ? `${personasTxt(totalImpactadas)} – ${personasTxt(totalImpactadas + sinId.valor)}`
+    : personasTxt(totalImpactadas);
   const metabase = enlaceMetabase();
+  const totalNoImpactadas = porPrograma.reduce((s, p) => s + p.noImpactadas, 0);
 
   return (
     <MarcoInforme
@@ -95,18 +140,24 @@ export default async function PaginaVistaPrevia({ params }: { params: Promise<{ 
         <div className="grid gap-8 sm:grid-cols-3">
           <Cifra
             valor={rango}
-            rotulo={sinId.valor > 0 ? 'personas impactadas (rango: hay registros sin identificar)' : 'personas impactadas'}
-            med={personas}
+            rotulo={
+              esGlobal
+                ? `personas impactadas (suma de los programas${sinId.valor > 0 ? '; rango: hay registros sin identificar' : ''})`
+                : sinId.valor > 0
+                  ? 'personas impactadas (rango: hay registros sin identificar)'
+                  : 'personas impactadas'
+            }
+            med={porPrograma[0]?.medIds}
           />
           <Cifra
             valor={edad.valor.promedio === null ? '—' : `${edad.valor.promedio.toLocaleString('es-MX')}`}
             rotulo={edad.valor.promedio === null ? 'edad promedio (sin datos de nacimiento)' : `edad promedio, en años (${edad.valor.n} con fecha de nacimiento)`}
             med={edad}
           />
-          {esGlobal && enAmbos ? (
-            <Cifra valor={personasTxt(enAmbos.valor)} rotulo="de ellas están en los dos programas" med={enAmbos} />
+          {enAmbos ? (
+            <Cifra valor={personasTxt(enAmbos.valor)} rotulo="personas aparecen en más de un programa (dato informativo; no se resta)" med={enAmbos} />
           ) : (
-            <Cifra valor={String(porCiudad.valor.filter((c) => c.personas > 0).length)} rotulo="ciudades con personas atendidas" />
+            <Cifra valor={String(porCiudad.valor.filter((c) => c.personas > 0).length)} rotulo="ciudades con personas impactadas" />
           )}
         </div>
 
@@ -121,45 +172,46 @@ export default async function PaginaVistaPrevia({ params }: { params: Promise<{ 
         </div>
       </div>
 
-      {/* Global: cada programa con sus cifras */}
-      {esGlobal && porPrograma.length > 0 && (
+      {/* Programa: cada tipo de registro por separado */}
+      {!esGlobal && porPrograma[0] && porPrograma[0].resumen.length > 0 && (
         <div className="tarjeta" style={{ marginTop: 'var(--sp-4)' }}>
-          <h2 style={{ fontSize: 15 }}>Cada programa por separado</h2>
-          <ul style={{ listStyle: 'none', padding: 0, margin: 'var(--sp-2) 0 0' }}>
-            {porPrograma.map((p) => (
-              <li key={p.id} className="fila">
-                <span className="fila__cuerpo">
-                  <span style={{ fontWeight: 500 }}>{p.nombre}</span>
-                  <span className="etiqueta" style={{ display: 'block' }}>
-                    {p.unidades.map((x) => `${x.n.toLocaleString('es-MX')} ${NOMBRE_UNIDAD[x.u].toLowerCase()}`).join(' · ') || 'sin registros'}
-                  </span>
-                </span>
-                <span className="fila__dato">
-                  <strong className="mono" style={{ fontSize: 20 }}>{personasTxt(p.personas.valor)}</strong>
-                  <span className="etiqueta" style={{ display: 'block' }}>personas</span>
-                </span>
-              </li>
-            ))}
-          </ul>
+          <h2 style={{ fontSize: 15 }}>Registros por tipo</h2>
+          <FilasTipos programaId={alcance} resumen={porPrograma[0].resumen} />
+          <p className="etiqueta" style={{ marginTop: 'var(--sp-3)' }}>
+            Son tipos de registro distintos: no se suman entre sí.
+            {porPrograma[0].noImpactadas > 0 && (
+              <> Las personas que solo aportan ({porPrograma[0].resumen.filter((r) => !r.cuenta).map((r) => pluralRol(rolDe(alcance, r.tipo))).join(', ')}) se muestran aparte y no cuentan como impactadas.</>
+            )}
+          </p>
         </div>
       )}
 
-      {/* Unidades por separado: no se suman entre sí */}
-      {unidadesConCifra.length > 0 && (
+      {/* Global: cada programa con sus cifras */}
+      {esGlobal && (
         <div className="tarjeta" style={{ marginTop: 'var(--sp-4)' }}>
-          <h2 style={{ fontSize: 15 }}>Registros por tipo</h2>
-          <ul style={{ listStyle: 'none', padding: 0, margin: 0 }}>
-            {unidadesConCifra.map(({ u, med }) => (
-              <li key={u} className="fila">
-                <span className="fila__cuerpo">{NOMBRE_UNIDAD[u]}</span>
-                <span className="fila__dato"><strong className="mono" style={{ fontSize: 18 }}>{med.valor.toLocaleString('es-MX')}</strong></span>
-              </li>
-            ))}
-          </ul>
-          <p className="etiqueta" style={{ marginTop: 'var(--sp-3)' }}>
-            Son tipos de registro distintos: una misma persona puede tener una atención y una participación, así que no se suman entre sí.
+          <h2 style={{ fontSize: 15 }}>Cada programa por separado</h2>
+          <p className="etiqueta" style={{ marginTop: 'var(--sp-1)' }}>
+            El total de arriba es la suma de las personas impactadas de cada programa:
+            quien aparece en dos cuenta dos veces. Dentro de un programa cuenta una sola vez.
           </p>
-          {unidadesConCifra[0] && <ComoSeCalculo med={unidadesConCifra[0].med} />}
+          {porPrograma.map((p) => (
+            <div key={p.id} style={{ borderTop: 'var(--border)', marginTop: 'var(--sp-4)', paddingTop: 'var(--sp-3)' }}>
+              <div className="flex flex-wrap items-baseline justify-between gap-3">
+                <h3>{p.nombre}</h3>
+                <p>
+                  <strong className="mono" style={{ fontSize: 20 }}>{personasTxt(p.ids.length)}</strong>{' '}
+                  <span className="etiqueta">personas impactadas</span>
+                </p>
+              </div>
+              <FilasTipos programaId={p.id} resumen={p.resumen} />
+            </div>
+          ))}
+          {totalNoImpactadas > 0 && (
+            <p className="etiqueta" style={{ marginTop: 'var(--sp-4)', borderTop: 'var(--border)', paddingTop: 'var(--sp-3)' }}>
+              Aparte de las impactadas: {personasTxt(totalNoImpactadas)} personas solo aportan
+              ({porPrograma.filter((p) => p.noImpactadas > 0).map((p) => p.nombre).join(', ')}) — no cuentan como impactadas.
+            </p>
+          )}
         </div>
       )}
 

@@ -1,8 +1,9 @@
 import {
-  conteoUnidad, edadPromedio, filtrosDe, NOMBRE_UNIDAD,
-  personasPorCiudad, personasUnicas, sinIdentificar, unidadesConDatos,
+  edadPromedioIds, filtrosDe, impactadasIdsDe, noImpactadasIdsDe,
+  personasEnMasDeUnPrograma, personasPorCiudadIds, resumenTiposDe, sinIdentificar,
 } from '@/lib/datos';
 import { esAlcance, fechaCorteDe, fuentesDe } from '@/lib/informe';
+import { nombrePrograma, pluralTipo, programasDemo } from '@/lib/catalogo';
 
 export const dynamic = 'force-dynamic';
 
@@ -18,15 +19,31 @@ export async function GET(_req: Request, { params }: { params: Promise<{ alcance
   const { alcance: a } = await params;
   if (!esAlcance(a)) return new Response('No encontrado', { status: 404 });
   const alcance = a;
+  const esGlobal = alcance === 'global';
 
-  const f = await filtrosDe(alcance);
   const corte = await fechaCorteDe(alcance);
   const fuentes = await fuentesDe(alcance);
-  const [unidades, personas, sinId, porCiudad] = await Promise.all([
-    unidadesConDatos(), personasUnicas(f), sinIdentificar(f), personasPorCiudad(f),
+
+  const programaIds = esGlobal ? programasDemo().map((d) => d.id) : [alcance];
+  const porPrograma = await Promise.all(
+    programaIds.map(async (id) => {
+      const [ids, resumen, noImp] = await Promise.all([
+        impactadasIdsDe(id),
+        resumenTiposDe(id),
+        noImpactadasIdsDe(id),
+      ]);
+      return { id, nombre: nombrePrograma(id), ids: ids.valor, resumen, noImpactadas: noImp.valor.length };
+    }),
+  );
+  const totalImpactadas = porPrograma.reduce((s, p) => s + p.ids.length, 0);
+  const idsUnicos = [...new Set(porPrograma.flatMap((p) => p.ids))];
+
+  const f = await filtrosDe(alcance);
+  const [sinId, edad, porCiudad] = await Promise.all([
+    sinIdentificar(f),
+    edadPromedioIds(idsUnicos, corte),
+    personasPorCiudadIds(idsUnicos),
   ]);
-  const edad = await edadPromedio(f, corte);
-  const conteos = await Promise.all(unidades.valor.map((u) => conteoUnidad(u, f)));
 
   const nombres = fuentes.valor.map((x) => x.nombre).join('; ') || 'sin archivos';
   const advert = 'Datos ficticios de demostración; tipos de registro no sumables entre sí; valores de personas menores a 5 se muestran como <5';
@@ -34,13 +51,15 @@ export async function GET(_req: Request, { params }: { params: Promise<{ alcance
   const filas: (string | number)[][] = [
     ['indicador', 'valor', 'unidad', 'definicion', 'fecha_corte', 'fuentes', 'advertencias'],
     [
-      'personas_identificadas', personas.valor, 'persona',
-      'Personas únicas identificadas, sin duplicados',
+      'personas_impactadas', totalImpactadas, 'persona',
+      esGlobal
+        ? 'Suma de las personas impactadas de cada programa (quien está en dos cuenta dos veces)'
+        : 'Personas únicas identificadas que cuentan como impactadas, sin duplicados',
       corte, nombres, advert,
     ],
     [
-      'personas_impactadas_maximo', personas.valor + sinId.valor, 'persona',
-      `Personas identificadas más ${sinId.valor} registros sin identificar: el total real está entre ambas cifras`,
+      'personas_impactadas_maximo', totalImpactadas + sinId.valor, 'persona',
+      `Personas impactadas más ${sinId.valor} registros sin identificar: el total real está entre ambas cifras`,
       corte, nombres, advert,
     ],
     [
@@ -50,14 +69,44 @@ export async function GET(_req: Request, { params }: { params: Promise<{ alcance
     ],
   ];
 
-  for (let i = 0; i < unidades.valor.length; i++) {
-    const u = unidades.valor[i];
-    if (conteos[i].valor === 0) continue;
+  if (esGlobal) {
+    const enAmbos = (await personasEnMasDeUnPrograma(programaIds)).valor;
     filas.push([
-      NOMBRE_UNIDAD[u].toLowerCase(), conteos[i].valor, u,
-      `Registros del tipo «${NOMBRE_UNIDAD[u]}» en los archivos importados`,
+      'personas_en_mas_de_un_programa', enAmbos, 'persona',
+      'Personas presentes en más de un programa (dato informativo; no se resta del total)',
       corte, nombres, advert,
     ]);
+    for (const p of porPrograma) {
+      filas.push([
+        `personas_impactadas_${p.id}`, p.ids.length, 'persona',
+        `Personas impactadas de «${p.nombre}»`,
+        corte, nombres, advert,
+      ]);
+    }
+  }
+
+  for (const p of porPrograma) {
+    for (const r of p.resumen) {
+      filas.push([
+        `${r.tipo}_${p.id}`, r.conteo, r.tipo,
+        `Registros del tipo «${pluralTipo(r.tipo)}» en ${p.nombre}`,
+        corte, nombres, advert,
+      ]);
+      if (r.personas !== null) {
+        filas.push([
+          `personas_${r.tipo}_${p.id}`, r.personas < 5 ? '<5' : r.personas, 'persona',
+          `Personas únicas con registros de tipo «${pluralTipo(r.tipo)}» en ${p.nombre}${r.cuenta ? '' : ' (no cuentan como impactadas)'}`,
+          corte, nombres, advert,
+        ]);
+      }
+    }
+    if (p.noImpactadas > 0) {
+      filas.push([
+        `personas_no_impactadas_${p.id}`, p.noImpactadas < 5 ? '<5' : p.noImpactadas, 'persona',
+        `Personas que solo aportan en ${p.nombre} (no cuentan como impactadas)`,
+        corte, nombres, advert,
+      ]);
+    }
   }
 
   for (const c of porCiudad.valor) {
