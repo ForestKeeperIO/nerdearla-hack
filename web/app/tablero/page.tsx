@@ -19,13 +19,28 @@ import { join } from 'node:path';
 
 export const dynamic = 'force-dynamic';
 
-/** Dashboard público de Metabase del entorno (metabase/enlaces.json), si existe. */
-function enlaceMetabase(programa: string | null): string | null {
+/** Dashboard público de Metabase (metabase/enlaces.json). El embed público
+    acepta los parámetros programa, mes, municipio y servicio; se alimentan
+    desde la misma barra de filtros. */
+const PARAM_DIM: Record<string, string> = {
+  programa: 'programa',
+  periodo: 'mes',
+  ciudad: 'municipio',
+  servicio: 'servicio',
+};
+
+function enlaceMetabase(f: { programa: string[]; ciudad: string[]; periodo: string[]; servicio: string[] }): string | null {
   for (const ruta of [join(process.cwd(), '..', 'metabase', 'enlaces.json'), join(process.cwd(), 'metabase', 'enlaces.json')]) {
     try {
       const j = JSON.parse(readFileSync(ruta, 'utf8')) as Record<string, string>;
-      if (programa && j.impacto_por_programa) return j.impacto_por_programa.replace('{programa}', encodeURIComponent(programa));
-      return j.impacto ?? null;
+      const base = j.impacto;
+      if (!base) return null;
+      const q = new URLSearchParams();
+      for (const [dim, param] of Object.entries(PARAM_DIM)) {
+        for (const v of f[dim as keyof typeof f]) q.append(param, v);
+      }
+      const qs = q.toString();
+      return qs ? `${base}?${qs}` : base;
     } catch { /* siguiente ruta */ }
   }
   return null;
@@ -51,7 +66,7 @@ export default async function Tablero({ searchParams }: { searchParams: Promise<
       ...UNIDADES.map((u) => conteoUnidadMulti(u.id, f)),
     ]);
   const pendientes = pares.valor.filter((p) => p.estado === 'pendiente').length;
-  const metabase = enlaceMetabase(f.programa.length === 1 ? f.programa[0] : null);
+  const metabase = enlaceMetabase(f);
 
   return (
     <div>
@@ -129,10 +144,9 @@ export default async function Tablero({ searchParams }: { searchParams: Promise<
         </div>
       </section>
 
-      {/* Gráficas: el tablero público de Metabase, embebido. Recibe el filtro
-          de programa cuando hay exactamente uno elegido (enlaces.json define la
-          plantilla ?programa=); las demás dimensiones no tienen parámetro
-          habilitado en el dashboard público. */}
+      {/* Gráficas: el tablero público de Metabase, embebido. Recibe los
+          filtros activos como parámetros (programa→programa, municipio→
+          municipio, periodo→mes, servicio→servicio). */}
       {metabase && (
         <section aria-label="Gráficas" className="mt-8">
           <h2 style={{ fontSize: 15 }}>Gráficas del tablero</h2>
@@ -142,9 +156,8 @@ export default async function Tablero({ searchParams }: { searchParams: Promise<
             style={{ width: '100%', minHeight: 520, border: 'var(--border)', borderRadius: 'var(--r-md)', marginTop: 'var(--sp-3)', background: 'var(--superficie)' }}
           />
           <p className="etiqueta" style={{ marginTop: 'var(--sp-2)' }}>
-            {f.programa.length === 1
-              ? `Mostrando el programa «${f.programa[0]}». Los demás filtros de la barra no tienen parámetro habilitado en el dashboard público.`
-              : 'Los filtros de la barra no tienen parámetro habilitado en el dashboard público (salvo programa).'}
+            El dashboard público recibe los filtros de la barra como parámetros de URL
+            (programa, municipio, mes y servicio).
           </p>
         </section>
       )}
