@@ -32,7 +32,7 @@ export default async function Portada() {
   return (
     <div>
       <h1>Informes de impacto</h1>
-      <p className="lead mt-3" style={{ maxWidth: '56ch', color: 'var(--ink-soft)' }}>
+      <p className="lead mt-3" style={{ maxWidth: '56ch', color: 'var(--tinta-suave)' }}>
         Sube los reportes de cada coordinación; el informe se arma solo, sin contar dos veces
         el mismo archivo, la misma fila ni la misma persona.
       </p>
@@ -51,7 +51,7 @@ export default async function Portada() {
                 <span className="etiqueta" style={{ display: 'block', marginTop: 2 }}>
                   {ini?.descripcion ?? 'Junta todos los programas: cada programa suma sus personas al total.'}
                 </span>
-                <span className="etiqueta" style={{ display: 'block', marginTop: 4, color: a.ruta ? 'var(--ink-soft)' : 'var(--warn)' }}>
+                <span className="etiqueta" style={{ display: 'block', marginTop: 4, color: a.ruta ? 'var(--tinta-suave)' : 'var(--aviso)' }}>
                   {a.texto}
                 </span>
               </span>

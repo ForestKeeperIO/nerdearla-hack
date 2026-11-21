@@ -124,20 +124,20 @@ export function SubirArchivos({
         {...getRootProps({
           className: 'tarjeta',
           style: {
-            borderStyle: 'dashed', borderWidth: 1, borderColor: isDragActive ? 'var(--accent)' : 'var(--line-strong)',
+            borderStyle: 'dashed', borderWidth: 1, borderColor: isDragActive ? 'var(--vino)' : 'var(--linea-fuerte)',
             minHeight: 140, display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center',
-            gap: 'var(--sp-2)', textAlign: 'center', cursor: 'pointer', background: 'var(--white)',
+            gap: 'var(--sp-2)', textAlign: 'center', cursor: 'pointer', background: 'var(--superficie)',
           } as React.CSSProperties,
         })}
       >
         <input {...getInputProps()} />
-        <UploadCloud className="size-7" style={{ color: 'var(--gray)' }} aria-hidden="true" />
+        <UploadCloud className="size-7" style={{ color: 'var(--tinta-tenue)' }} aria-hidden="true" />
         <p style={{ fontWeight: 500 }}>
           {isDragActive ? 'Suelta los archivos aquí' : 'Arrastra aquí los Excel o CSV de este programa'}
         </p>
         <p className="etiqueta">
           o{' '}
-          <button type="button" onClick={open} className="underline underline-offset-4" style={{ color: 'var(--accent)', minHeight: 'auto', fontWeight: 500 }}>
+          <button type="button" onClick={open} className="underline underline-offset-4" style={{ color: 'var(--vino)', minHeight: 'auto', fontWeight: 500 }}>
             elige archivos
           </button>{' '}
           (máximo 10 MB cada uno)
@@ -148,7 +148,7 @@ export function SubirArchivos({
         <ul className="mt-4" style={{ listStyle: 'none', padding: 0 }}>
           {archivos.map((a) => (
             <li key={a.id} className="fila" style={{ gap: 'var(--sp-4)' }}>
-              <FileSpreadsheet className="size-5" style={{ color: 'var(--gray)', flexShrink: 0 }} aria-hidden="true" />
+              <FileSpreadsheet className="size-5" style={{ color: 'var(--tinta-tenue)', flexShrink: 0 }} aria-hidden="true" />
               <span className="fila__cuerpo" style={{ display: 'flex', flexWrap: 'wrap', alignItems: 'center', gap: 'var(--sp-4)' }}>
                 <span style={{ minWidth: 0, flex: 1 }}>
                   <span style={{ display: 'block', fontWeight: 500, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{a.file.name}</span>
@@ -165,7 +165,7 @@ export function SubirArchivos({
                     <select
                       value={a.unidad}
                       onChange={(e) => cambiar(a.id, { unidad: e.target.value })}
-                      style={{ border: '1px solid var(--line-strong)', borderRadius: 'var(--r-sm)', background: 'var(--white)', padding: '0 var(--sp-3)', fontSize: 'var(--fs-small)' }}
+                      style={{ border: '1px solid var(--linea-fuerte)', borderRadius: 'var(--r-sm)', background: 'var(--superficie)', padding: '0 var(--sp-3)', fontSize: 'var(--fs-small)' }}
                     >
                       {tipos.map((t) => (
                         <option key={t.clave} value={t.clave}>{t.etiqueta}</option>
@@ -176,7 +176,7 @@ export function SubirArchivos({
               </span>
               <span className="fila__dato" style={{ display: 'flex', alignItems: 'center', gap: 'var(--sp-3)' }}>
                 {a.envio === 'enviado' && <span className="estado estado--listo">Recibido</span>}
-                {a.envio === 'enviando' && <span className="estado estado--info">Enviando…</span>}
+                {a.envio === 'enviando' && <span className="estado estado--tinta-suave">Enviando…</span>}
                 {a.envio === 'error' && <span className="estado estado--error">No se subió</span>}
                 {(a.envio === 'sin_enviar' || a.envio === 'error') && (
                   <button type="button" className="btn btn--quieto btn--sm" onClick={() => setArchivos((x) => x.filter((y) => y.id !== a.id))}>

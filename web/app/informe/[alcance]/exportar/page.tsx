@@ -148,7 +148,7 @@ export default async function PaginaExportar({ params }: { params: Promise<{ alc
 
         <section style={{ marginTop: 'var(--sp-6)' }} aria-labelledby="i-advertencias">
           <h3 id="i-advertencias">Advertencias</h3>
-          <ul style={{ marginTop: 'var(--sp-2)', paddingLeft: 'var(--sp-5, 20px)', color: 'var(--ink-soft)', fontSize: 'var(--fs-small)' }}>
+          <ul style={{ marginTop: 'var(--sp-2)', paddingLeft: 'var(--sp-5, 20px)', color: 'var(--tinta-suave)', fontSize: 'var(--fs-small)' }}>
             <li>Datos ficticios de demostración.</li>
             <li>Toda cifra de personas menor a 5 se muestra como «&lt;5».</li>
             <li>Los tipos de registro no se suman entre sí.</li>
@@ -158,7 +158,7 @@ export default async function PaginaExportar({ params }: { params: Promise<{ alc
 
         <section style={{ marginTop: 'var(--sp-6)' }} aria-labelledby="i-notas">
           <h3 id="i-notas">Notas al pie</h3>
-          <ol style={{ marginTop: 'var(--sp-2)', paddingLeft: 'var(--sp-5, 20px)', color: 'var(--ink-soft)', fontSize: 'var(--fs-small)' }}>
+          <ol style={{ marginTop: 'var(--sp-2)', paddingLeft: 'var(--sp-5, 20px)', color: 'var(--tinta-suave)', fontSize: 'var(--fs-small)' }}>
             {notas.map((n, i) => <li key={i} style={{ marginTop: 'var(--sp-1)' }}>{n}</li>)}
           </ol>
         </section>

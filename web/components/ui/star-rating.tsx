@@ -29,15 +29,15 @@ export function StarRating({
             className={cn(
               "size-4",
               i < acotado
-                ? "estrella-llena fill-[var(--ink)] text-[var(--ink)]"
-                : "estrella-vacia fill-transparent text-[var(--line-strong)]"
+                ? "estrella-llena fill-[var(--vino)] text-[var(--vino)]"
+                : "estrella-vacia fill-transparent text-[var(--linea-fuerte)]"
             )}
             strokeWidth={1.5}
           />
         ))}
       </span>
       {etiqueta && (
-        <span className="text-sm font-medium text-[var(--gray)] tabular-nums">{etiqueta}</span>
+        <span className="text-sm font-medium text-[var(--tinta-tenue)] tabular-nums">{etiqueta}</span>
       )}
     </span>
   )
