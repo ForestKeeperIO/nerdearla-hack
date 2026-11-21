@@ -113,8 +113,9 @@ sembrados. La dependencia `splink` queda instalada para el piloto.
 
 - Huella de fila: HMAC(`id|nombre_norm|municipio_clave|servicio|fecha|asistio|cantidad`)
   con `IMPACTO_HMAC_KEY`. No incluye programa ni unidad: el traslape entre
-  coordinaciones se detecta. `eira:huellas:{archivo,contenido,fila}` (nuevas
-  claves; falta asentarlas en `docs/contrato-valkey.md`).
+  coordinaciones se detecta. En reportes sin persona la huella es el
+  contenido completo de la fila. Claves: `eira:huellas:{archivo,fila}`
+  (la de contenido se quitó en la segunda pasada).
 - Las huellas se registran al final del MULTI de Valkey y la fuente en SQLite
   lleva `huella_bytes UNIQUE`: una caída a media carga no marca el archivo y
   un reintento lo reporta como idéntico en vez de reimportar.
@@ -137,13 +138,103 @@ sembrados. La dependencia `splink` queda instalada para el piloto.
 - `eira:archivo:*` trae bytes: se lee con un cliente aparte
   (`decode_responses=False`); el de texto lo rompería.
 
+## Segunda pasada (iniciativas, roles y territorio)
+
+Cambios respecto a la primera versión:
+
+- Esquema por iniciativas: `iniciativas`, `tipos_de_registro`,
+  `roles_de_persona` e `iniciativa_tipo` se cargan de
+  `catalogos/iniciativas.json`; `municipios` de
+  `publicos/municipios_mexico.json` (2,478; Jalisco = 125).
+- `fuentes`/`registros` guardan `iniciativa_id` y `tipo_registro` (llave al
+  catálogo, ya no CHECK de cuatro valores); `registros` además trae
+  `rol_persona` y lugar resuelto (`estado_clave`, `estado`,
+  `municipio_clave`, `municipio`) conservando `ciudad` en texto original.
+- Un archivo puede mezclar tipos: `unidad=segun_fila` y la columna `Tipo`
+  decide por fila con `valores_tipo`/`roles_por_tipo` del catálogo. Melenas
+  en Movimiento (nuevo reporte del demo): 60 donaciones de trenza (donante)
+  + 20 entregas de peluca (beneficiaria).
+- Impactadas = roles `beneficiaria` y `participante`; donantes y
+  voluntarias se reportan aparte (`eira:per:impactadas:<ini>`,
+  `eira:per:donantes:<ini>`, vistas `v_personas_por_programa` con ambas
+  columnas).
+- Global: `v_global.total_personas_impactadas` suma las impactadas de cada
+  iniciativa (una persona en dos programas cuenta dos veces);
+  `personas_en_mas_de_un_programa` es informativo.
+- Territorio: el trabajo trae `estado_clave` (default `14`); una columna de
+  estado en el archivo manda; alias `Ciudad Guzmán`/`Cd. Guzmán` →
+  Zapotlán el Grande `14023`; claves de municipio directas (`cvegeo_resid`,
+  `clave_entidad`+`clave_municipio`); ciudad desconocida = anomalía
+  `ciudad_desconocida` y no entra a presencia. Vistas `v_presencia` y
+  `v_presencia_municipios`; hashes `eira:presencia:<ini>` y
+  `eira:presencia:global` (municipio_clave → registros).
+- `eira:huellas:contenido` ya no existe: "mismo contenido" se deduce de que
+  todas las huellas de fila ya estaban en `eira:huellas:fila` y pertenecen a
+  una misma fuente. En reportes sin persona la huella de fila es el
+  contenido completo de la fila (deduplicar por los pocos campos mapeados
+  colapsaba ~900 filas de defunciones a 89).
+- Vistas para Metabase: `v_calidad` (con `filas_nuevas`/`filas_omitidas`) y
+  `v_pares_pendientes`.
+
+### Verificación final
+
+Valkey limpio (puerto 6391, base 15), SQLite temporal, HMAC de prueba.
+Los dos CSV públicos salieron de `origin/fuentes-reales` con `git show`
+(`defunciones_mujeres_jalisco_c50_c53_2024.csv`, 900 filas;
+`egresos_hospitalarios_jalisco_c50_c53_2024.csv`, 1,429 filas;
+iniciativa `salud-publica-jalisco`, tipo `registro_publico`).
+
+| Archivo | Estado | nivel_duplicado | Mensaje |
+|---|---|---|---|
+| tamizaje-rosa.xlsx | listo | distinto | Se agregaron 126 filas. 4 filas repetidas dentro del archivo: se cuentan una vez. |
+| melenas-en-movimiento.xlsx | listo | distinto | Se agregaron 80 filas. |
+| reporte_final_2.xlsx | duplicado | identico | Este archivo ya se cargó el 21 nov como 'tamizaje-rosa.xlsx'. No se vuelve a cargar. |
+| tamizaje-rosa-reguardado.xlsx | duplicado | mismo_contenido | Mismo contenido que 'tamizaje-rosa.xlsx' (archivo vuelto a guardar o exportado). No hay nada nuevo. |
+| tamizaje-rosa.csv | duplicado | mismo_contenido | Mismo contenido que 'tamizaje-rosa.xlsx' (archivo vuelto a guardar o exportado). No hay nada nuevo. |
+| tamizaje-rosa_v2.xlsx | listo | version_nueva | Parece una versión nueva de 'tamizaje-rosa.xlsx': 126 filas ya estaban y se omiten; se agregan 8. |
+| defunciones_mujeres_jalisco_c50_c53_2024.csv | listo | distinto | Este reporte no trae identificador de persona: se cuenta por filas. Se agregaron 900 filas. |
+| egresos_hospitalarios_jalisco_c50_c53_2024.csv | listo | distinto | Este reporte no trae identificador de persona: se cuenta por filas. Se agregaron 1375 filas. 54 filas repetidas dentro del archivo: se cuentan una vez. |
+
+Vistas resultantes:
+
+```
+v_personas_por_programa            (iniciativa, personas_impactadas, donantes)
+  melenas-en-movimiento   20  60
+  tamizaje-rosa          106   0
+
+v_objetos                          (iniciativa, tipo_registro, cantidad)
+  melenas-en-movimiento  donacion             60
+  melenas-en-movimiento  producto_entregado  20
+
+v_global   (total_personas_impactadas, personas_en_mas_de_un_programa, donantes)
+  126   15   60
+```
+
+Conteo extra en Valkey: `eira:per:todas` = 171 personas; cruce
+tamizaje ∩ melenas (`SINTERCARD`) = 15; `cnt:atencion` = 128,
+`cnt:donacion` = 60, `cnt:producto_entregado` = 20; `eira:pares` = 5;
+`eira:presencia:global` = 98 municipios con actividad.
+
+`v_presencia` confirma `municipios_del_estado` = 125 para Jalisco en las
+tres iniciativas (salud-publica-jalisco: 98 municipios activos,
+1,455 registros, 0 personas — son filas sin identificador).
+
+Las 54 "repetidas" de egresos son filas literalmente idénticas dentro del
+archivo oficial (mismo municipio, misma fecha, mismos campos): la
+deduplicación por contenido completo de fila las cuenta una sola vez.
+
 ## Pendientes
 
-- Asentar `eira:huellas:{archivo,contenido,fila}` en `docs/contrato-valkey.md`
-  (commit propio a `main`, avisando al frontend).
+- Las adiciones del contrato (iniciativa como `programa`, `segun_fila`,
+  `estado_clave`, `per:impactadas`/`per:donantes`, fin de
+  `huellas:contenido`) están documentadas aquí en
+  `docs/contrato-valkey.md`; avisar al frontend que lea la rama `motor`.
 - `edad_inconsistente` está implementada pero no se ejercita en los datos.
 - `posible_correccion` (fila casi igual con un campo distinto) está en las
   reglas pero sin detección aún.
+- El ciclo `worker.servir` se ejercita solo por pruebas que llaman
+  `procesar_trabajo` directo; no hubo corrida del proceso largo contra el
+  stream en esta verificación (mismos code paths, distinto entry point).
 
 ---
 

@@ -40,6 +40,10 @@ def _t(v) -> str:
 
 def huella_fila(fila: dict, clave: bytes | None = None) -> str:
     clave = clave or clave_hmac()
+    # Reportes sin persona: la huella es todo el contenido de la fila.
+    if fila.get("contenido_fila"):
+        return hmac.new(clave, ("cruda|" + fila["contenido_fila"]).encode(),
+                        hashlib.sha256).hexdigest()
     cant = fila.get("cantidad", 1)
     cant = 1.0 if cant != cant else float(cant)  # NaN -> 1
     cant_txt = str(int(cant)) if cant == int(cant) else f"{cant:.4f}"
