@@ -42,6 +42,13 @@
       "plural": "productos entregados",
       "se_cuenta": "objetos",
       "cuenta_personas": true
+    },
+    {
+      "clave": "registro_publico",
+      "etiqueta": "Registro de fuente pública",
+      "plural": "registros de fuentes públicas",
+      "se_cuenta": "eventos",
+      "cuenta_personas": false
     }
   ],
   "roles_de_persona": [
@@ -91,8 +98,12 @@
       ],
       "rol_por_defecto": "donante",
       "estado": "confirmado",
-      "nota": "Quien dona cabello no es beneficiaria; quien recibe una peluca sí. Se registran por separado.",
-      "en_demo": false
+      "nota": "Quien dona cabello es donante, no beneficiaria; quien recibe una peluca sí es beneficiaria. Un mismo archivo puede traer los dos tipos de registro.",
+      "en_demo": true,
+      "roles_por_tipo": {
+        "donacion": "donante",
+        "producto_entregado": "beneficiaria"
+      }
     },
     {
       "id": "salud-que-florece",
@@ -104,7 +115,7 @@
       ],
       "rol_por_defecto": "participante",
       "estado": "confirmado",
-      "en_demo": true
+      "en_demo": false
     },
     {
       "id": "cambiando-las-reglas",
@@ -134,17 +145,32 @@
       "en_demo": false
     },
     {
-      "id": "me-cuidan-mientras-aprendo",
-      "nombre": "Me cuidan mientras aprendo",
+      "id": "me-cuido-mientras-aprendo",
+      "nombre": "Me cuido mientras Aprendo",
       "clase": "iniciativa",
-      "descripcion": "",
+      "descripcion": "Iniciativa educativa; incluye el podcast ConoSenos. Página propia en eiraac.org/mecuido.html.",
       "tipos_de_registro": [
         "participacion"
       ],
       "rol_por_defecto": "participante",
       "estado": "por_confirmar",
-      "nota": "La mencionó el equipo; no aparece en la guía. Falta saber qué registra y a quién atiende.",
+      "nota": "El nombre correcto, según el sitio de EIRA, es \"Me cuido mientras Aprendo\". Qué registra (asistentes, episodios) es inferencia: falta confirmarlo con EIRA.",
       "en_demo": false
+    },
+    {
+      "id": "salud-publica-jalisco",
+      "nombre": "Datos públicos de salud (Jalisco)",
+      "clase": "fuente_publica",
+      "descripcion": "Reportes de datos abiertos oficiales: defunciones por cáncer de mama y cervicouterino (INEGI), egresos hospitalarios y unidades de salud (Secretaría de Salud). Sin identificador de persona.",
+      "tipos_de_registro": [
+        "registro_publico"
+      ],
+      "rol_por_defecto": null,
+      "estado": "confirmado",
+      "en_demo": false,
+      "solo_entorno": "real"
     }
-  ]
+  ],
+  "_por_agregar": "La investigación del 21 nov encontró más iniciativas mencionadas por EIRA sin ficha pública: Mayo Rosa en tu Comunidad, Paso Firme, Mundo Rosa, Juguetón, Educación continua e Investigación. No se agregan al catálogo hasta confirmarlas con EIRA; ver docs/contexto/iniciativas-eira.md.",
+  "regla_global": "Decisión de Ian (13:10): en el informe Global, una persona que aparece en dos programas cuenta dos veces: el total de personas del Global es la suma de las personas de cada programa. Se muestra aparte, como dato informativo, cuántas aparecen en más de un programa."
 }
