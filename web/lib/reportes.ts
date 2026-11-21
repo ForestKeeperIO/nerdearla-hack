@@ -14,7 +14,7 @@ const normal = (s: string) => s.normalize('NFD').replace(/\p{M}/gu, '').toLowerC
 export type Linea = { programa: string; cve: string; municipio: string; servicio: string; unidad: string; n: number };
 const edades = ['Menos de 25', '25 a 39', '40 a 69', '70 o más'];
 
-function poblaciones() {
+export function poblaciones() {
   const texto = readFileSync(join(process.cwd(),'..','publicos','jalisco_mun_denominadores_2020.csv'),'utf8');
   return new Map(texto.trim().split(/\r?\n/).slice(1).map(f => {
     const c = f.split(',');
