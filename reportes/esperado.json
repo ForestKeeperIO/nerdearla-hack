@@ -1,0 +1,76 @@
+{
+  "archivos": {
+    "tamizaje-rosa.xlsx": {
+      "filas": 130,
+      "asistencias": 120,
+      "inasistencias": 6,
+      "sin_id": 8,
+      "repetidas_dentro": 4,
+      "anomalias": 20
+    },
+    "salud-que-florece.xlsx": {
+      "filas": 84,
+      "asistencias": 80,
+      "inasistencias": 4,
+      "sin_id": 12,
+      "repetidas_dentro": 0,
+      "anomalias": 14
+    },
+    "nutricion.xlsx": {
+      "filas": 40,
+      "asistencias": 40,
+      "inasistencias": 0,
+      "sin_id": 0,
+      "repetidas_dentro": 0,
+      "anomalias": 30
+    },
+    "tamizaje-rosa_v2.xlsx": {
+      "filas": 138,
+      "asistencias": 128,
+      "inasistencias": 6,
+      "sin_id": 8,
+      "repetidas_dentro": 4,
+      "anomalias": 146
+    },
+    "reporte_final_2.xlsx": {
+      "filas": 130,
+      "asistencias": 120,
+      "inasistencias": 6,
+      "sin_id": 8,
+      "repetidas_dentro": 4,
+      "anomalias": 20,
+      "sha256_igual_a": "tamizaje-rosa.xlsx"
+    },
+    "tamizaje-rosa-reguardado.xlsx": {
+      "filas": 130,
+      "asistencias": 120,
+      "inasistencias": 6,
+      "sin_id": 8,
+      "repetidas_dentro": 4,
+      "anomalias": 20
+    },
+    "tamizaje-rosa.csv": {
+      "filas": 130,
+      "asistencias": 120,
+      "inasistencias": 6,
+      "sin_id": 8,
+      "repetidas_dentro": 4,
+      "anomalias": 20
+    }
+  },
+  "globales": {
+    "personas_identificadas": 163,
+    "registros_sin_identificar": 0,
+    "cruce_tamizaje_florece": 15,
+    "pares_mismo_id": 2,
+    "variantes_de_nombre": 3,
+    "filas_compartidas_nutricion": 30,
+    "edad_promedio": 45.9,
+    "totales_finales": {
+      "atenciones": 138,
+      "participaciones": 80,
+      "personas": 181,
+      "pares_pendientes": 5
+    }
+  }
+}
