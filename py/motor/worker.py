@@ -21,7 +21,7 @@ from datetime import date
 import pandas as pd
 import valkey
 
-from db import crear
+from db.crear import crear
 from . import escribir, huellas, leer, personas
 
 GRUPO = "procesadores"
@@ -38,7 +38,7 @@ def conectar(texto: bool = True) -> valkey.Valkey:
     return valkey.Valkey.from_url(
         os.environ.get("VALKEY_URL", "redis://127.0.0.1:6379"),
         password=os.environ.get("VALKEY_PASSWORD") or None,
-        decode_responses=texto)
+        decode_responses=texto, socket_timeout=15)
 
 
 def asegurar_grupos(v) -> None:
@@ -369,9 +369,12 @@ def aplicar_decision(v, db, campos: dict) -> None:
 
 def ciclo(v, db, bloque_ms: int = 5000, vb=None) -> None:
     vb = vb or conectar(texto=False)
-    resp = v.xreadgroup(GRUPO, CONSUMIDOR,
-                        {"eira:trabajos": ">", "eira:decisiones": ">"},
-                        count=4, block=bloque_ms)
+    try:
+        resp = v.xreadgroup(GRUPO, CONSUMIDOR,
+                            {"eira:trabajos": ">", "eira:decisiones": ">"},
+                            count=4, block=bloque_ms)
+    except (TimeoutError, valkey.exceptions.TimeoutError):
+        return  # sin mensajes en el bloqueo: vuelve a intentar
     for stream, mensajes in resp or []:
         for msg_id, campos in mensajes:
             try:
