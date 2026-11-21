@@ -28,3 +28,6 @@
 - Sesiones Devin lanzadas 12:10: (a) valkey-base: claves, limpiar, semilla, verificar, ejemplo Python; (b) fe: habilidades modern-web-guidance + Hallmark, Next.js en web/, pantallas Subir/Calidad/Tablero/Informe/Registro, capturas en docs/capturas/; (c) benchmark UI 21st.dev + details.so → scratchpad devin2/out/c.md. Informes en scratchpad devin2/out/{a,b,c}.md.
 - Valkey 6379 (sin contraseña) lo usa el FE; pruebas de valkey-base en 6391.
 - Pendiente: respuestas de Ian (cómo recibe Python los archivos, dónde corre, NFC); integrar ramas; despliegue HTTPS; README; Devpost 15:20.
+- Sesión Claude Code ya commiteó 5 veces en main (scaffold, plan ajustado con respuestas EIRA, tablero Excalidraw, contrato Valkey). Worktrees: `nerdearla-hack-fe` (rama fe) y `nerdearla-hack-valkey` (rama valkey-base).
+- Pusheado todo a origin: main, fe, valkey-base. `docs/ESTADO-SESION.md` = espejo de STATE.md.
+- Auto-sync: cron */2 min corre `.claude/sync-repo.sh` (commit wip en main + push --all). QUITAR tras el hackathon: `crontab -l | grep -v sync-repo | crontab -`.
