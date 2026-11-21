@@ -35,7 +35,7 @@ function Cifra({ valor, rotulo, med }: { valor: string; rotulo: string; med?: Me
   return (
     <div>
       <p className="cifra">{valor}</p>
-      <p className="etiqueta" style={{ marginTop: 'var(--sp-2)' }}>{rotulo}</p>
+      <p className="rotulo-cifra">{rotulo}</p>
       {med && <ComoSeCalculo med={med} />}
     </div>
   );
@@ -139,8 +139,8 @@ export default async function PaginaVistaPrevia({ params }: { params: Promise<{ 
       bajada={`Las cifras tal como saldrán. De: ${nombresFuentes || 'sin archivos'} · datos al corte del ${corte}.`}
     >
       {/* Las tres cifras que pidió EIRA */}
-      <div className="tarjeta">
-        <div className="grid gap-8 sm:grid-cols-3">
+      <div className="tarjeta" style={{ padding: 0, overflow: 'hidden' }}>
+        <div className="banda-cifras">
           <Cifra
             valor={rango}
             rotulo={
@@ -164,7 +164,7 @@ export default async function PaginaVistaPrevia({ params }: { params: Promise<{ 
           )}
         </div>
 
-        <div style={{ marginTop: 'var(--sp-8)' }}>
+        <div style={{ borderTop: 'var(--border)', padding: 'var(--sp-6)' }}>
           <h2 style={{ fontSize: 15 }}>Desglose por ciudad</h2>
           <div style={{ marginTop: 'var(--sp-3)' }}>
             <BarList
