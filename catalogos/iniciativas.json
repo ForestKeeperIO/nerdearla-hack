@@ -1,0 +1,25 @@
+{
+  "_nota": "Catálogo de programas e iniciativas de EIRA y de los tipos de registro que cada una produce. Fuente: guía de EIRA para participantes (sección 3) y lo dicho por el equipo el 21 nov. Lo marcado 'por_confirmar' no está verificado con EIRA.",
+  "tipos_de_registro": [
+    { "clave": "atencion", "etiqueta": "Atención", "plural": "atenciones", "se_cuenta": "eventos", "cuenta_personas": true },
+    { "clave": "estudio", "etiqueta": "Estudio", "plural": "estudios", "se_cuenta": "eventos", "cuenta_personas": true },
+    { "clave": "participacion", "etiqueta": "Participación", "plural": "participaciones", "se_cuenta": "eventos", "cuenta_personas": true },
+    { "clave": "entrega_insumo", "etiqueta": "Entrega de insumo", "plural": "entregas de insumos", "se_cuenta": "objetos", "cuenta_personas": true },
+    { "clave": "donacion", "etiqueta": "Donación recibida", "plural": "donaciones recibidas", "se_cuenta": "objetos", "cuenta_personas": false },
+    { "clave": "producto_entregado", "etiqueta": "Producto entregado", "plural": "productos entregados", "se_cuenta": "objetos", "cuenta_personas": true }
+  ],
+  "roles_de_persona": [
+    { "clave": "beneficiaria", "etiqueta": "Beneficiaria", "cuenta_como_impactada": true },
+    { "clave": "participante", "etiqueta": "Participante", "cuenta_como_impactada": true },
+    { "clave": "donante", "etiqueta": "Donante", "cuenta_como_impactada": false },
+    { "clave": "voluntaria", "etiqueta": "Voluntaria", "cuenta_como_impactada": false }
+  ],
+  "iniciativas": [
+    { "id": "tamizaje-rosa", "nombre": "Tamizaje Rosa", "clase": "programa", "descripcion": "Campañas de salud con Papanicolaou, ultrasonido de mama, exploración clínica y valoración nutricional.", "tipos_de_registro": ["atencion", "estudio"], "rol_por_defecto": "beneficiaria", "estado": "confirmado" },
+    { "id": "melenas-en-movimiento", "nombre": "Melenas en Movimiento", "clase": "iniciativa", "descripcion": "Recolección de cabello y elaboración de pelucas oncológicas.", "tipos_de_registro": ["donacion", "producto_entregado"], "rol_por_defecto": "donante", "estado": "confirmado", "nota": "Quien dona cabello no es beneficiaria; quien recibe una peluca sí. Se registran por separado." },
+    { "id": "salud-que-florece", "nombre": "Salud que Florece", "clase": "programa", "descripcion": "Educación para la salud, participación juvenil y acciones en escuelas y comunidades.", "tipos_de_registro": ["participacion"], "rol_por_defecto": "participante", "estado": "confirmado" },
+    { "id": "cambiando-las-reglas", "nombre": "Cambiando las Reglas", "clase": "programa", "descripcion": "Educación en salud menstrual y acceso a insumos.", "tipos_de_registro": ["participacion", "entrega_insumo"], "rol_por_defecto": "beneficiaria", "estado": "confirmado" },
+    { "id": "comunidades-de-origen", "nombre": "Comunidades de Origen", "clase": "programa", "descripcion": "Acciones comunitarias de salud preventiva, educación y acceso a insumos.", "tipos_de_registro": ["atencion", "participacion", "entrega_insumo"], "rol_por_defecto": "beneficiaria", "estado": "confirmado" },
+    { "id": "me-cuidan-mientras-aprendo", "nombre": "Me cuidan mientras aprendo", "clase": "iniciativa", "descripcion": "", "tipos_de_registro": ["participacion"], "rol_por_defecto": "participante", "estado": "por_confirmar", "nota": "La mencionó el equipo; no aparece en la guía. Falta saber qué registra y a quién atiende." }
+  ]
+}
