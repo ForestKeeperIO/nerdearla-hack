@@ -33,7 +33,7 @@ export default async function ReportePagina({params, searchParams}: {params:Prom
   const folio = `EIRA-${territorio?'T':'A'}-${programa}-${localidad?.clave||'general'}-${r.version}`;
   const nombre = f.programa.length ? f.programa.map(nombrePrograma).join(', ') : 'Global';
   const corte = r.corte ? fechaEs(r.corte) : 'Sin fecha de corte';
-  const nacional = q.mapa==='mexico' || q.mapa==='mx' || (!!localidad && localidad.estado_clave!=='14');
+  const nacional = q.mapa==='mexico' || q.mapa==='mx' || (!q.mapa && municipios.some(m=>m.estado_clave!=='14'));
   const excluidas = r.fuentes.reduce((a,f)=>a+f.filas_omitidas,0);
   const ocultos = (excepto:string[])=>[...url.entries()].filter(([k])=>!excepto.includes(k)).map(([k,v])=><input key={k} type="hidden" name={k} value={v}/>);
   const form = <form className="lector-filtros no-imprimir">{ocultos(['programa','mun'])}
@@ -43,7 +43,7 @@ export default async function ReportePagina({params, searchParams}: {params:Prom
     {q.imprimir==='1' && <ImprimirAlAbrir/>}
     <div className="utiles no-imprimir"><Link href={`/reportes?${url}`}>Todos los reportes</Link>{form}<a className="btn btn--primario" href={`/reportes/${tipo}/informe.pdf?${url}`}>Descargar PDF</a><a className="btn btn--secundario" href={`/reportes/${tipo}/datos.csv?${url}`}>Descargar CSV</a><BotonImprimir/></div>
     <section className="pliego">
-      <header className="membrete"><strong>EIRA</strong><span>Movimiento Rosa A.C.</span><span>Datos de demostración</span></header>
+      <header className="membrete"><strong>EIRA</strong><span>Movimiento Rosa A.C.</span><span>Datos de demostración · Folio {r.version}</span></header>
       <div className="titulo-ficha"><div><h1>{territorio?'Presencia territorial':'Impacto para aliados'}</h1><p>{territorio ? `Para gobierno y hospitales de ${localidad ? localidad.municipio : 'los municipios con actividad'}.` : 'Para las organizaciones que acompañan el trabajo de EIRA.'}</p></div>
       <dl><dt>Programa</dt><dd>{nombre}</dd><dt>Corte de las fuentes</dt><dd>{corte}</dd></dl></div>
       <p className="seleccion-publicada">Selección: {nombre}. {periodo}. {f.estado.length>0 && `Entidades: ${f.estado.join(', ')}. `}{f.municipio.length>0 && `Municipios: ${f.municipio.join(', ')}. `}{f.servicio.join(', ')}</p>
@@ -53,7 +53,7 @@ export default async function ReportePagina({params, searchParams}: {params:Prom
         <div className="resumen-bento"><div className="respuesta"><span><UsersRound/> Personas impactadas <a href="#metodo" aria-label="Ver método de conteo"><ArrowUpRight/></a></span><strong>{cifra(r.impactadas)}</strong>
         <p>{programa==='global'?'Suma de personas identificadas por programa.':'Personas identificadas en el programa.'}</p><small>Sin periodo previo</small></div>
         {([[HeartPulse,'Donantes',cifra(r.donantes),'Se cuentan por separado'],[MapPin,'Municipios',r.municipios.length,'Con actividad verificada'],[CalendarDays,'Mediana de edad',r.edad.mediana??'—','Años al corte']] as const).map(([Icono,titulo,n,detalle])=><div className="dato-bento" key={titulo}><span><Icono/>{titulo}<a href="#metodo" aria-label={`Método: ${titulo}`}><ArrowUpRight/></a></span><strong>{n}</strong><p>{detalle}</p><small>Sin periodo previo</small></div>)}</div>}
-      {!territorio && <div className="columnas"><section><h2>Alcance por servicio</h2><p>Productos de la actividad, según B4SI.</p><Barras items={servicios.map(s=>({label:`${s.label} (${pluralTipo(s.unidad)})`,n:s.n}))}/></section>
+      {!territorio && r.disponible && <div className="columnas"><section><h2>Alcance por servicio</h2><p>Actividad registrada por unidad; una persona puede recibir más de un servicio.</p><Barras items={servicios.map(s=>({label:`${s.label} (${pluralTipo(s.unidad)})`,n:s.n}))}/></section>
         <section><h2>Edad al corte</h2><p>{r.edad.mediana!==null ? `Mediana: ${r.edad.mediana} años. Promedio: ${r.edad.media?.toLocaleString('es-MX',{maximumFractionDigits:1})} años.`:'Sin muestra publicable.'} Con edad: {cifra(r.edad.n)}. Sin edad: {cifra(r.edad.sin)}{r.edad.total>=5 && (r.edad.sin===0 || r.edad.sin>=5) ? ` (${Math.round(r.edad.sin*100/r.edad.total)} %)` : ''}.</p><Barras items={r.edad.grupos}/></section></div>}
       {territorio ? <section className="nota-norma norma-bento"><AnilloDato valor={null} etiqueta="Sin meta municipal convenida"/><div><h2>Contribución a la población objetivo</h2><p>Citología: 25 a 64 años. Exploración clínica de mama: desde los 25 años. El ultrasonido no equivale a una mastografía.</p>
         {r.tasas.map(t=><p key={t.clave}><b>{t.municipio}:</b> {cifra(t.n)} atenciones de Papanicolaou en el grupo de edad; {t.tasa===null?'tasa reservada':`${t.tasa.toLocaleString('es-MX',{maximumFractionDigits:2})} por 1,000 mujeres de 25 a 64 años`}.</p>)}

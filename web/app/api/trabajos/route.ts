@@ -2,6 +2,7 @@ import { NextResponse } from 'next/server';
 import { fuentesDe, trabajosDe, esAlcance } from '@/lib/informe';
 import type { Alcance } from '@/lib/recorrido';
 import { valkey } from '@/lib/valkey';
+import { pares } from '@/lib/claves';
 
 export const dynamic = 'force-dynamic';
 
@@ -12,7 +13,7 @@ export async function GET(request: Request) {
   try {
     const [t, f] = await Promise.all([trabajosDe(alcance), fuentesDe(alcance)]);
     const paresPorFuente:Record<string,number>={};
-    for (const s of await valkey().hvals('eira:pares')) {
+    for (const s of await valkey().hvals(pares())) {
       try { const p=JSON.parse(s); if (typeof p.b?.fuente==='string') paresPorFuente[p.b.fuente]=(paresPorFuente[p.b.fuente]||0)+1; }
       catch { /* Los pares incompletos no acreditan una incidencia de este archivo. */ }
     }

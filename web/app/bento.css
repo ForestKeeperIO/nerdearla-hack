@@ -37,8 +37,8 @@ main.contenido:has(.archivo-eira) { max-width: 88rem; }
 .miniatura-reporte { width: 40%; max-width: 13rem; }
 .miniatura-reporte figcaption { display: none; }
 .miniatura-reporte rect { fill: var(--papel); opacity: .65; }
-.miniatura-reporte .atlas path { fill: var(--papel-2); stroke: var(--linea-fuerte); }
-.miniatura-reporte .atlas circle { fill: var(--vino); }
+.miniatura-reporte .atlas-reporte path { fill: var(--papel-2); stroke: var(--linea-fuerte); }
+.miniatura-reporte .atlas-reporte circle { fill: var(--vino); }
 .tapa h2 { max-width: none; font-size: clamp(1.65rem,3vw,2.45rem); }
 .tapa h2 a { text-decoration: none; }
 .tapa p { margin-block: .4rem 1rem; }
@@ -89,7 +89,7 @@ main.contenido:has(.archivo-eira) { max-width: 88rem; }
 .resumen-bento small { align-self: flex-start; margin-top: auto; padding: .2rem .65rem; border-radius: var(--r-pill); background: var(--papel-2); color: var(--tinta-suave); }
 .hoja .columnas { grid-template-columns: minmax(0,7fr) minmax(0,5fr); gap: var(--bento-gap); }
 .hoja .panel-mapa,.hoja .nota-norma { margin-block: var(--bento-gap); }
-.hoja .panel-mapa .atlas { background: var(--papel); padding: 1rem; border-radius: var(--bento-interno); }
+.hoja .panel-mapa .atlas-reporte { background: var(--papel); padding: 1rem; border-radius: var(--bento-interno); }
 .norma-bento { display: grid; grid-template-columns: minmax(8rem,1fr) minmax(0,4fr); align-items: center; gap: 1.5rem; }
 .hoja .sin-dato { background: var(--bento-rayado); border-radius: var(--bento-interno); }
 .hoja .ficha-metodo h2 { display: flex; gap: .7rem; align-items: center; }

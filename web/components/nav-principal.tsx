@@ -1,6 +1,5 @@
 'use client';
 
-// Navegación superior: dos pestañas (Tablero | Informes) marcando la activa.
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
 
@@ -19,7 +18,7 @@ export function NavPrincipal() {
         return (
           <Link
             key={p.href}
-            href={p.href}
+            href={p.href === '/reportes' ? '/reportes?programa=tamizaje-rosa' : p.href}
             aria-current={activo ? 'page' : undefined}
           >
             {p.titulo}

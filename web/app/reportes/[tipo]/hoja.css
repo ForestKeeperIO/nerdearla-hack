@@ -28,11 +28,11 @@
 .sin-dato,.sin-lectura { color: var(--tinta-suave); background: var(--papel-2); padding: .8rem 1rem; margin-block-start: .7rem; }
 .panel-mapa { grid-template-columns: minmax(10rem,.68fr) minmax(0,1.32fr); background: var(--papel); padding: 1.5rem; }
 .panel-mapa p { margin-top: .7rem; }
-.atlas { margin: 0; }
-.atlas svg { width: 100%; height: auto; }
-.atlas path { fill: var(--papel-2); stroke: var(--linea-fuerte); stroke-width: 1; }
-.atlas circle { fill: var(--vino); stroke: var(--papel); stroke-width: 1; }
-.atlas figcaption { font-size: .76rem; color: var(--tinta-suave); }
+.atlas-reporte { margin: 0; }
+.atlas-reporte svg { width: 100%; height: auto; }
+.atlas-reporte path { fill: var(--papel-2); stroke: var(--linea-fuerte); stroke-width: 1; }
+.atlas-reporte circle { fill: var(--vino); stroke: var(--papel); stroke-width: 1; }
+.atlas-reporte figcaption { font-size: .76rem; color: var(--tinta-suave); }
 .evidencia,.ficha-metodo { margin-top: 2rem; }
 .tabla-scroll { overflow: auto; max-inline-size: 100%; margin-top: .75rem; }
 .tabla-scroll table { border-collapse: collapse; min-width: 100%; text-align: left; font-size: .875rem; }
@@ -63,7 +63,7 @@
   .titulo-ficha dl,.ficha-metodo dl { display: block; }
   .columnas,.panel-mapa,.respuesta { grid-template-columns: 1fr 1fr; gap: 6mm; }
   .panel-mapa { margin-block: 5mm; }
-  .atlas svg { max-height: 64mm; }
+  .atlas-reporte svg { max-height: 64mm; }
   .tabla-scroll { overflow: visible; }
   .tabla-scroll :is(th,td) { position: static; padding: 2mm; }
   .hoja tr,.nota-norma { break-inside: avoid; }

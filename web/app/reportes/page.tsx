@@ -10,13 +10,14 @@ import { AtlasReporte } from '@/components/atlas-reporte';
 export const dynamic = 'force-dynamic';
 
 export default async function Indice({searchParams}:{searchParams:Promise<QueryReporte>}) {
-  const q=await searchParams;
+  // Sin filtros, "Sacar reporte" del Tablero representa todos los programas.
+  const q={origen:'tablero',...await searchParams};
   const {params,f,periodo}=contextoReporte(q);
   const r = await informeSeleccion(q);
   const nombre=f.programa.length?f.programa.map(nombrePrograma).join(', '):'Global';
   const fuentes = r.fuentes;
   const servicios = porServicio(r.lineas).filter(s=>s.n>=5).slice(0,5);
-  const corte = fuentes.map(f => f.fecha_corte).sort().at(-1);
+  const corte = r.corte;
   return <div className="archivo-eira">
     <div className="apertura"><h1>Reportes</h1><p>{nombre}. {periodo}. La misma selección para el informe de aliados y el oficio municipal.</p></div>
     <div className="catalogo-reportes">
