@@ -45,6 +45,7 @@
 | `shared/types.ts`, `shared/folio.ts` | Contrato y folios | 1 |
 | `server/claves.ts` | Nombres de todas las claves de Valkey | 1 |
 | `scripts/valkey-local.sh` | Descargar y arrancar Valkey sin Docker | 1 |
+| `server/decisor.ts` | Interfaz `Decisor` y `DecisorReglas` (decisiones con probabilidad) | 2 |
 | `server/normalizar.ts` | Texto, fechas, municipios, clave de persona | 2 |
 | `server/importar.ts` | Leer CSV y Excel, proponer mapeo, reglas de calidad | 2 |
 | `scripts/datos-sinteticos.ts` | Los dos archivos del caso práctico | 2 |
@@ -133,7 +134,7 @@ export interface Ajuste { id: string; en: string; por: string; tipo: 'importacio
 - [ ] **Step 2:** Escribir `shared/types.ts` y `server/claves.ts` como arriba.
 - [ ] **Step 3:** Prueba de folio (formato `^EIRA-[2-9A-HJKMNP-Z]{4}-[2-9A-HJKMNP-Z]{4}$`, `isValidFolio` verdadero para uno nuevo y falso al cambiar el último carácter); implementar; `npx vitest run shared`, esperado PASS.
 - [ ] **Step 4:** `npm run valkey` y verificar: `node -e "import('iovalkey').then(async({Valkey})=>{const v=new Valkey();console.log(await v.ping());v.disconnect()})"` imprime `PONG`.
-- [ ] **Step 5:** Commit `chore: scaffold, contract and local Valkey`; crear repositorio público y push.
+- [ ] **Step 5:** Commit `chore: scaffold, contract and local Valkey` y push a `origin main`. El repositorio ya existe (`github.com/ForestKeeperIO/nerdearla-hack`, con `QUE-HAREMOS.md`, `.gitignore` y los planes); hacer `git pull --rebase` antes y conservar lo que ya está en `.gitignore`. Hay una colaboradora invitada: cada tarea paralela trabaja en su propia rama `t2-importar`, `t3-motor`, `t5-pantallas` y se integra a `main` al terminar.
 
 ### Task 2: Importación, mapeo y calidad (paralelo)
 
@@ -150,8 +151,10 @@ export interface Ajuste { id: string; en: string; por: string; tipo: 'importacio
   - `clavePersona(d: { folio?: string | null; nombreCompleto?: string | null; fechaNacimiento?: string | null }, hmacKey: string): { clave: string | null; certeza: Certeza }`
   - `leerArchivo(buf: Buffer, nombre: string): { encabezados: string[]; filas: Record<string, unknown>[] }` — CSV (detecta UTF-8 o Latin-1) y XLSX
   - `proponerMapeo(encabezados: string[]): Mapeo`
+  - `proponerMapeoDetallado(encabezados: string[], d: Decisor): Promise<{ encabezado: string; campo: Campo; probabilidad: number; porConfirmar: boolean }[]>` — `porConfirmar` es `true` si la probabilidad es menor a 0.90
+  - `interface Decisor { elegir(estado: string, pregunta: string, opciones: string[]): Promise<{ opcion: string; probabilidad: number }[]> }` y `class DecisorReglas implements Decisor` en `server/decisor.ts` (sinónimos exactos = 1.0; si no, la mejor similitud Jaro-Winkler contra los sinónimos; resultado ordenado de mayor a menor). Pruebas: `'Fecha de atención'` → `fecha` con probabilidad 1.0; `'Fcha atencion'` → `fecha` con probabilidad entre 0.80 y 0.99 y `porConfirmar: true`; `'Observaciones'` → `ignorar`.
   - `aRegistros(filas, mapeo: Mapeo, fuente: Fuente, hmacKey: string): { registros: Registro[]; anomalias: Anomalia[] }`
-  - `npm run datos` genera, con semilla fija, `data/sinteticos/tamizaje-rosa.csv` y `data/sinteticos/salud-que-florece.xlsx`
+  - `npm run datos` genera, con semilla fija, `sinteticos/tamizaje-rosa.csv` y `sinteticos/salud-que-florece.xlsx`
 
 Archivos sintéticos (valores exactos que usan las pruebas):
 
@@ -218,7 +221,7 @@ test('una fila con fecha inválida conserva su registro con fecha y periodo nulo
 ### Task 3: Motor de indicadores sobre Valkey (paralelo)
 
 **Files:**
-- Create: `server/motor.ts`, `server/publicos.ts`, `data/publicos/README.md`
+- Create: `server/motor.ts`, `server/publicos.ts`, `publicos/README.md`
 - Test: `server/motor.test.ts` (usa Valkey real en la base 15 y hace `FLUSHDB` antes de cada prueba)
 
 **Interfaces:**
@@ -292,7 +295,7 @@ test('ningún valor guardado contiene un nombre sembrado', async () => {
 
 - [ ] **Step 2:** Correr, esperado FAIL.
 - [ ] **Step 3:** Implementar `motor.ts` con la tabla de comandos.
-- [ ] **Step 4:** Implementar `publicos.ts` con datos públicos reales, ya descargados y verificados (copiarlos del directorio de trabajo a `data/publicos/` y versionarlos, con `data/publicos/README.md` que da URL, fecha de descarga y cómo se derivó cada uno):
+- [ ] **Step 4:** Implementar `publicos.ts` con datos públicos reales, ya descargados y verificados (copiarlos del directorio de trabajo a `publicos/` y versionarlos, con `publicos/README.md` que da URL, fecha de descarga y cómo se derivó cada uno):
   - `jalisco_mun_denominadores_2020.csv` — derivado del Censo 2020 ITER de INEGI (`https://www.inegi.org.mx/contenidos/programas/ccpv/2020/datosabiertos/iter/iter_14_cpv2020_csv.zip`, filas con `LOC == '0000'`): mujeres de 25 a 64 años, de 40 a 69, población indígena y porcentaje rural por municipio. Denominador del indicador `mujeres_25_64`. Valor de control para la prueba: Zapotlán el Grande (`14023`) = 30,089 mujeres de 25 a 64.
   - `IMM_2020.xlsx` de CONAPO (`https://conapo.segob.gob.mx/work/models/CONAPO/Datos_Abiertos/Municipio/IMM_2020.xlsx`, hoja `IMM_2020`, columnas `CVE_MUN` y `GM_2020`): grado de marginación. Indicador adicional: porcentaje de atenciones en municipios de marginación alta o muy alta.
   - Catálogo de los 125 municipios de Jalisco (`https://gaia.inegi.org.mx/wscatgeo/v2/mgem/14`, JSON): alimenta `server/catalogo-municipios.ts` de la Tarea 2.
@@ -312,7 +315,7 @@ test('ningún valor guardado contiene un nombre sembrado', async () => {
 | Método y ruta | Rol | Respuesta |
 |---|---|---|
 | `POST /api/login` | público | `{ token, role }` |
-| `POST /api/fuentes/previa` (multipart `archivo`) | coordinacion | `{ encabezados, muestra: 5 filas, mapeoPropuesto, yaImportado: boolean }` |
+| `POST /api/fuentes/previa` (multipart `archivo`) | coordinacion | `{ encabezados, muestra: 5 filas, mapeoPropuesto: { encabezado, campo, probabilidad, porConfirmar }[], yaImportado: boolean }` |
 | `POST /api/fuentes` (multipart `archivo`, `programa`, `unidad`, `fechaCorte`, `mapeo`) | coordinacion | `{ fuente, registros: number, anomalias: number, nuevo: boolean }` |
 | `GET /api/fuentes` | ambos | `Fuente[]` |
 | `GET /api/calidad?fuenteId=` | ambos | `{ porRegla: Record<ReglaCalidad, number>; anomalias: Anomalia[] }` |
@@ -428,7 +431,9 @@ Territorio para los datos de prueba: EIRA trabaja en Jalisco, Colima, Michoacán
 
 ## Costos y sostenibilidad (para el README)
 
-- Sin modelos de lenguaje: el mapeo de columnas, las reglas de calidad y las coincidencias son reglas deterministas y conjuntos en Valkey. Costo por uso: cero. Un clasificador pequeño para proponer mapeos o duplicados queda como mejora opcional, nunca como requisito.
+- Sin modelos de lenguaje generativos: el mapeo de columnas, las reglas de calidad y las coincidencias son reglas deterministas y conjuntos en Valkey. Costo por uso: cero.
+- Punto de extensión para un modelo de decisión al estilo Jev (TypeSafe AI): `server/decisor.ts` define `interface Decisor { elegir(estado: string, pregunta: string, opciones: string[]): Promise<{ opcion: string; probabilidad: number }[]> }`. La implementación del prototipo es `DecisorReglas` (sinónimos y similitud de texto, con la similitud como probabilidad). Se usa en dos lugares: `proponerMapeo` (¿a qué campo común corresponde este encabezado?) y la propuesta de pares duplicados. Toda decisión con probabilidad menor a 0.90 se muestra como "por confirmar" y la confirma una persona.
+- Un `DecisorModelo` queda descrito, no construido, salvo que sobre tiempo después de las 13:15: Jev es cerrado, su registro está en pausa y se sirve desde Estados Unidos, así que no se le envían filas de pacientes; la alternativa viable es un modelo abierto local (Laya multilingüe, 322M, Apache-2.0, cerca de 1 GB de memoria). Su desempeño en español no está verificado en ninguna fuente.
 - Demo y piloto: una instancia pequeña con la aplicación y Valkey en el mismo equipo. Lightsail de 512 MB cuesta 5 USD al mes (precio leído en la página oficial); los precios de EC2 son de terceros y se presentan como estimación de 5 a 12 USD al mes.
 - Costo cero: laptop de oficina con el mismo `compose.yaml` y respaldo de los archivos originales. Se declara lo que implica: sin disponibilidad garantizada, un solo punto de falla y alguien que cuide el equipo.
 - Valkey administrado (ElastiCache Serverless): mínimo cercano a 6 USD al mes; opción para cuando haya presupuesto.
