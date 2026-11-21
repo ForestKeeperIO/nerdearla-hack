@@ -95,6 +95,14 @@ Un valor desconocido se escribe como cadena vacía en su posición del campo.
 
 `estado`: `pendiente`, `misma`, `distinta`. `etiqueta` es el texto que se muestra para reconocer a la persona; recomendado iniciales, ciudad y edad, no el nombre completo.
 
+### Presencia territorial
+
+| Clave | Tipo | Contenido |
+|---|---|---|
+| `eira:presencia:<alcance>` | Hash | clave de municipio de INEGI (5 dígitos) → número de registros. `<alcance>` es el id del programa o `global` |
+
+El trabajo que encola el frontend lleva además el campo `estado_clave` (2 dígitos; por defecto `14`, Jalisco), para resolver las ciudades del archivo. El catálogo de municipios está en `publicos/municipios_mexico.json`.
+
 ### Memoria de duplicados (solo la usa Python)
 
 | Clave | Tipo | Contenido |

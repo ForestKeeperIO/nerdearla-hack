@@ -129,6 +129,23 @@ En Valkey el campo `<programa>` de las claves pasa a llevar el `id` de la inicia
 
 > El diagrama de arriba todavía muestra el modelo anterior (columna `programa` y cuatro unidades fijas).
 
+## Estado y municipio: trazabilidad territorial (actualización 13:15)
+
+Cada registro guarda dónde ocurrió con las claves oficiales de INEGI, para poder seguirlo por estado y por municipio.
+
+| Dónde | Columnas | Contenido |
+|---|---|---|
+| `registros` | `estado_clave`, `estado`, `municipio_clave`, `municipio` | Clave de entidad (2 dígitos) y de municipio (5 dígitos: entidad + municipio), con sus nombres oficiales. `ciudad` conserva el texto tal como venía en el Excel |
+| Tabla nueva `municipios` | `clave`, `municipio`, `estado_clave`, `estado` | El catálogo completo del país: 2,478 municipios en 32 entidades. Fuente: INEGI, en `publicos/municipios_mexico.json` |
+| Vista nueva `v_presencia` | `iniciativa_id`, `estado`, `municipios_con_actividad`, `municipios_del_estado`, `registros`, `personas` | Presencia por estado y programa |
+| Vista nueva `v_presencia_municipios` | `iniciativa_id`, `estado`, `municipio_clave`, `municipio`, `registros`, `personas` | Solo los municipios con actividad |
+
+Cómo se resuelve el lugar: el Excel trae "Ciudad"; al subir el archivo se indica el estado (por defecto Jalisco) y el motor busca la ciudad en el catálogo de ese estado, con alias para los nombres de uso común (Ciudad Guzmán es Zapotlán el Grande). Si el Excel trae una columna de estado, manda esa. Lo que no se pueda resolver queda como problema de calidad `ciudad_desconocida` y no se asigna a ningún municipio.
+
+En Valkey, una clave nueva que escribe el motor: `eira:presencia:<alcance>` (Hash; `<alcance>` es el id del programa o `global`), con campo `<municipio_clave>` y valor el número de registros.
+
+**Cómo se muestra.** Es un dato secundario, al final de la Vista previa y del informe, y se presenta como presencia, no como faltante: "Presencia en 6 municipios de 1 estado", con la lista de municipios y un mosaico discreto del estado donde cada municipio con actividad va marcado. El total del estado aparece solo como referencia en letra pequeña ("de 125 municipios de Jalisco"). No se muestran porcentajes de cobertura territorial, ni listas de municipios sin atender, ni colores de alerta.
+
 ## Valkey
 
 Las claves del contrato v1 están en [`contrato-valkey.md`](contrato-valkey.md). **Propuesta de tres claves nuevas**, que el contrato aún no tiene y que el motor necesita para omitir duplicados:

@@ -87,6 +87,10 @@ Reglas:
 - Tablero de Metabase incrustado para mirar más a fondo.
 - Cada cifra con su nota: de qué archivos sale y con qué fecha de corte. El detalle técnico de cómo se calculó queda en un desplegable discreto.
 
+**Presencia territorial (dentro de Vista previa y del informe, al final).** Dato secundario. Titular en positivo: "Presencia en N municipios de M estados". Debajo, por estado, la lista de municipios con actividad y un mosaico discreto del estado (un cuadro por municipio; los que tienen actividad en vino, los demás en la línea neutra, sin rótulos). El total del estado va solo como referencia en letra pequeña ("de 125 municipios de Jalisco"). No se muestran porcentajes de cobertura territorial, ni "municipios sin atender", ni colores de alerta: el bloque dice dónde está EIRA, no dónde falta.
+
+Al subir un archivo se indica el estado al que corresponden sus ciudades (por defecto Jalisco).
+
 **4. Exportar.** El informe tal como se va a entregar, con notas al pie, y dos acciones: descargar CSV e imprimir o guardar PDF.
 
 ## Dos versiones en línea
