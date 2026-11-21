@@ -33,6 +33,15 @@
   --radius-md: var(--r-md);
   --radius-lg: var(--r-md);
   --radius-xl: var(--r-lg);
+  /* Riel lateral (componente oficial): superficie blanca, acento rubor */
+  --color-sidebar: var(--superficie);
+  --color-sidebar-foreground: var(--tinta);
+  --color-sidebar-primary: var(--vino);
+  --color-sidebar-primary-foreground: var(--superficie);
+  --color-sidebar-accent: var(--rubor);
+  --color-sidebar-accent-foreground: var(--vino);
+  --color-sidebar-border: var(--linea);
+  --color-sidebar-ring: var(--vino);
 }
 
 @layer base {
@@ -166,4 +175,25 @@ details.calculo .calculo__cuerpo {
   .tarjeta { box-shadow: none !important; border: 1px solid var(--linea-fuerte) !important; break-inside: avoid; }
   a[href]::after { content: ""; }
   @page { margin: 18mm; }
+}
+
+/* Banda de cifras (OhMD): celdas divididas por hairline, rótulo mono en versalitas. */
+.banda-cifras { display: grid; }
+@media (min-width: 640px) { .banda-cifras { grid-template-columns: repeat(3, 1fr); } }
+.banda-cifras > * { padding: var(--sp-5) var(--sp-6); border-top: var(--border); min-width: 0; }
+.banda-cifras > *:first-child { border-top: 0; }
+@media (min-width: 640px) {
+  .banda-cifras > * { border-top: 0; border-left: var(--border); }
+  .banda-cifras > *:first-child { border-left: 0; }
+}
+.rotulo-cifra {
+  font-family: var(--font-mono); font-size: var(--fs-meta);
+  letter-spacing: 0.08em; text-transform: uppercase; color: var(--tinta-tenue);
+  line-height: 1.45; margin-top: var(--sp-2);
+}
+
+/* Selects e inputs coherentes con el sistema. */
+.campo {
+  border: 1px solid var(--linea-fuerte); border-radius: var(--r-sm);
+  background: var(--superficie); padding: 0 var(--sp-3); font-size: var(--fs-small);
 }

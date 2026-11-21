@@ -10,6 +10,8 @@ import { PieDePaso } from '@/components/pie-de-paso';
 import { MismaPersona } from '@/components/misma-persona';
 import { ComoSeCalculo } from '@/components/como';
 import { StarRating } from '@/components/ui/star-rating';
+import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from '@/components/ui/accordion';
+import { Card, CardContent, CardHeader } from '@/components/ui/card';
 import { listarFuentes } from '@/lib/datos';
 import type { Par } from '@/lib/comun';
 
@@ -32,23 +34,25 @@ function GrupoProblemas({ anomalias }: { anomalias: Record<string, Anomalia[]> }
   const grupos = Object.entries(anomalias).filter(([, l]) => l.length > 0);
   if (grupos.length === 0) return null;
   return (
-    <div style={{ marginTop: 'var(--sp-4)' }}>
+    <Accordion defaultValue={grupos.filter(([, l]) => l.length <= 6).map(([r]) => r)} className="mt-4">
       {grupos.map(([regla, lista]) => (
-        <details key={regla} className="calculo" open={lista.length <= 6}>
-          <summary style={{ color: 'var(--tinta)', fontWeight: 500 }}>
+        <AccordionItem key={regla} value={regla}>
+          <AccordionTrigger style={{ fontWeight: 500, fontSize: 'var(--fs-small)' }}>
             {REGLAS[regla] ?? regla} · {lista.length} {lista.length === 1 ? 'fila' : 'filas'}
-          </summary>
-          <ul style={{ listStyle: 'none', padding: 0, margin: 'var(--sp-1) 0 var(--sp-3)' }}>
-            {lista.map((an, i) => (
-              <li key={i} style={{ borderTop: 'var(--border)', padding: 'var(--sp-2) 0', display: 'flex', gap: 'var(--sp-4)', fontSize: 'var(--fs-small)' }}>
-                <span className="mono" style={{ color: 'var(--tinta-tenue)', flexShrink: 0 }}>fila {an.fila}</span>
-                <span style={{ color: 'var(--tinta-suave)' }}>{an.campo ? `${an.campo}: ` : ''}{an.detalle}</span>
-              </li>
-            ))}
-          </ul>
-        </details>
+          </AccordionTrigger>
+          <AccordionContent>
+            <ul style={{ listStyle: 'none', padding: 0, margin: 0 }}>
+              {lista.map((an, i) => (
+                <li key={i} style={{ borderTop: 'var(--border)', padding: 'var(--sp-2) 0', display: 'flex', gap: 'var(--sp-4)', fontSize: 'var(--fs-small)' }}>
+                  <span className="mono" style={{ color: 'var(--tinta-tenue)', flexShrink: 0 }}>fila {an.fila}</span>
+                  <span style={{ color: 'var(--tinta-suave)' }}>{an.campo ? `${an.campo}: ` : ''}{an.detalle}</span>
+                </li>
+              ))}
+            </ul>
+          </AccordionContent>
+        </AccordionItem>
       ))}
-    </div>
+    </Accordion>
   );
 }
 
@@ -111,15 +115,16 @@ export default async function PaginaCalidad({ params }: { params: Promise<{ alca
           {detalles.map(({ fuente: f, anomalias, omitidas }) => {
             const planas = Object.values(anomalias.valor).flat();
             return (
-              <article key={f.id} className="tarjeta" style={{ marginBottom: 'var(--sp-4)' }}>
-                <div className="flex flex-wrap items-center justify-between gap-3">
+              <Card key={f.id} className="mb-4" style={{ borderRadius: 'var(--r-lg)', border: 'var(--border)', boxShadow: 'var(--shadow-card)' }}>
+                <CardHeader className="flex flex-wrap items-center justify-between gap-3">
                   <div>
                     <h2 style={{ fontSize: 16 }}>{f.nombre}</h2>
                     <p className="etiqueta" style={{ marginTop: 2 }}>{f.filas_nuevas} filas contadas · corte {f.fecha_corte}</p>
                   </div>
                   <StarRating valor={f.estrellas} etiqueta={`${f.estrellas} / 5`} />
-                </div>
-                <p style={{ marginTop: 'var(--sp-3)', fontSize: 'var(--fs-small)', color: 'var(--tinta-suave)' }}>
+                </CardHeader>
+                <CardContent>
+                <p style={{ fontSize: 'var(--fs-small)', color: 'var(--tinta-suave)' }}>
                   {f.motivos.length > 0 ? `Qué le falta: ${f.motivos.join('; ')}.` : 'No le falta nada: está completa.'}
                 </p>
                 <GrupoProblemas anomalias={anomalias.valor} />
@@ -146,7 +151,8 @@ export default async function PaginaCalidad({ params }: { params: Promise<{ alca
                   <p className="etiqueta" style={{ marginTop: 'var(--sp-2)' }}>Sin problemas detectados: todas las filas entraron.</p>
                 )}
                 <ComoSeCalculo med={anomalias} />
-              </article>
+                </CardContent>
+              </Card>
             );
           })}
         </section>
