@@ -13,6 +13,8 @@ import { resolverNombre, SIN_ALTA } from '@/lib/programa-libre';
 import { explicarErrorCarga } from '@/lib/error-carga';
 import { prepararTraslado, useRecibirTraslado } from '@/lib/traslado-carga';
 import { AvisoPrograma } from './aviso-programa';
+import { ColaSinConexion } from './cola-sin-conexion';
+import { guardarPendiente } from '@/lib/cola-sin-conexion';
 
 const MAX_BYTES = 10 * 1024 * 1024;
 
@@ -49,7 +51,7 @@ function transferir(datos:FormData, progreso:(porcentaje:number)=>void) {
     xhr.upload.onprogress=e=>{if(e.lengthComputable && e.total) progreso(Math.round(100*e.loaded/e.total));};
     xhr.onload=()=>xhr.status>=200 && xhr.status<300 && xhr.response?.ok ? resolve()
       : reject(new Error(xhr.response?.error || 'El servidor no confirmó la recepción. Revisa la lista antes de reintentar.'));
-    xhr.onerror=xhr.ontimeout=()=>reject(new Error('No se confirmó el envío. Revisa la conexión y la lista de archivos.'));
+    xhr.onerror=xhr.ontimeout=()=>reject(Object.assign(new Error('No se confirmó el envío. Revisa la conexión y la lista de archivos.'),{sinRed:true}));
     xhr.send(datos);
   });
 }
@@ -138,6 +140,7 @@ export function SubirArchivos({
     setEnviando(true);
     let bien = 0;
     let mal = 0;
+    let guardados = 0;
     for (const a of pendientes) {
       cambiar(a.id, { envio: 'enviando' });
       const fd = new FormData();
@@ -148,12 +151,23 @@ export function SubirArchivos({
       fd.set('estado_clave', a.estado);
       fd.set('fecha_corte', libre ? corteLibre : fechaCorte);
       fd.set('por', 'Presidencia');
+      // Sin conexión, el archivo se guarda en este navegador y se envía después.
+      const guardar = async () => {
+        const campos: Record<string,string> = {};
+        fd.forEach((valor, clave) => { if (typeof valor === 'string') campos[clave] = valor; });
+        if (!(await guardarPendiente(a.file, campos))) return false;
+        setArchivos(actual=>actual.filter(x=>x.id!==a.id));
+        guardados++;
+        return true;
+      };
+      if (typeof navigator !== 'undefined' && navigator.onLine === false && await guardar()) continue;
       try {
         await transferir(fd,progreso=>cambiar(a.id,{progreso}));
         setArchivos(actual=>actual.filter(x=>x.id!==a.id));
         window.dispatchEvent(new Event('eira:carga-recibida'));
         bien++;
       } catch (error) {
+        if ((error as { sinRed?: boolean }).sinRed && await guardar()) continue;
         cambiar(a.id, { envio: 'error', error: error instanceof Error?error.message:'No se pudo subir el archivo.' });
         mal++;
       }
@@ -161,6 +175,7 @@ export function SubirArchivos({
     setEnviando(false);
     if (libre && bien && !mal && elegido) router.push(`/informe/${elegido.id}/subir`);
     if (bien) toast.success(`${bien} archivo${bien > 1 ? 's' : ''} recibido${bien > 1 ? 's' : ''}`, { description: 'Se están leyendo; en unos segundos ves el resultado aquí.' });
+    if (guardados) toast.message(`${guardados} archivo${guardados > 1 ? 's' : ''} guardado${guardados > 1 ? 's' : ''} sin conexión`, { description: 'Se subirá solo cuando vuelva la conexión.' });
     if (mal) toast.error(`${mal} archivo${mal > 1 ? 's' : ''} no se pudo${mal > 1 ? 'n' : ''} subir`);
   }
 
@@ -208,6 +223,7 @@ export function SubirArchivos({
         <small>{lectura?'Modo de consulta: no se reciben archivos.':'Excel (.xlsx) o CSV · Hasta 10 MB por archivo'}</small>
       </div>}
 
+      <ColaSinConexion />
       {archivos.length > 0 && (
         <ul className="mt-4" style={{ listStyle: 'none', padding: 0 }}>
           {archivos.map((a) => (

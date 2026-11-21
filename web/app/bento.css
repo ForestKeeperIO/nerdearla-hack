@@ -161,3 +161,12 @@ main.contenido:has(.archivo-eira) { max-width: 88rem; }
 .gracias-jurado p { margin: 0 0 .7rem; font-size: 1rem; line-height: 1.5; color: var(--tinta); }
 .gracias-jurado .gracias-firma { color: var(--tinta-suave); font-size: .92rem; }
 .gracias-jurado footer { display: flex; justify-content: flex-end; gap: .5rem; margin-top: 1rem; flex-wrap: wrap; }
+
+/* Archivos guardados sin conexión. */
+.insignia-cola { display: inline-flex; align-items: center; gap: .35rem; padding: .3rem .65rem; border-radius: 999px; border: 1px solid var(--vino); color: var(--vino-oscuro); background: var(--superficie); font-size: .78rem; font-weight: 650; text-decoration: none; white-space: nowrap; }
+.cola-sin-conexion { list-style: none; margin: 1rem 0 0; padding: 0; display: grid; gap: .6rem; }
+.cola-sin-conexion li { display: flex; flex-wrap: wrap; align-items: center; gap: .8rem; padding: .8rem 1rem; border: 1px dashed var(--vino); border-radius: var(--bento-interno, 12px); background: var(--superficie); }
+.cola-sin-conexion li > div { flex: 1; min-width: 14rem; }
+.cola-sin-conexion p { margin: .15rem 0 0; font-size: .92rem; color: var(--tinta-suave); }
+.cola-sin-conexion p[role=alert] { color: var(--error); }
+.cola-sin-conexion li > span { display: flex; gap: .4rem; flex-wrap: wrap; }

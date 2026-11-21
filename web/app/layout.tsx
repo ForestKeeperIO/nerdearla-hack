@@ -9,6 +9,7 @@ import "./demo.css";
 import { TooltipProvider } from "@/components/ui/tooltip";
 import { NavPrincipal } from "@/components/nav-principal";
 import { GraciasJurado } from "@/components/gracias-jurado";
+import { InsigniaCola } from "@/components/cola-sin-conexion";
 import { DemoGuiado } from "@/components/demo-guiado";
 
 const montserrat = Montserrat({ variable: "--font-montserrat", subsets: ["latin"] });
@@ -33,6 +34,7 @@ export default async function RootLayout({ children }: LayoutProps<"/">) {
             <div className="eira-mastil">
               <Link href="/" className="eira-firma" aria-label="Informes que unen, inicio">Informes que unen <span>para EIRA Movimiento Rosa A.C.</span></Link>
               <NavPrincipal />
+              <InsigniaCola />
             </div>
           </header>
           <main className="container contenido">{children}</main>
