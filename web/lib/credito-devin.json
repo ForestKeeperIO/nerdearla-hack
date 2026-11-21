@@ -1,0 +1,32 @@
+{
+  "corte": "90ae03e",
+  "total": 52,
+  "ramas": [
+    "demo",
+    "entrega",
+    "fe",
+    "fe-e2e",
+    "fuentes-reales",
+    "main",
+    "motor",
+    "referencias",
+    "valkey-base"
+  ],
+  "ejemplos": [
+    {
+      "sha": "db8f0ca",
+      "titulo": "Motor de deduplicación de Excel y CSV",
+      "rama": "motor"
+    },
+    {
+      "sha": "2ce6365",
+      "titulo": "Tablero con filtros por programa y periodo",
+      "rama": "fe"
+    },
+    {
+      "sha": "2d19cdc",
+      "titulo": "Tableros de impacto y calidad en Metabase",
+      "rama": "metabase"
+    }
+  ]
+}

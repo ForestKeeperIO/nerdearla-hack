@@ -113,10 +113,10 @@ main.contenido:has(.archivo-eira) { max-width: 88rem; }
   .expediente-carga footer { flex-wrap: wrap; }
   .expediente-carga footer > * { max-width: 100%; }
 }
-@media (max-width: 360px) {
+@media (max-width: 560px) {
   .eira-mastil { flex-wrap: wrap; }
-  .eira-mastil .eira-nav { flex-basis: 100%; justify-content: space-between; }
-  .eira-nav a { white-space: nowrap; }
+  .eira-mastil .eira-nav { flex-basis: 100%; justify-content: space-between; flex-wrap: wrap; }
+  .eira-nav a { white-space: nowrap; padding-inline: .48rem; }
 }
 @media print {
   body:has(.archivo-eira) { background: var(--superficie); }
