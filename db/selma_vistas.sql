@@ -87,7 +87,8 @@ SELECT a.iniciativa AS iniciativa_id, a.servicio, a.periodo, p.ordinal AS person
        CASE WHEN a.impactada THEN 'impactada' ELSE 'donante' END AS rol_persona,
        1 AS contado, CASE WHEN a.objetos THEN a.cantidad ELSE 1 END AS cantidad,
        coalesce(l.clave,'') AS municipio_clave, coalesce(l.municipio,'') AS municipio,
-       coalesce(substr(l.clave,1,2),'') AS estado_clave, coalesce(l.estado,'') AS estado
+       coalesce(substr(l.clave,1,2),'') AS estado_clave, coalesce(l.estado,'') AS estado,
+       a.tipo AS tipo_registro, a.fuente AS fuente_id
 FROM actividad a LEFT JOIN atlas_personas p ON p.persona=a.persona
 LEFT JOIN lugares l ON l.fuente=a.fuente AND l.ciudad=a.ciudad;
 CREATE TEMP VIEW atlas_edades AS
@@ -99,5 +100,9 @@ SELECT p.ordinal AS persona, cast(substr(fecha,1,4) AS integer)-cast(substr(nac,
 FROM nacimientos n JOIN atlas_personas p USING(persona), corte WHERE nac<=fecha;
 CREATE TEMP VIEW atlas_municipios AS SELECT DISTINCT clave, municipio FROM lugares;
 CREATE TEMP VIEW atlas_roles AS SELECT 'impactada' AS clave, 1 AS cuenta_como_impactada UNION ALL SELECT 'donante',0;
-CREATE TEMP VIEW atlas_cortes AS SELECT DISTINCT fecha_corte FROM fuentes;
+CREATE TEMP VIEW atlas_fuentes AS
+SELECT id, programa AS iniciativa_id, nombre, fecha_corte,
+       strftime('%Y-%m-%dT%H:%M:%SZ', cargada_en, 'unixepoch') AS cargada_en, estrellas, puntaje
+FROM fuentes;
+CREATE TEMP VIEW atlas_pares AS SELECT estado FROM pares;
 CREATE TEMP VIEW atlas_pendientes AS SELECT 1 AS pendiente FROM pares WHERE estado='pendiente';

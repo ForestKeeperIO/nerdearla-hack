@@ -1,5 +1,7 @@
 # STATE: Impacto EIRA (Nerdearla Vibeathon)
 
+15:19 CDMX, fase 3: merge de `main@cb1094e` en curso. Se conservan revisión, cargas y comparación; pruebas del pin de Selma: 7/7. Falta validar el Atlas ampliado en el navegador y cotejar los cuatro lectores en una base 8 nueva. No usar el GO de la fase 2 para este corte.
+
 15:04 CDMX, integración fijada en `13a806d`: **GO de staging, no de producción**. Selector de roles `EIRA_MOTOR`, Atlas y proyector por eventos probados en `6396/8`. HTML, tarjeta Metabase y CSV = 150; mapa = 6 municipios; bytes terminales = 0. Melenas del export de Selma. Vigente: `docs/integracion-selma.md`; los bloqueos de las notas anteriores corresponden al ensayo previo.
 
 Integración (rama `integra-selma`, 14:30 CDMX): export de `soe_python@13a806d`, siete pruebas del procesador pasaron con Valkey privado. Base del frontend `6abb898`: `rolesDe` necesita dos claves del procesador. Staging sin acceso a los servicios en línea; evidencia y criterios de corte en `docs/integracion-selma.md`.

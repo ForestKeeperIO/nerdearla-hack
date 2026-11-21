@@ -17,7 +17,8 @@ VISTAS = ("v_personas_por_programa", "v_global", "v_conteos", "v_objetos",
 MARCA = 0x45495241
 ATLAS = {"atlas_registros": "v_registros_ef", "atlas_edades": "v_edad",
          "atlas_municipios": "municipios", "atlas_roles": "roles_de_persona",
-         "atlas_iniciativas": "iniciativas", "atlas_cortes": "fuentes",
+         "atlas_iniciativas": "iniciativas", "atlas_fuentes": "fuentes",
+         "atlas_tipos": "tipos_de_registro", "atlas_pares": "pares_persona", "atlas_revision": "bitacora",
          "atlas_pendientes": "v_pares_pendientes"}
 
 
@@ -30,6 +31,10 @@ def preparar(origen):
     origen.execute("CREATE TEMP TABLE atlas_iniciativas(id, nombre, clase)")
     origen.executemany("INSERT INTO atlas_iniciativas VALUES(?,?,?)",
                        ((p["id"], p["nombre"], p["clase"]) for p in cat["iniciativas"]))
+    origen.execute("CREATE TEMP TABLE atlas_tipos(clave, plural)")
+    origen.executemany("INSERT INTO atlas_tipos VALUES(?,?)",
+                       ((t["clave"], t["plural"]) for t in cat["tipos_de_registro"]))
+    origen.execute("CREATE TEMP TABLE atlas_revision(id)")
     objetos = {t["clave"] for t in cat["tipos_de_registro"] if t["se_cuenta"] == "objetos"}
     roles = {r["clave"] for r in cat["roles_de_persona"] if r["cuenta_como_impactada"]}
     origen.executemany("INSERT INTO tipos VALUES(?,?,?,?)", (
@@ -59,8 +64,12 @@ def geografia(origen, v):
 
 def publicar(origen, destino, v):
     # Una lectura coherente de SQLite y una transacción para todos los lectores JDBC.
+    ultimo = v.xrevrange("eira:bitacora", count=1)
     origen.execute("BEGIN")
     try:
+        origen.execute("DELETE FROM temp.atlas_revision")
+        if ultimo:
+            origen.execute("INSERT INTO temp.atlas_revision VALUES(?)", (ultimo[0][0],))
         geografia(origen, v)
         with destino:
             destino.execute("BEGIN IMMEDIATE")
@@ -70,6 +79,13 @@ def publicar(origen, destino, v):
                 columnas = ", ".join(d[0] for d in cur.description)
                 tabla = "datos_" + nombre
                 destino.execute(f"CREATE TABLE IF NOT EXISTS {esquema}.{tabla} ({columnas})")
+                # Ampliar la foto de la fase 2 sin reemplazar el archivo abierto por Next/JDBC.
+                existentes = {r[1] for r in destino.execute(f"PRAGMA {esquema}.table_info({tabla})")}
+                nuevas = [d[0] for d in cur.description if d[0] not in existentes]
+                if nuevas:
+                    for columna in nuevas:
+                        destino.execute(f"ALTER TABLE {esquema}.{tabla} ADD COLUMN {columna}")
+                    destino.execute(f"DROP VIEW IF EXISTS {esquema}.{nombre}")
                 destino.execute(f"CREATE VIEW IF NOT EXISTS {esquema}.{nombre} AS SELECT {columnas} FROM {tabla}")
                 destino.execute(f"DELETE FROM {esquema}.{tabla}")
                 signos = ",".join("?" for _ in cur.description)
