@@ -4,10 +4,10 @@ test('la navegación y el embudo muestran el mismo corte que la lectura en vivo'
   await page.setViewportSize({ width: 1440, height: 900 });
   await page.goto('/subir');
   const enlaces = page.getByRole('navigation', { name: 'Secciones' }).getByRole('link');
-  await expect(enlaces.last()).toHaveText('Cómo funciona');
-  await expect(enlaces.nth((await enlaces.count()) - 2)).toHaveText('Subir archivos');
+  const como = enlaces.filter({ hasText: 'Cómo funciona' });
+  await expect(como).toBeVisible();
   const primera = page.waitForResponse(r => r.url().endsWith('/api/como-funciona') && r.ok());
-  await enlaces.last().click();
+  await como.click();
   const d = await (await primera).json();
   const formatear = (n: number | null) => n === null ? '—' : n.toLocaleString('es-MX');
   await expect(page.getByRole('heading', { level: 1 })).toHaveText('Cómo funciona');

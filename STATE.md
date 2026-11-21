@@ -164,3 +164,14 @@ ss -ltnp | grep -E 'cloudflared|next-server|java|valkey'
 curl -s http://127.0.0.1:<cloudflared metrics port>/quicktunnel   # prints the tunnel hostname
 tail -5 .claude/sync-repo.log
 ```
+
+## Monitor de Valkey
+
+Rama `valkey-monitor`: `/valkey` lee `/api/valkey` cada dos segundos. Los streams
+solo exponen campos de esquema y valores validados; no se muestran identificadores
+de mensajes, consumidores, personas ni nombres de archivos. La verificación usa
+la base 4 sin generar trabajos de prueba.
+
+Verificado en Chromium a 1440 y 390 px: navegación desde «Subir archivos»,
+dos muestras sucesivas y recuperación tras una respuesta 503. El proceso de
+prueba sirve en el puerto 3111; el 3110 ya estaba ocupado por otra vista previa.

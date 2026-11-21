@@ -1,0 +1,66 @@
+/* Hallmark: sistema EIRA B. La traza de actividad comparte escala entre muestras visibles. */
+.vk { padding-block: var(--sp-6); color: var(--tinta); font-variant-numeric: tabular-nums; }
+.vk :is(h1,h2,h3,p,dl,dd,figure,ol,ul) { margin: 0; }
+.vk-titulo,.vk-control,.vk-pulso,.vk-curva figcaption,.vk-datos > div,.vk-lista li { display: flex; justify-content: space-between; gap: var(--sp-3); }
+.vk-titulo { align-items: end; flex-wrap: wrap; margin-bottom: var(--sp-6); }
+.vk-titulo h1 { font-size: clamp(2.1rem,3.2vw,3.1rem); line-height: 1.1; }
+.vk-titulo p,.vk-seccion p { margin-top: var(--sp-2); color: var(--tinta-suave); }
+.vk-control { flex-direction: column; align-items: end; gap: var(--sp-1); font-size: var(--fs-small); }
+.vk-control button { background: var(--superficie); border: 1px solid var(--linea-fuerte); border-radius: var(--r-pill); padding: .4rem 1rem; cursor: pointer; }
+.vk-control button:hover { color: var(--vino); border-color: var(--vino); }
+.vk-error:not(:empty) { padding: var(--sp-4); margin-bottom: var(--sp-4); background: var(--rubor); color: var(--error); border-radius: var(--r-md); }
+.vk-grid { display: grid; grid-template-columns: repeat(12,minmax(0,1fr)); gap: var(--bento-gap); }
+.vk-panel { grid-column: span 3; min-width: 0; background: var(--superficie); padding: clamp(1rem,1.8vw,1.7rem); border-radius: var(--bento-radio); display: flex; flex-direction: column; gap: var(--sp-2); }
+.vk-panel h2 { font-size: clamp(1.05rem,1.55vw,1.4rem); line-height: 1.18; }
+.vk-panel p,.vk-panel li,.vk-panel summary,.vk-datos { font-size: var(--fs-small); }
+.vk-panel p,.vk-nota,.vk-lista span { color: var(--tinta-suave); }
+.vk-valor { font-size: clamp(1.9rem,3.1vw,3.1rem); font-weight: 570; letter-spacing: -.04em; line-height: 1.1; margin-top: var(--sp-2); }
+.vk-comando { display: flex; align-items: baseline; flex-wrap: wrap; gap: .18rem .6rem; margin-top: auto; padding-top: var(--sp-3); border-top: var(--border); color: var(--tinta-suave); font-size: .73rem; }
+.vk-panel > :nth-last-child(2) { margin-bottom: var(--sp-2); }
+.vk-comando span { font-weight: 650; }
+.vk code { font-family: var(--font-plex-mono), monospace; overflow-wrap: anywhere; }
+.vk-actividad,.vk-mapa { grid-column: span 7; }
+.vk-servidor,.vk-lateral { grid-column: span 5; }
+.vk-mitad { grid-column: span 6; }
+.vk-actividad { background: var(--vino-oscuro); color: var(--superficie); }
+.vk-actividad :is(h2,.vk-nota,.vk-comando) { color: inherit; }
+.vk-actividad .vk-comando { border-color: var(--aviso); }
+.vk-pulso { align-items: end; gap: var(--sp-6); margin-block: auto; }
+.vk-pulso > div { display: grid; }
+.vk-numero { line-height: 1; font-size: clamp(3rem,5.7vw,6rem); font-weight: 520; letter-spacing: -.04em; }
+.vk-pulso span { font-size: var(--fs-small); }
+.vk-curva { width: 58%; min-width: 0; }
+.vk-curva svg { display: block; width: 100%; height: 80px; color: var(--rosa); }
+.vk-curva polyline,.vk-curva path { fill: none; stroke: currentColor; stroke-width: 2; vector-effect: non-scaling-stroke; }
+.vk-curva path { stroke-width: 1; opacity: .35; stroke-dasharray: 2 5; }
+.vk-curva circle { fill: currentColor; }.vk-curva figcaption { font-size: var(--fs-meta); }
+.vk-datos > div,.vk-lista li { align-items: baseline; padding-block: .32rem; border-bottom: var(--border); }
+.vk-datos > div:last-child,.vk-lista li:last-child { border: 0; }
+.vk-datos dd { text-align: end; font-weight: 600; }
+.vk-seccion { grid-column: 1/-1; margin-top: var(--sp-4); }
+.vk-seccion h2 { font-size: clamp(1.6rem,2.4vw,2.1rem); line-height: 1.1; }
+.vk-stream h2 { color: var(--vino-oscuro); }
+.vk-stream h3 { font-size: .9rem; margin-top: var(--sp-3); }
+.vk-fila { display: flex; gap: clamp(1rem,4vw,3.4rem); margin-top: var(--sp-2); }
+.vk-fila dt { color: var(--tinta-suave); font-size: var(--fs-small); }
+.vk-fila dd { font-size: 1.75rem; font-weight: 570; }
+.vk-entradas { padding-left: 1.45rem; list-style: decimal; }.vk-entradas li { padding-block: .25rem; overflow-wrap: anywhere; }
+.vk-lista { list-style: none; padding: 0; }
+.vk-lateral { display: grid; gap: var(--bento-gap); align-content: start; }
+.vk-lateral .vk-panel { grid-column: auto; }
+.vk-lateral summary { cursor: pointer; color: var(--vino); padding-block: .4rem; }
+.vk-tabla { max-height: 26rem; overflow: auto; }
+.vk-tabla table { width: 100%; border-spacing: 0; font-size: var(--fs-small); }
+.vk-tabla :is(th,td) { text-align: start; padding: .5rem .35rem; border-bottom: var(--border); }
+.vk-tabla thead th { position: sticky; top: 0; background: var(--papel); color: var(--tinta-suave); z-index: 1; }
+.vk-tabla tr > :last-child { text-align: end; }
+@media (max-width: 900px) {
+  .vk-panel { grid-column: span 6; }.vk-mapa,.vk-lateral { grid-column: span 6; }
+  .vk-control { align-items: start; }
+}
+@media (max-width: 620px) {
+  .vk-grid { grid-template-columns: repeat(2,minmax(0,1fr)); gap: var(--sp-3); }
+  .vk-panel { grid-column: span 1; }.vk-actividad,.vk-servidor,.vk-mitad,.vk-mapa,.vk-lateral { grid-column: 1/-1; }
+  .vk-control { flex-direction: row; align-items: center; gap: var(--sp-3); }
+  .vk-pulso { margin-block: var(--sp-4); }.vk-fila { gap: var(--sp-4); }
+}
