@@ -1,5 +1,4 @@
-import { readFileSync } from 'node:fs';
-import { join } from 'node:path';
+import { impactoPublico } from '@/lib/metabase';
 import { exigirPaso } from '@/lib/guardia';
 import { fechaCorteDe, fuentesDe } from '@/lib/informe';
 import {
@@ -18,19 +17,6 @@ import { PresenciaTerritorial } from '@/components/presencia';
 import { BarList } from '@/components/ui/bar-list';
 
 export const dynamic = 'force-dynamic';
-
-/** Tablero Metabase del entorno, si la rama metabase ya provisionó. */
-function enlaceMetabase(): string | null {
-  for (const ruta of [join(process.cwd(), '..', 'metabase', 'enlaces.json'), join(process.cwd(), 'metabase', 'enlaces.json')]) {
-    try {
-      const j = JSON.parse(readFileSync(/* turbopackIgnore: true */ ruta, 'utf8')) as { impacto?: string };
-      if (j.impacto) return j.impacto;
-    } catch {
-      // sin tablero todavía: la pantalla funciona sin él
-    }
-  }
-  return null;
-}
 
 function Cifra({ valor, rotulo, med }: { valor: string; rotulo: string; med?: Med<unknown> }) {
   return (
@@ -98,7 +84,7 @@ export default async function PaginaVistaPrevia({ params }: { params: Promise<{ 
   const rango = sinId.valor > 0
     ? `${personasTxt(totalImpactadas)} – ${personasTxt(totalImpactadas + sinId.valor)}`
     : personasTxt(totalImpactadas);
-  const metabase = enlaceMetabase();
+  const metabase = impactoPublico({ programa: esGlobal ? [] : [alcance] });
   const presencia = await presenciaDe(alcance);
 
   return (

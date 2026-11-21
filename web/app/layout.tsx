@@ -4,7 +4,6 @@ import { Montserrat, IBM_Plex_Mono, Rosarivo } from "next/font/google";
 import "./globals.css";
 import { TooltipProvider } from "@/components/ui/tooltip";
 import { NavPrincipal } from "@/components/nav-principal";
-import { estadoRecorrido } from "@/lib/informe";
 
 const montserrat = Montserrat({ variable: "--font-montserrat", subsets: ["latin"] });
 const plexMono = IBM_Plex_Mono({ variable: "--font-plex-mono", subsets: ["latin"], weight: ["400", "500"] });
@@ -17,9 +16,7 @@ export const metadata: Metadata = {
 };
 
 export default async function RootLayout({ children }: LayoutProps<"/">) {
-  const entorno = process.env.NOMBRE_ENTORNO ?? "En blanco";
-  // El botón primario del encabezado lleva al primer informe de programa.
-  const primerPrograma = (await estadoRecorrido('tamizaje-rosa')).alcance;
+  const entorno = process.env.NOMBRE_ENTORNO ?? "Demostración";
   return (
     <html lang="es" className={`${montserrat.variable} ${plexMono.variable} ${rosarivo.variable} h-full antialiased`}>
       <body className="min-h-full">
@@ -32,24 +29,21 @@ export default async function RootLayout({ children }: LayoutProps<"/">) {
               backdropFilter: "blur(6px)",
             }}
           >
-            <div className="container flex items-center gap-4" style={{ minHeight: 52 }}>
+            <div className="container mastil" style={{ minHeight: 56 }}>
               <Link
                 href="/"
                 className="no-underline"
                 style={{ fontFamily: "var(--font-display)", fontSize: 16, color: "var(--tinta)", letterSpacing: "-0.01em", whiteSpace: "nowrap" }}
               >
-                EIRA Impacto
+                EIRA <span className="mastil-marca">Movimiento Rosa</span>
               </Link>
               <NavPrincipal />
               <span className="mono etiqueta ml-auto hidden sm:inline" title="Entorno de demostración">
                 {entorno}
               </span>
-              <Link href={`/informe/${primerPrograma}/subir`} className="btn btn--primario btn--sm no-underline">
-                Subir archivos
-              </Link>
             </div>
           </header>
-          <main className="container flex-1" style={{ paddingBlock: "var(--sp-10)" }}>{children}</main>
+          <main className="container contenido">{children}</main>
           <footer
             className="no-imprimir container"
             style={{ paddingBlock: "var(--sp-8)", borderTop: "var(--border)", marginTop: "var(--sp-12)" }}
