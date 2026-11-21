@@ -1,11 +1,11 @@
 'use client';
 
 import { useCallback, useRef, useState } from 'react';
+import { useRouter } from 'next/navigation';
 import { useDropzone, type FileRejection } from 'react-dropzone';
 import { FileSpreadsheet, Trash2, UploadCloud, XCircle } from 'lucide-react';
 import { toast } from 'sonner';
 import { Selector } from './selector';
-import { useRouter } from 'next/navigation';
 import type { Opcion } from '@/lib/filtros-comun';
 
 const MAX_BYTES = 10 * 1024 * 1024;
@@ -18,7 +18,8 @@ type ArchivoLocal = {
   file: File;
   unidad: string;
   estado: string;
-  envio: 'sin_enviar' | 'enviando' | 'enviado' | 'error';
+  envio: 'sin_enviar' | 'enviando' | 'error';
+  progreso?: number;
   error?: string;
 };
 
@@ -26,7 +27,21 @@ function textoError(r: FileRejection): string {
   const codigo = r.errors[0]?.code;
   if (codigo === 'file-too-large') return `Pesa más de 10 MB (${Math.round(r.file.size / 1048576)} MB).`;
   if (codigo === 'file-invalid-type') return 'Solo se aceptan .xlsx o .csv.';
-  return r.errors[0]?.message ?? 'No se acepta este archivo.';
+  return 'No se acepta este archivo. Elige un Excel (.xlsx) o un CSV.';
+}
+
+function transferir(datos:FormData, progreso:(porcentaje:number)=>void) {
+  return new Promise<void>((resolve,reject)=>{
+    const xhr=new XMLHttpRequest();
+    xhr.open('POST','/api/subir');
+    xhr.responseType='json';
+    xhr.timeout=120000;
+    xhr.upload.onprogress=e=>{if(e.lengthComputable && e.total) progreso(Math.round(100*e.loaded/e.total));};
+    xhr.onload=()=>xhr.status>=200 && xhr.status<300 && xhr.response?.ok ? resolve()
+      : reject(new Error(xhr.response?.error || 'El servidor no confirmó la recepción. Revisa la lista antes de reintentar.'));
+    xhr.onerror=xhr.ontimeout=()=>reject(new Error('No se confirmó el envío. Revisa la conexión y la lista de archivos.'));
+    xhr.send(datos);
+  });
 }
 
 /** Propone el tipo de registro cuando el nombre del archivo lo sugiere. */
@@ -46,16 +61,18 @@ export function SubirArchivos({
   fechaCorte,
   estados,
   programas,
+  lectura=false,
 }: {
   alcance: string;
   tipos: TipoOpcion[];
   fechaCorte: string;
   estados: EstadoOpcion[];
   programas: Opcion[];
+  lectura?: boolean;
 }) {
+  const router=useRouter();
   const [archivos, setArchivos] = useState<ArchivoLocal[]>([]);
   const [enviando, setEnviando] = useState(false);
-  const router = useRouter();
   const siguiente = useRef(1);
 
   const agregar = useCallback((aceptados: File[], rechazados: FileRejection[]) => {
@@ -81,6 +98,7 @@ export function SubirArchivos({
 
   const { getRootProps, getInputProps, isDragActive, open } = useDropzone({
     onDrop: agregar,
+    disabled: lectura,
     accept: {
       'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet': ['.xlsx'],
       'text/csv': ['.csv'],
@@ -96,7 +114,7 @@ export function SubirArchivos({
 
   async function enviar() {
     const pendientes = archivos.filter((a) => a.envio === 'sin_enviar' && a.unidad);
-    if (!pendientes.length) return;
+    if (!pendientes.length || enviando || lectura) return;
     setEnviando(true);
     let bien = 0;
     let mal = 0;
@@ -110,17 +128,12 @@ export function SubirArchivos({
       fd.set('fecha_corte', fechaCorte);
       fd.set('por', 'Presidencia');
       try {
-        const r = await fetch('/api/subir', { method: 'POST', body: fd });
-        const j = (await r.json()) as { ok: boolean; error?: string };
-        if (j.ok) {
-          cambiar(a.id, { envio: 'enviado' });
-          bien++;
-        } else {
-          cambiar(a.id, { envio: 'error', error: j.error ?? 'No se pudo subir.' });
-          mal++;
-        }
-      } catch {
-        cambiar(a.id, { envio: 'error', error: 'Sin conexión con el servidor.' });
+        await transferir(fd,progreso=>cambiar(a.id,{progreso}));
+        setArchivos(actual=>actual.filter(x=>x.id!==a.id));
+        window.dispatchEvent(new Event('eira:carga-recibida'));
+        bien++;
+      } catch (error) {
+        cambiar(a.id, { envio: 'error', error: error instanceof Error?error.message:'No se pudo subir el archivo.' });
         mal++;
       }
     }
@@ -133,35 +146,23 @@ export function SubirArchivos({
 
   return (
     <section aria-label="Subir archivos">
-      <div className="programa-subida">
-        {enviables || enviando
-          ? <p>Programa de estos archivos: <strong>{programas.find(p => p.valor === alcance)?.texto}</strong></p>
-          : <Selector unico label="Programa" opciones={programas} elegidos={[alcance]}
-              cambiar={([programa]) => { if (programa !== alcance) router.push(`/informe/${encodeURIComponent(programa)}/subir`); }} />}
-      </div>
       <div
-        {...getRootProps({
-          className: 'tarjeta',
-          style: {
-            borderStyle: 'dashed', borderWidth: 1, borderColor: isDragActive ? 'var(--vino)' : 'var(--linea-fuerte)',
-            minHeight: 140, display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center',
-            gap: 'var(--sp-2)', textAlign: 'center', cursor: 'pointer', background: 'var(--superficie)',
-          } as React.CSSProperties,
-        })}
+        {...getRootProps({className:'zona-carga'})}
+        data-arrastrando={isDragActive} aria-disabled={lectura}
       >
-        <input {...getInputProps()} />
-        <UploadCloud className="size-7" style={{ color: 'var(--tinta-tenue)' }} aria-hidden="true" />
-        <p style={{ fontWeight: 500 }}>
+        <input {...getInputProps({'aria-label':'Archivo Excel o CSV'})} disabled={lectura} />
+        <UploadCloud aria-hidden="true" />
+        <p aria-live="polite">
           {isDragActive ? 'Suelta los archivos aquí' : 'Arrastra aquí los Excel o CSV de este programa'}
         </p>
-        <p className="etiqueta">
-          o{' '}
-          <button type="button" onClick={open} className="underline underline-offset-4" style={{ color: 'var(--vino)', minHeight: 44, fontWeight: 500 }}>
-            elige archivos
-          </button>{' '}
-          (máximo 10 MB cada uno)
-        </p>
+        <button type="button" onClick={open} disabled={lectura} className="elegir-archivo">Elegir archivo</button>
+        <small>{lectura?'Modo de consulta: no se reciben archivos.':'Excel (.xlsx) o CSV · Hasta 10 MB por archivo'}</small>
       </div>
+      <div className="programa-subida">{archivos.length || enviando
+        ? <p>Programa de esta carga: <strong>{programas.find(p=>p.valor===alcance)?.texto}</strong></p>
+        : <Selector unico label="Programa" opciones={programas} elegidos={[alcance]} cambiar={([id])=>{
+            if(id && id!==alcance) router.push(`/informe/${encodeURIComponent(id)}/subir`);
+          }}/>}</div>
 
       {archivos.length > 0 && (
         <ul className="mt-4" style={{ listStyle: 'none', padding: 0 }}>
@@ -186,8 +187,8 @@ export function SubirArchivos({
                 </span>}
               </span>
               <span className="fila__dato" style={{ display: 'flex', alignItems: 'center', gap: 'var(--sp-3)' }}>
-                {a.envio === 'enviado' && <span className="estado estado--listo">Recibido</span>}
-                {a.envio === 'enviando' && <span className="estado estado--info">Enviando…</span>}
+                {a.envio === 'enviando' && <span className="transferencia" role="status">Subiendo{a.progreso===undefined?'…':` · ${a.progreso} %`}
+                  <progress aria-label={`Progreso de ${a.file.name}`} max={100} value={a.progreso}/></span>}
                 {a.envio === 'error' && <span className="estado estado--error">No se subió</span>}
                 {(a.envio === 'sin_enviar' || a.envio === 'error') && (
                   <button type="button" className="btn btn--quieto btn--sm" onClick={() => setArchivos((x) => x.filter((y) => y.id !== a.id))}>

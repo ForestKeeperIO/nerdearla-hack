@@ -4,13 +4,14 @@ import { valkey } from '@/lib/valkey';
 import { archivo, informe, trabajo, trabajos } from '@/lib/claves';
 import { tiposDe } from '@/lib/catalogo';
 import { esAlcance } from '@/lib/informe';
+import { soloLectura } from '@/lib/modo-carga';
 
 export const dynamic = 'force-dynamic';
 
 const MAX_BYTES = 10 * 1024 * 1024; // 10 MB
 
 export async function POST(request: Request) {
-  if (process.env.EIRA_VISTA_LECTURA === '1') return NextResponse.json({ok:false,error:'Esta vista de demostración no acepta cargas.'},{status:403});
+  if (soloLectura()) return NextResponse.json({ok:false,error:'Esta vista es de consulta y no acepta cargas.'},{status:403});
   let form: FormData;
   try {
     form = await request.formData();
