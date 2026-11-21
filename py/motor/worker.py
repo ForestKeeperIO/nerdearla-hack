@@ -516,6 +516,14 @@ MAX_ENTREGAS = 3
 _ENTREGAS: dict[str, int] = {}
 
 
+def _borrar_archivo_crudo(v, vb, stream: str, campos: dict) -> None:
+    """El Excel subido trae nombres: se borra de Valkey en cuanto el trabajo
+    termina (bien o con error definitivo). Su caducidad de una hora queda solo
+    como red de seguridad por si este borrado no llega a ejecutarse."""
+    if stream == "eira:trabajos" and campos.get("id"):
+        (vb or v).delete(f"eira:archivo:{campos['id']}")
+
+
 def _manejar(v, db, stream: str, msg_id: str, campos: dict, vb=None) -> None:
     """Procesa un mensaje del grupo. XACK solo tras exito o tras
     MAX_ENTREGAS intentos (en ese caso el trabajo queda en error)."""
@@ -538,9 +546,11 @@ def _manejar(v, db, stream: str, msg_id: str, campos: dict, vb=None) -> None:
                 v.publish("eira:eventos", json.dumps(
                     {"tipo": "trabajo", "id": campos["id"]}))
             _ENTREGAS.pop(msg_id, None)
+            _borrar_archivo_crudo(v, vb, stream, campos)
             v.xack(stream, GRUPO, msg_id)
         return
     _ENTREGAS.pop(msg_id, None)
+    _borrar_archivo_crudo(v, vb, stream, campos)
     v.xack(stream, GRUPO, msg_id)
 
 

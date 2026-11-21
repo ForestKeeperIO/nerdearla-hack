@@ -90,6 +90,23 @@ def test_exito_hace_ack(motor):
     assert motor.v.hget(f"eira:trabajo:{tid}", "estado") == "listo"
 
 
+# --- Privacidad: el Excel crudo no se queda en Valkey ---------------------------
+
+def test_archivo_crudo_se_borra_al_terminar(motor):
+    """El archivo subido trae nombres; en cuanto el trabajo termina se borra
+    de Valkey (la caducidad de una hora queda solo como red de seguridad)."""
+    worker.asegurar_grupos(motor.v)
+    tid = _encolar(motor)
+    assert motor.vb.exists(f"eira:archivo:{tid}") == 1
+    resp = motor.v.xreadgroup(worker.GRUPO, worker.CONSUMIDOR,
+                              {"eira:trabajos": ">"}, count=1)
+    msg_id, campos = resp[0][1][0]
+    worker._manejar(motor.v, motor.db, "eira:trabajos", msg_id, campos,
+                    vb=motor.vb)
+    assert motor.v.hget(f"eira:trabajo:{tid}", "estado") == "listo"
+    assert motor.vb.exists(f"eira:archivo:{tid}") == 0
+
+
 # --- Hallazgo 1: divergencia SQLite/Valkey + reconstruir -----------------------
 
 def _borrar_resultados(v):
