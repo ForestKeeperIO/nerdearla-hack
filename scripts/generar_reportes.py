@@ -247,6 +247,10 @@ def construir():
         personas_identificadas=163,
         registros_sin_identificar=0,
         cruce_tamizaje_melenas=15,
+        cruce_con_pares_pendientes=20,
+        nota_pares=("Mientras un par este pendiente cuenta como UNA persona: "
+                    "el cruce y las membresias muestran 20 y per:todas baja "
+                    "en 5 hasta que alguien decida."),
         pares_mismo_id=2,
         variantes_de_nombre=3,
         filas_compartidas_nutricion=30,

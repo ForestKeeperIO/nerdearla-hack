@@ -23,7 +23,7 @@ import valkey
 
 from db import catalogo
 from db.crear import crear
-from . import escribir, huellas, leer, personas
+from . import escribir, huellas, leer, personas, reconstruir
 
 GRUPO = "procesadores"
 CONSUMIDOR = f"py-{os.getpid()}"
@@ -245,22 +245,21 @@ def procesar_trabajo(v, db: sqlite3.Connection, trabajo_id: str,
         previa = db.execute("SELECT id FROM fuentes WHERE huella_bytes=?",
                             (hb,)).fetchone()
         if previa:
-            veredicto.update(nivel="identico", fuente_original=previa[0], mensaje=(
-                f"Este archivo ya se cargó antes como '{nombre}'. No se vuelve a cargar."))
-            escribir.registrar_duplicado(v, trabajo_id, veredicto, nombre,
-                                         filas, df.attrs.get("mapeo", []))
-            return v.hgetall(f"eira:trabajo:{trabajo_id}")
+            return _resolver_previa(v, db, trabajo_id, veredicto, nombre,
+                                    filas, df.attrs.get("mapeo", []), previa[0])
 
         try:
             escribir.guardar(db, v, fuente, df, anomalias, pares, veredicto, vinculacion)
         except sqlite3.IntegrityError:
-            # La fuente quedo a medias por una caida anterior: el hash UNIQUE la
-            # delata. Se reporta como identica en vez de reimportar.
-            veredicto.update(nivel="identico", fuente_original=fid, mensaje=(
-                f"Este archivo ya se cargó antes como '{nombre}'. No se vuelve a cargar."))
-            escribir.registrar_duplicado(v, trabajo_id, veredicto, nombre,
-                                         filas, df.attrs.get("mapeo", []))
-            return v.hgetall(f"eira:trabajo:{trabajo_id}")
+            # La fuente ya existia (carrera con otro worker o una caida a
+            # medias): el UNIQUE de huella_bytes la delata. Si su mitad de
+            # Valkey falta se re-emite; un IntegrityError de otra cosa es un
+            # error genuino y sube.
+            if db.execute("SELECT 1 FROM fuentes WHERE huella_bytes=?",
+                          (hb,)).fetchone() is None:
+                raise
+            return _resolver_previa(v, db, trabajo_id, veredicto, nombre,
+                                    filas, df.attrs.get("mapeo", []), fid)
 
         mensaje = veredicto["mensaje"]
         if filas_repetidas:
@@ -287,24 +286,92 @@ def procesar_trabajo(v, db: sqlite3.Connection, trabajo_id: str,
         raise
 
 
+def _resolver_previa(v, db, trabajo_id: str, veredicto: dict, nombre: str,
+                     filas: int, mapeo: list, fid_prev: str) -> dict:
+    """La fuente ya esta en SQLite. Si su mitad de Valkey falta (EXEC
+    perdido tras una caida) se re-emite desde SQLite y el trabajo queda
+    listo; si esta completa es un duplicado normal."""
+    if not v.exists(f"eira:fuente:{fid_prev}"):
+        reconstruir.reconstruir_fuente(db, v, fid_prev)
+        v.hset(f"eira:trabajo:{trabajo_id}", mapping={
+            "estado": "listo",
+            "mensaje": "Este archivo ya estaba registrado; volví a publicar "
+                       "sus cifras en el tablero.",
+            "nivel_duplicado": "identico", "fuente": fid_prev,
+            "fuente_original": fid_prev, "filas": str(filas),
+            "filas_nuevas": "0", "filas_omitidas": str(filas),
+            "filas_repetidas": "0", "mapeo": json.dumps(
+                mapeo, ensure_ascii=False),
+            "terminado_en": escribir.ahora()})
+        v.xadd("eira:bitacora", {
+            "en": escribir.ahora(), "por": "motor", "tipo": "reconstruir",
+            "detalle": f"Se re-emitieron las claves de '{nombre}'"
+                       f" ({fid_prev}) desde SQLite."})
+        v.publish("eira:eventos", json.dumps({"tipo": "trabajo", "id": trabajo_id}))
+        return v.hgetall(f"eira:trabajo:{trabajo_id}")
+    veredicto.update(nivel="identico", fuente_original=fid_prev, mensaje=(
+        f"Este archivo ya se cargó antes como '{nombre}'. No se vuelve a cargar."))
+    escribir.registrar_duplicado(v, trabajo_id, veredicto, nombre, filas, mapeo)
+    return v.hgetall(f"eira:trabajo:{trabajo_id}")
+
+
 # --- Decisiones humanas ---------------------------------------------------------
+
+def _membresias(db, pid: str) -> set[str]:
+    """Claves eira:per:* donde una persona aparece por sus registros
+    contados (cantidad > 0)."""
+    impactados = catalogo.roles_impactados()
+    claves = {"eira:per:todas"}
+    for ini, ciu, per, ser, rol in db.execute(
+            "SELECT DISTINCT iniciativa_id, ciudad, periodo, servicio,"
+            " rol_persona FROM registros"
+            " WHERE persona_id=? AND contado=1 AND cantidad>0", (pid,)):
+        claves.add(f"eira:per:programa:{ini}")
+        if ciu:
+            claves.add(f"eira:per:ciudad:{ciu}")
+        if per:
+            claves.add(f"eira:per:periodo:{per}")
+        if ser:
+            claves.add(f"eira:per:servicio:{ser}")
+        if rol in impactados:
+            claves.add(f"eira:per:impactadas:{ini}")
+        if rol == "donante":
+            claves.add(f"eira:per:donantes:{ini}")
+    c = db.execute("SELECT certeza FROM personas WHERE id=?",
+                   (pid,)).fetchone()
+    if c:
+        claves.add(f"eira:per:certeza:{c[0]}")
+    return claves
+
 
 def _decidir_par(v, db, par: str, decision: str, por: str) -> None:
     fila = db.execute("SELECT * FROM pares_persona WHERE id=?", (par,)).fetchone()
-    if fila is None or fila[5] != "pendiente":  # columna estado
+    if fila is None:
         return
+    pendiente = fila[5] == "pendiente"  # columna estado
+    if not pendiente and fila[5] != decision:
+        return  # ya se decidio otra cosa: no se pisa
     en = escribir.ahora()
     a, b = fila[1], fila[2]
-    with db:
-        db.execute("UPDATE pares_persona SET estado=?, decidido_por=?, decidido_en=?"
-                   " WHERE id=?", (decision, por, en, par))
-        if decision == "misma":
-            db.execute("UPDATE registros SET persona_id=? WHERE persona_id=?", (a, b))
-            db.execute("DELETE FROM identidades WHERE persona_id=?", (b,))
-            db.execute("DELETE FROM personas WHERE id=?", (b,))
-        db.execute("INSERT INTO bitacora(en, por, tipo, detalle) VALUES (?,?,?,?)",
-                   (en, por or "presidencia", "decision",
-                    f"Par {par}: se marcó como '{decision}'."))
+    sets_b = _membresias(db, b)  # antes de mover registros
+    if pendiente:
+        with db:
+            db.execute("UPDATE pares_persona SET estado=?, decidido_por=?,"
+                       " decidido_en=? WHERE id=?", (decision, por, en, par))
+            if decision == "misma":
+                db.execute("UPDATE registros SET persona_id=?"
+                           " WHERE persona_id=?", (a, b))
+                # Reasignar identidades en vez de borrarlas: una carga
+                # posterior con ese ID y nombre cae en a. OR IGNORE por si
+                # la pareja (clave, nombre_clave) ya apunta a a.
+                db.execute("UPDATE OR IGNORE identidades SET persona_id=?"
+                           " WHERE persona_id=?", (a, b))
+                db.execute("DELETE FROM identidades WHERE persona_id=?", (b,))
+                db.execute("DELETE FROM personas WHERE id=?", (b,))
+            db.execute("INSERT INTO bitacora(en, por, tipo, detalle)"
+                       " VALUES (?,?,?,?)",
+                       (en, por or "presidencia", "decision",
+                        f"Par {par}: se marcó como '{decision}'."))
 
     crudo = v.hget("eira:pares", par)
     if crudo:
@@ -312,41 +379,25 @@ def _decidir_par(v, db, par: str, decision: str, por: str) -> None:
         d["estado"] = decision
         v.hset("eira:pares", par, json.dumps(d, ensure_ascii=False))
 
+    # Valkey es idempotente: reaplicar repara una caida a media decision.
+    pipe = v.pipeline()
     if decision == "misma":
-        # Mover membresias de b a a segun sus registros contados.
-        filas = db.execute(
-            "SELECT DISTINCT iniciativa_id, ciudad, periodo, servicio FROM registros"
-            " WHERE persona_id=? AND contado=1 AND cantidad>0", (a,)).fetchall()
-        pares_rol = db.execute(
-            "SELECT DISTINCT iniciativa_id, rol_persona FROM registros"
-            " WHERE persona_id=? AND contado=1 AND cantidad>0", (a,)).fetchall()
-        impactados = catalogo.roles_impactados()
-        pipe = v.pipeline()
-        pipe.srem("eira:per:todas", b)
-        for prog, ciu, per, ser in filas:
-            for clave in (f"eira:per:programa:{prog}",
-                          f"eira:per:ciudad:{ciu}" if ciu else None,
-                          f"eira:per:periodo:{per}" if per else None,
-                          f"eira:per:servicio:{ser}" if ser else None):
-                if clave:
-                    pipe.srem(clave, b)
-                    pipe.sadd(clave, a)
-        for prog, rol in pares_rol:
-            for clave in (f"eira:per:impactadas:{prog}" if rol in impactados else None,
-                          f"eira:per:donantes:{prog}" if rol == "donante" else None):
-                if clave:
-                    pipe.srem(clave, b)
-                    pipe.sadd(clave, a)
-        for nivel in ("folio", "id"):
-            pipe.srem(f"eira:per:certeza:{nivel}", b)
+        # b sale de los conjuntos; a la representa donde ella tenia filas.
+        for clave in sets_b:
+            pipe.srem(clave, b)
+            pipe.sadd(clave, a)
         nac_b = v.hget("eira:nac", b)
         pipe.hdel("eira:nac", b)
         if nac_b and not v.hget("eira:nac", a):
             pipe.hset("eira:nac", a, nac_b)
-        pipe.execute()
-    v.xadd("eira:bitacora", {"en": en, "por": por or "presidencia",
-                            "tipo": "decision",
-                            "detalle": f"Par {par}: '{decision}'."})
+    elif decision == "distinta":
+        # b vuelve a contar como persona propia donde tenga filas.
+        for clave in sets_b:
+            pipe.sadd(clave, b)
+    pipe.xadd("eira:bitacora", {"en": en, "por": por or "presidencia",
+                              "tipo": "decision",
+                              "detalle": f"Par {par}: '{decision}'."})
+    pipe.execute()
     v.publish("eira:eventos", json.dumps({"tipo": "persona", "id": par}))
 
 
@@ -358,10 +409,13 @@ def _restituir_fila(v, db, fuente_id: str, num_fila: int, por: str) -> None:
         return
     cols = [d[0] for d in db.execute("SELECT * FROM registros LIMIT 0").description]
     r = dict(zip(cols, reg))
+    cant = float(r["cantidad"] or 0)
     en = escribir.ahora()
     with db:
-        db.execute("UPDATE registros SET contado=1, cantidad=? WHERE id=?",
-                   (1.0, r["id"]))
+        # La cantidad real de la fila ya esta guardada; solo se marca contada.
+        db.execute("UPDATE registros SET contado=1 WHERE id=?", (r["id"],))
+        db.execute("UPDATE fuentes SET filas_omitidas=MAX(filas_omitidas-1,0),"
+                   " filas_nuevas=filas_nuevas+1 WHERE id=?", (fuente_id,))
         db.execute("INSERT INTO bitacora(en, por, tipo, detalle) VALUES (?,?,?,?)",
                    (en, por or "presidencia", "restituir_fila",
                     f"Fila {num_fila} de '{fuente_id}' se cuenta de todos modos."))
@@ -373,8 +427,11 @@ def _restituir_fila(v, db, fuente_id: str, num_fila: int, por: str) -> None:
     campo = escribir.campo_conteo(ini, r["ciudad"] or "",
                                   r["periodo"] or "", r["servicio"] or "")
     pipe = v.pipeline()
+    pipe.hincrby(f"eira:fuente:{fuente_id}", "filas_omitidas", -1)
+    pipe.hincrby(f"eira:fuente:{fuente_id}", "filas_nuevas", 1)
     if r["persona_id"]:
-        pipe.hincrby(f"eira:cnt:{r['tipo_registro']}", campo, 1)
+        if cant > 0:
+            escribir._incr(pipe, f"eira:cnt:{r['tipo_registro']}", campo, cant)
         rol = r["rol_persona"] or ""
         impactados = catalogo.roles_impactados()
         for clave in (f"eira:per:programa:{ini}",
@@ -386,8 +443,8 @@ def _restituir_fila(v, db, fuente_id: str, num_fila: int, por: str) -> None:
             if clave:
                 pipe.sadd(clave, r["persona_id"])
         pipe.sadd("eira:per:todas", r["persona_id"])
-    else:
-        pipe.hincrby("eira:sinid", campo, 1)
+    elif cant > 0:
+        escribir._incr(pipe, "eira:sinid", campo, cant)
     if r["municipio_clave"]:
         pipe.hincrby(f"eira:presencia:{ini}", r["municipio_clave"], 1)
         pipe.hincrby("eira:presencia:global", r["municipio_clave"], 1)
