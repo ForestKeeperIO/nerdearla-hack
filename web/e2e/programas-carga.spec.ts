@@ -13,6 +13,7 @@ test('los programas llegan desde la carga al Tablero y a Reportes sin reasignar 
     await expect(tarjetas.getByRole('link', {name:nombre, exact:true})).toBeVisible();
   await tarjetas.getByRole('link',{name:'Comunidades de Origen'}).click();
   await page.locator('input[type=file]').setInputFiles(resolve('..','reportes','nutricion.xlsx'));
+  await page.getByRole('button',{name:'Conservar Comunidades de Origen'}).click();
   await page.getByRole('button',{name:'Subir 1 archivo'}).click();
   await expect(page.locator('.fila').filter({hasText:'nutricion.xlsx'})).toContainText(/Listo · [1-9]\d* filas nuevas/, {timeout:30000});
   const archivo = {name:'taller.csv', mimeType:'text/csv', buffer:Buffer.from(

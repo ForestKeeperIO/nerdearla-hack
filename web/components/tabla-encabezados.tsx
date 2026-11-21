@@ -29,7 +29,7 @@ export function RevisionEncabezados({ revision, error, nombre }: { revision?: Re
   return <section className="enc-revision" aria-label={`Encabezados de ${nombre}`}>
     <h3>Revisión de encabezados</h3>
     <p role="status" className={problema ? 'enc-error' : undefined}>{problema || (revision
-      ? 'Vista previa de la primera fila. El archivo aún no se ha enviado.'
+      ? 'Vista previa de los encabezados. El archivo aún no se ha enviado.'
       : 'Leyendo la primera fila en este dispositivo…')}</p>
     {!!revision?.columnas.length && <>
       <Tabla columnas={revision.columnas} titulo={`Vista previa de ${nombre}`} />

@@ -1,0 +1,25 @@
+.programas-carga.programas-eleccion {
+  margin-block: 1.5rem 3rem;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 1rem;
+}
+.programas-eleccion a {
+  align-items: start;
+  padding: 1.4rem;
+  border-radius: 24px;
+}
+.programas-eleccion strong { display: block; font-size: 1.15rem; line-height: 1.25; }
+.programas-eleccion small { display: block; margin-top: .65rem; line-height: 1.5; font-weight: 400; color: var(--tinta-suave); }
+.programas-eleccion svg { margin-top: .15rem; }
+.programa-aviso {
+  display: grid;
+  gap: .5rem;
+  padding: .85rem 1rem;
+  margin-block: .65rem;
+  border-radius: 16px;
+  color: var(--vino-oscuro);
+  background: var(--papel-2);
+}
+.programa-acciones { display: flex; gap: .5rem; flex-wrap: wrap; align-items: center; }
+@media (max-width: 900px) { .programas-carga.programas-eleccion { grid-template-columns: repeat(2, minmax(0, 1fr)); } }
+@media (max-width: 580px) { .programas-carga.programas-eleccion { grid-template-columns: minmax(0, 1fr); } }

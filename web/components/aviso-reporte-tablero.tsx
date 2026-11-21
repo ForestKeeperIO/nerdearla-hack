@@ -5,7 +5,7 @@ import { generarReporte } from '@/lib/generar-reporte';
 import { consultaDe, periodoTexto, type Seleccion } from '@/lib/seleccion-tablero';
 import { catalogoMunicipios } from '@/lib/territorio';
 import { BotonGenerar } from './boton-generar';
-import styles from './aviso-reporte-tablero.module.css';
+import './aviso-reporte-tablero.css';
 
 export function AvisoReporteTablero({ seleccion, consulta }: { seleccion: Seleccion; consulta: string }) {
   const lugares = catalogoMunicipios();
@@ -23,17 +23,17 @@ export function AvisoReporteTablero({ seleccion, consulta }: { seleccion: Selecc
     await generarReporte(String(datos.get('plantilla')), consulta);
   }
 
-  return <section className={styles.aviso} aria-labelledby="seleccion-tablero">
+  return <section className="aviso-reporte-tablero" aria-labelledby="seleccion-tablero">
     <div>
       <h2 id="seleccion-tablero">Tu selección del Tablero</h2>
-      <ul className={styles.chips} aria-label="Filtros del reporte">
+      <ul aria-label="Filtros del reporte">
         {(chips.length ? chips : ['Todos los programas', 'Todo el periodo']).map((texto, i) => <li key={i}>{texto}</li>)}
       </ul>
-      <Link className={styles.cambiar} href={filtros ? `/tablero?${filtros}` : '/tablero'}>
+      <Link href={filtros ? `/tablero?${filtros}` : '/tablero'}>
         <SlidersHorizontal aria-hidden/> Cambiar filtros
       </Link>
     </div>
-    <form action={guardar} aria-labelledby="seleccion-tablero" className={styles.formulario}>
+    <form action={guardar} aria-labelledby="seleccion-tablero">
       <fieldset>
         <legend>¿Para quién es el reporte?</legend>
         {([['aliados', 'Para aliados'], ['territorial', 'Para gobierno y hospitales']] as const).map(([tipo, texto]) =>
