@@ -1,5 +1,7 @@
 # Contrato de Valkey · versión 1
 
+> Adiciones del 21 nov, 13:00 (no rompen compatibilidad): `eira:informe:<alcance>` y las tres claves `eira:huellas:*`. Cada entorno (en blanco, con fuentes reales) usa un número de base distinto de Valkey, indicado en `VALKEY_URL`.
+
 Valkey es el único punto de contacto entre el **procesamiento en Python** (leer Excel, deduplicar, unificar programas) y el **frontend** (subir archivos, tableros, calidad, informe). Ninguno llama al otro: los dos leen y escriben estas claves.
 
 - Prefijo de todas las claves: `eira:`
@@ -93,6 +95,22 @@ Un valor desconocido se escribe como cadena vacía en su posición del campo.
 
 `estado`: `pendiente`, `misma`, `distinta`. `etiqueta` es el texto que se muestra para reconocer a la persona; recomendado iniciales, ciudad y edad, no el nombre completo.
 
+### Presencia territorial
+
+| Clave | Tipo | Contenido |
+|---|---|---|
+| `eira:presencia:<alcance>` | Hash | clave de municipio de INEGI (5 dígitos) → número de registros. `<alcance>` es el id del programa o `global` |
+
+El trabajo que encola el frontend lleva además el campo `estado_clave` (2 dígitos; por defecto `14`, Jalisco), para resolver las ciudades del archivo. El catálogo de municipios está en `publicos/municipios_mexico.json`.
+
+### Memoria de duplicados (solo la usa Python)
+
+| Clave | Tipo | Contenido |
+|---|---|---|
+| `eira:huellas:archivo` | Hash | sha256 de los bytes → id de fuente |
+| `eira:huellas:contenido` | Hash | huella canónica del contenido → id de fuente |
+| `eira:huellas:fila` | Hash | huella de fila → `<fuente>:<fila>` donde se contó |
+
 ### Aviso en vivo
 
 `PUBLISH eira:eventos <json>` con `{ "tipo": "trabajo" | "fuente" | "persona", "id": "…" }` cada vez que cambie algo que el tablero deba refrescar.
@@ -103,6 +121,7 @@ Un valor desconocido se escribe como cadena vacía en su posición del campo.
 |---|---|---|
 | `eira:den:mujeres_25_64` | Hash | ciudad → mujeres de 25 a 64 años (INEGI, Censo 2020; `publicos/`) |
 | `eira:contrato` | String | `1` |
+| `eira:informe:<alcance>` | Hash | Estado de cada informe: `fecha_corte`, `creado_en`, `calidad_resuelta` (0 o 1), `cifras_aprobadas` (0 o 1). `<alcance>` es el id de un programa (`tamizaje-rosa`, `salud-que-florece`) o `global`. Solo lo usa el frontend |
 
 ## Ejemplo mínimo en Python
 
