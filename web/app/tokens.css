@@ -1,0 +1,60 @@
+/* Sistema visual EIRA — tokens de docs/referencias/auditoria-componentes.md.
+   Neutros cálidos + un solo acento: verde bosque #1C4633. Nada de rosa. */
+:root {
+  color-scheme: light;
+
+  /* Neutros cálidos */
+  --ink:        #17140F;
+  --ink-soft:   #4A463E;
+  --gray:       #7A756B;
+  --line:       #E3E0D8;
+  --line-strong:#CFCBC0;
+  --paper:      #F7F5F1;
+  --paper-2:    #EFECE5;
+  --white:      #FFFFFF;
+
+  /* Acento único: verde bosque */
+  --accent:     #1C4633;
+  --accent-hover:#153726;
+  --accent-ink: #FFFFFF;
+  --accent-dim: #E0E9DD;
+
+  /* Semánticos */
+  --warn:       #8A6D1F;
+  --warn-bg:    #F6F0DC;
+  --error:      #8C3B2E;
+  --error-bg:   #F5E7E3;
+  --ok:         #1C4633;
+  --ok-bg:      #E0E9DD;
+  --info:       #4A463E;
+  --info-bg:    #EFECE5;
+
+  /* Tipografía */
+  --font-display: var(--font-space-grotesk), "Space Grotesk", sans-serif;
+  --font-ui:      var(--font-inter), "Inter", ui-sans-serif, system-ui, sans-serif;
+  --font-mono:    var(--font-plex-mono), "IBM Plex Mono", ui-monospace, monospace;
+
+  /* Escala (px) */
+  --fs-hero: 30px; --fs-h2: 20px; --fs-stat: 40px; --fs-stat-sm: 28px;
+  --fs-body: 15px; --fs-small: 13px; --fs-meta: 12px;
+  --lh-body: 1.5; --lh-tight: 1.15;
+
+  /* Espaciado (4px base) */
+  --sp-1: 4px; --sp-2: 8px; --sp-3: 12px; --sp-4: 16px;
+  --sp-6: 24px; --sp-8: 32px; --sp-10: 40px; --sp-12: 48px; --sp-16: 64px;
+
+  /* Radios */
+  --r-sm: 6px; --r-md: 10px; --r-lg: 16px; --r-pill: 999px;
+
+  /* Bordes y sombras: hairline primero, sombra casi nula */
+  --border: 1px solid var(--line);
+  --shadow-card: 0 1px 2px rgba(23, 20, 15, .05);
+  --shadow-modal: 0 8px 32px rgba(23, 20, 15, .14);
+
+  /* Duraciones */
+  --dur: 160ms;
+  --ease: cubic-bezier(0.16, 1, 0.3, 1);
+
+  --container: 880px;
+  --gutter: 32px;
+}

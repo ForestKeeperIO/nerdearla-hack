@@ -1,0 +1,14 @@
+[
+ {
+  "shape": "app screen",
+  "theme": "coral",
+  "axes": "light/grotesk-sans/warm",
+  "nav": "top bar con cuatro pasos",
+  "signature": "lista viva de trabajos + cómo se calculó en cada cifra",
+  "scope": "app",
+  "prompt": "herramienta interna ONG: subir Excel, calidad, tablero, informe; acento rosa",
+  "fingerprint": "coral-rosa-ink-paper",
+  "date": "2026-11-21",
+  "mode": "build"
+ }
+]

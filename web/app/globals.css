@@ -1,0 +1,156 @@
+/* Capa visual EIRA: sobria, precisa. Neutro cálido + verde bosque como único acento. */
+@import url("./tokens.css");
+@import url("./base.css");
+@import "tailwindcss";
+@import "tw-animate-css";
+
+@theme inline {
+  --color-background: var(--paper);
+  --color-foreground: var(--ink);
+  --color-card: var(--white);
+  --color-card-foreground: var(--ink);
+  --color-popover: var(--white);
+  --color-popover-foreground: var(--ink);
+  --color-primary: var(--accent);
+  --color-primary-foreground: var(--accent-ink);
+  --color-secondary: var(--paper-2);
+  --color-secondary-foreground: var(--ink);
+  --color-muted: var(--paper-2);
+  --color-muted-foreground: var(--gray);
+  --color-accent: var(--accent-dim);
+  --color-accent-foreground: var(--accent);
+  --color-destructive: var(--error);
+  --color-destructive-foreground: #FFFFFF;
+  --color-border: var(--line);
+  --color-input: var(--line-strong);
+  --color-ring: var(--accent);
+  --font-sans: var(--font-ui);
+  --font-mono: var(--font-mono);
+  --font-heading: var(--font-display);
+  --radius-sm: var(--r-sm);
+  --radius-md: var(--r-md);
+  --radius-lg: var(--r-md);
+  --radius-xl: var(--r-lg);
+}
+
+@layer base {
+  button, [role="button"], select, input[type="checkbox"], input[type="radio"] { min-height: 40px; }
+  input:not([type="checkbox"]):not([type="radio"]), select { min-height: 40px; }
+  button:disabled, [aria-disabled="true"] { opacity: 0.5; cursor: not-allowed; }
+  button, a, [role="button"] { transition: background-color var(--dur) var(--ease), border-color var(--dur) var(--ease), color var(--dur) var(--ease); }
+}
+
+/* ---------- piezas del sistema ---------- */
+
+.etiqueta { color: var(--gray); font-size: var(--fs-small); }
+.lead { font-size: 16px; line-height: 1.55; color: var(--ink-soft); }
+
+/* Tarjeta blanca de borde fino (OhMD): ocupa lo que su contenido necesita. */
+.tarjeta {
+  background: var(--white);
+  border: var(--border);
+  border-radius: var(--r-lg);
+  box-shadow: var(--shadow-card);
+  padding: var(--sp-6);
+}
+
+/* Cifra grande en peso ligero (OhMD stats): jerarquía por peso, no por tamaño. */
+.cifra {
+  font-family: var(--font-display);
+  font-variant-numeric: tabular-nums;
+  font-size: var(--fs-stat);
+  font-weight: 500;
+  letter-spacing: -0.02em;
+  line-height: 1.05;
+}
+.cifra--sm { font-size: var(--fs-stat-sm); }
+
+/* Marca de estado: siempre palabras, además de color. */
+.estado {
+  display: inline-flex; align-items: center; gap: var(--sp-2);
+  padding: 3px var(--sp-3);
+  border-radius: var(--r-pill);
+  font-size: var(--fs-small); font-weight: 500; line-height: 1.5;
+  white-space: nowrap;
+}
+.estado--listo { color: var(--ok); background: var(--ok-bg); }
+.estado--aviso { color: var(--warn); background: var(--warn-bg); }
+.estado--error { color: var(--error); background: var(--error-bg); }
+.estado--info { color: var(--info); background: var(--info-bg); }
+
+/* Fila editorial (Revelatio): índice mono a la izquierda, título, dato a la derecha, hairline. */
+.fila {
+  display: flex; align-items: center; gap: var(--sp-6);
+  padding-block: var(--sp-5, 20px);
+  border-top: var(--border);
+}
+.fila:first-child { border-top: 0; }
+.fila__indice {
+  font-family: var(--font-mono); font-size: var(--fs-small); color: var(--gray);
+  width: 2.5rem; flex-shrink: 0;
+}
+.fila__cuerpo { flex: 1; min-width: 0; }
+.fila__dato { flex-shrink: 0; text-align: right; }
+
+/* Indicador de pasos (Decimals): número en mono + título + conector hairline. */
+.pasos { display: flex; align-items: flex-start; }
+.pasos__paso { display: flex; align-items: flex-start; min-width: 0; }
+.pasos__item { display: flex; align-items: center; gap: var(--sp-3); }
+.pasos__num {
+  font-family: var(--font-mono); font-size: var(--fs-small);
+  display: inline-flex; align-items: center; justify-content: center;
+  width: 1.75rem; height: 1.75rem; border-radius: var(--r-pill);
+  border: 1px solid var(--line-strong); color: var(--gray); flex-shrink: 0;
+}
+.pasos__item--actual .pasos__num { border-color: var(--accent); color: var(--accent); }
+.pasos__item--hecho .pasos__num { border-color: var(--accent); background: var(--accent); color: var(--accent-ink); }
+.pasos__nombre { font-size: var(--fs-small); font-weight: 500; white-space: nowrap; }
+.pasos__item--actual .pasos__nombre { color: var(--ink); }
+.pasos__item--hecho .pasos__nombre { color: var(--ink-soft); }
+.pasos__item--bloqueado .pasos__nombre, .pasos__item--bloqueado .pasos__num { color: var(--gray); }
+.pasos__linea { flex: 1; min-width: 16px; height: 1px; background: var(--line); margin: 0.9rem var(--sp-3) 0; }
+.pasos__motivo { display: block; font-size: var(--fs-meta); color: var(--gray); font-weight: 400; white-space: normal; margin-top: 2px; }
+
+/* Botones (Viru): primario píldora verde bosque, secundario de borde fino. */
+.btn {
+  display: inline-flex; align-items: center; justify-content: center; gap: var(--sp-2);
+  min-height: 44px; padding: 0 var(--sp-6);
+  border-radius: var(--r-pill);
+  font-size: var(--fs-body); font-weight: 500; line-height: 1;
+  cursor: pointer; text-decoration: none;
+  border: 1px solid transparent;
+}
+.btn--primario { background: var(--accent); color: var(--accent-ink); }
+.btn--primario:hover:not(:disabled) { background: var(--accent-hover); }
+.btn--secundario { background: var(--white); color: var(--ink); border-color: var(--line-strong); }
+.btn--secundario:hover:not(:disabled) { background: var(--paper-2); }
+.btn--quieto { background: transparent; color: var(--gray); }
+.btn--quieto:hover:not(:disabled) { color: var(--ink); background: var(--paper-2); }
+.btn--sm { min-height: 36px; padding: 0 var(--sp-4); font-size: var(--fs-small); }
+
+/* Desplegable "Cómo se calculó": discreto, el detalle técnico vive aquí. */
+details.calculo summary {
+  cursor: pointer; color: var(--gray); font-size: var(--fs-small);
+  min-height: 40px; display: inline-flex; align-items: center; gap: var(--sp-2);
+  list-style: none;
+}
+details.calculo summary::before { content: "▸"; font-size: var(--fs-meta); }
+details.calculo[open] summary::before { content: "▾"; }
+details.calculo summary:hover { color: var(--accent); }
+details.calculo .calculo__cuerpo {
+  font-family: var(--font-mono); font-size: var(--fs-meta); color: var(--ink-soft);
+  background: var(--paper-2); border: var(--border); border-radius: var(--r-sm);
+  padding: var(--sp-3) var(--sp-4); margin-top: var(--sp-1); overflow-wrap: anywhere;
+}
+
+/* Impresión del informe. */
+.solo-imprimir { display: none; }
+@media print {
+  .no-imprimir { display: none !important; }
+  .solo-imprimir { display: block; }
+  body { background: #fff; font-size: 12pt; }
+  main { max-width: none; padding: 0 !important; }
+  .tarjeta { box-shadow: none !important; border: 1px solid #999 !important; break-inside: avoid; }
+  a[href]::after { content: ""; }
+  @page { margin: 18mm; }
+}
