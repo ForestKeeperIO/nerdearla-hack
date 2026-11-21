@@ -25,7 +25,7 @@ export function MarcoInforme({
         <ArrowLeft className="size-3.5" aria-hidden="true" /> Todos los informes
       </Link>
       <div className="mt-6">
-        <p className="etiqueta mono" style={{ letterSpacing: '0.02em' }}>{tituloInforme(estado.alcance)}</p>
+        <p className="etiqueta mono">{tituloInforme(estado.alcance)}</p>
         <div className="mt-4 no-imprimir">
           <IndicadorPasos estado={estado} actual={paso} />
         </div>

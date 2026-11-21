@@ -7,6 +7,7 @@ import {
   personasEnMasDeUnPrograma, personasPorCiudadIds, personasTxt, resumenTiposDe,
   sinIdentificar, type Med, type ResumenTipo,
 } from '@/lib/datos';
+import { fechaEs } from '@/lib/comun';
 import { nombrePrograma, pluralRol, pluralTipo, programasDemo, rolDe } from '@/lib/catalogo';
 import { aprobarCifras } from '@/lib/acciones';
 import { presenciaDe } from '@/lib/territorio';
@@ -136,7 +137,7 @@ export default async function PaginaVistaPrevia({ params }: { params: Promise<{ 
       estado={estado}
       paso="vista-previa"
       titulo="Vista previa del informe"
-      bajada={`Las cifras tal como saldrán. De: ${nombresFuentes || 'sin archivos'} · datos al corte del ${corte}.`}
+      bajada={`Las cifras tal como saldrán. De: ${nombresFuentes || 'sin archivos'} · datos al corte del ${fechaEs(corte)}.`}
     >
       {/* Las tres cifras que pidió EIRA */}
       <div className="tarjeta" style={{ padding: 0, overflow: 'hidden' }}>

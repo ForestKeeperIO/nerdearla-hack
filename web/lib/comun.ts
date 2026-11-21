@@ -8,6 +8,13 @@ export function personasTxt(n: number): string {
   return n < 5 ? '<5' : n.toLocaleString('es-MX');
 }
 
+/** Fecha ISO → dd/mm/aaaa (la usuaria espera el orden latinoamericano). */
+export function fechaEs(iso: string): string {
+  const d = new Date(iso.length === 10 ? iso + 'T00:00:00Z' : iso);
+  if (isNaN(d.getTime())) return iso;
+  return d.toLocaleDateString('es-MX', { day: '2-digit', month: '2-digit', year: 'numeric', timeZone: 'UTC' });
+}
+
 export type Filtros = {
   programa?: string;
   /** Otro valor aceptado para el mismo programa (la semilla vieja usa el nombre, la nueva el id). */

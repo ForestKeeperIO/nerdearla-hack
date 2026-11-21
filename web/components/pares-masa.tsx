@@ -93,11 +93,11 @@ export function ParesMasa({
               </td>
               <td style={{ padding: 'var(--sp-2)' }}>
                 {p.a.etiqueta}
-                <span className="etiqueta" style={{ display: 'block' }}>{nombreFuente[p.a.fuente] ?? p.a.fuente} · fila {p.a.fila}</span>
+                <span className="etiqueta" style={{ display: 'block' }}>{nombreFuente[p.a.fuente] ?? p.a.fuente}, fila {p.a.fila}</span>
               </td>
               <td style={{ padding: 'var(--sp-2)' }}>
                 {p.b.etiqueta}
-                <span className="etiqueta" style={{ display: 'block' }}>{nombreFuente[p.b.fuente] ?? p.b.fuente} · fila {p.b.fila}</span>
+                <span className="etiqueta" style={{ display: 'block' }}>{nombreFuente[p.b.fuente] ?? p.b.fuente}, fila {p.b.fila}</span>
               </td>
               <td className="etiqueta" style={{ padding: 'var(--sp-2)' }}>{p.motivo}</td>
             </tr>

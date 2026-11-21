@@ -33,3 +33,18 @@ export function aQuery(f: FiltrosMulti): string {
 export function hayFiltros(f: FiltrosMulti): boolean {
   return DIMENSIONES.some((d) => f[d].length > 0);
 }
+
+const MESES = ['ene', 'feb', 'mar', 'abr', 'may', 'jun', 'jul', 'ago', 'sep', 'oct', 'nov', 'dic'];
+
+/** '2026-04' → 'abr 2026'. Si no es un periodo AAAA-MM, devuelve el valor tal cual. */
+export function etiquetaPeriodo(valor: string): string {
+  const m = /^(\d{4})-(\d{2})$/.exec(valor);
+  if (!m) return valor;
+  const mes = Number(m[2]);
+  return mes >= 1 && mes <= 12 ? `${MESES[mes - 1]} ${m[1]}` : valor;
+}
+
+/** Etiqueta visible de un valor de filtro: siempre texto humano, nunca el id crudo. */
+export function etiquetaValor(dim: Dimension, valor: string): string {
+  return dim === 'periodo' ? etiquetaPeriodo(valor) : valor;
+}
