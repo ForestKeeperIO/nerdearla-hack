@@ -4,6 +4,8 @@ import { CAMPOS } from './seleccion-tablero';
 import { contextoReporte, type QueryReporte } from './contexto-reporte';
 import { leerReporte, poblaciones, type Linea, type Reporte } from './reportes';
 import { fuentesDe } from './informe';
+import { baseAnalitica } from './base-analitica';
+import { motorActivo } from './claves';
 
 const campos = {estado:'estado_clave',municipio:'municipio_clave',programa:'iniciativa_id',servicio:'servicio'};
 export type Tasa = {clave:string;municipio:string;n:number;den:number;tasa:number|null};
@@ -12,14 +14,15 @@ export type InformeSeleccion = Reporte & {tasas:Tasa[];jornadas:number|null;disp
 /** Mismo lector analítico que Tablero: una transacción de solo lectura, nunca datos nominales al navegador. */
 export async function informeSeleccion(query:QueryReporte):Promise<InformeSeleccion> {
   const { f,programa,municipio }=contextoReporte(query);
-  if (!process.env.IMPACTO_DB) {
+  const ruta=baseAnalitica();
+  if (!ruta) {
     const r=await leerReporte(programa);
     const filtrado=!!(municipio||f.estado.length||f.municipio.length||f.servicio.length||f.desde||f.hasta||f.programa.length>1);
     if (filtrado) return {...r,disponible:false,fuentes:[],lineas:[],municipios:[],periodos:[],impactadas:0,donantes:0,edad:{total:0,sin:0,n:0,media:null,mediana:null,grupos:[]},tasas:[],jornadas:null};
     return {...r,disponible:true,tasas:[],jornadas:null};
   }
   const origenes = (await fuentesDe('global')).valor;
-  const db=new DatabaseSync(process.env.IMPACTO_DB,{readOnly:true});
+  const db=new DatabaseSync(ruta,{readOnly:true});
   try {
     db.exec('BEGIN');
     const where=["r.contado=1","i.clase<>'fuente_publica'"];
@@ -53,11 +56,14 @@ export async function informeSeleccion(query:QueryReporte):Promise<InformeSelecc
     const periodos=all<{p:string}>("SELECT DISTINCT periodo p FROM filas WHERE periodo<>'' ORDER BY periodo").map(x=>x.p);
     const [{jornadas}]=all<{jornadas:number}>("SELECT COUNT(*) jornadas FROM (SELECT DISTINCT fecha,municipio_clave FROM filas WHERE fecha<>'' AND municipio_clave<>'')");
     // Son atenciones o estudios según el archivo. No dar una tasa de estudios si la unidad dice atención.
-    const tasas=all<{clave:string;municipio:string;n:number}>(`SELECT municipio_clave clave,lugar municipio,SUM(cantidad) n
-      FROM positivas JOIN personas p ON p.id=persona_ef WHERE servicio='Papanicolaou' AND tipo_registro='atencion'
-      AND fecha<>'' AND p.fecha_nacimiento<>'' AND municipio_clave<>'' AND
+    // Selma proyecta la pertenencia al grupo, no la fecha de nacimiento.
+    const selma=motorActivo()==='selma';
+    const edadObjetivo=selma ? 'edad_objetivo=1' : `p.fecha_nacimiento<>'' AND
       (CAST(strftime('%Y',fecha) AS INTEGER)-CAST(strftime('%Y',p.fecha_nacimiento) AS INTEGER)-
-      (strftime('%m-%d',fecha)<strftime('%m-%d',p.fecha_nacimiento))) BETWEEN 25 AND 64 GROUP BY municipio_clave,lugar`)
+      (strftime('%m-%d',fecha)<strftime('%m-%d',p.fecha_nacimiento))) BETWEEN 25 AND 64`;
+    const tasas=all<{clave:string;municipio:string;n:number}>(`SELECT municipio_clave clave,lugar municipio,SUM(cantidad) n
+      FROM positivas ${selma?'':'JOIN personas p ON p.id=persona_ef'} WHERE servicio='Papanicolaou' AND tipo_registro='atencion'
+      AND fecha<>'' AND municipio_clave<>'' AND ${edadObjetivo} GROUP BY municipio_clave,lugar`)
       .flatMap(t=>{const den=pob.get(t.clave);return den?[{...t,den,tasa:t.n>=5?1000*t.n/den:null}]:[];});
     const version=createHash('sha256').update(JSON.stringify([f,municipio,fuentes.map(x=>x.id),lineas,impactadas,donantes,edad,tasas])).digest('hex').slice(0,8);
     return {programa,corte,version,fuentes,lineas,periodos,municipios,edad,impactadas,donantes,tasas,jornadas,disponible:true};

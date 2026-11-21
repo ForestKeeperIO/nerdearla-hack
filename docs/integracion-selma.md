@@ -1,91 +1,131 @@
-# Integración con el procesador de Selma
+# Corte al procesador de Selma
 
-> Análisis de solo lectura hecho por un agente el 21 nov, 14:20 CDMX, sobre `origin/soe_python` en `3435ded`. La rama siguió avanzando después (14:25: `13a806d`); lo posterior no está revisado. No se desplegó su código ni se cambió el nuestro: la decisión es de Ian.
+**Pin probado: `13a806dee7fd9e00117c02b06264a56b11d30049`. No activar producción sin el GO de nerdearla.** El titular Global suma personas impactadas **por programa**: 130 en Tamizaje + 20 en Melenas = **150**. Hay 130 personas únicas entre programas y 20 en ambos. Las 40 donantes y los registros sin ID no se añaden al titular.
 
+## Lectores y proyector
 
-Alcance: solo lectura sobre `origin/soe_python` (3435ded, 21 nov 14:13), exportado a un directorio temporal fuera del repositorio. No toqué el repositorio ni ningún servicio.
-
-## 1. Verificado
-
-| Qué | Comando | Resultado |
+| Dato | `EIRA_MOTOR=motor` (predeterminado) | `EIRA_MOTOR=selma` |
 |---|---|---|
-| Cambios de la rama | `git diff --stat origin/main...origin/soe_python \| tail` | `31 files changed, 2051 insertions(+), 84 deletions(-)`: `py/procesador/` (12 archivos), `py/datos_demo/`, `py/subir_demo.py`, `py/tests/test_flujo.py`, `test_texto.py`, y reescribe `py/tests/conftest.py` |
-| Commits | `git log origin/soe_python --not origin/main` | 5 commits de sortegae (a07998d, 83b34b3, f44e70b, e8762e3, 3435ded) |
-| Sus pruebas, tal cual | `uv run --no-project --with-requirements requirements.txt --with pytest python -m pytest tests/test_flujo.py tests/test_texto.py -q` | `4 passed, 3 skipped`: su fixture arranca un `valkey-server` propio y no hay ninguno en el PATH |
-| Sus pruebas contra 6392 | mismo comando, tras cambiar en mi copia el fixture `v` a `port=6392, db=10` con `flushdb` | `7 passed in 4.54s`; la base 10 quedó en 0 claves |
+| Roles por programa | `eira:per:impactadas:<id>` / `eira:per:donantes:<id>` | `eira:per:programa:<id>` / `eira:don:programa:<id>`. `rolesDe` elige ambas claves sin probar otras si faltan. |
+| Tablero, vista previa y CSV | Roles del motor; Atlas usa `IMPACTO_DB` | Mismo selector para las cifras por programa. Para filtros de lugar, mes y servicio, Atlas consulta `EIRA_TABLERO_DB=…/atlas-selma.sqlite`: ordinales por foto, sin nombres, HMAC ni nacimientos. No abrir el SQLite privado desde la web. |
+| Metabase | Vistas del motor | Solo `metabase-selma.sqlite`, separado del Atlas. La tarjeta suma `v_personas_por_programa`; se contrasta con `eira:met:global.personas`. Únicas entre programas = `SCARD eira:per:todas`. |
+| Presencia | Motor → `eira:presencia:<alcance>` | El proyector lee `eira.sqlite` en modo `ro` y resuelve ciudad + `estado_clave` de la ficha del trabajo. Cuenta filas contadas con asistencia, no cantidad de objetos. Escribe por programa y Global en un MULTI. Sin estado, omite la ubicación. |
+| Archivos | Limpieza del motor y TTL de una hora | `eira-selma-vistas` escucha `eira:eventos`; comprueba estado y retira bytes de `eira:archivo:<trabajo>` en una operación atómica, **solo** en `listo`, `duplicado` o `error`. Reconcilia al suscribirse y cada 60 s por si perdió un aviso. |
 
-No corrí `test_motor.py` (nuestro) dentro de su rama.
+[Matriz completa del contrato y diagnóstico previo](contexto/diagnostico-pre-selector-selma.md#claves-del-contrato-y-sus-lectores) · [Pedidos al procesador](pedidos-a-selma.md).
 
-## 2. Streams y grupos (leído en código)
+**Manifiesto de la demo:** Tamizaje, su v2, Nutrición y **`py/datos_demo/archivos/melenas-en-movimiento.xlsx` del pin de Selma**. Su Melenas produce 40 filas de donación (60 objetos) y 20 entregas. No usar el homónimo de `reportes/`: el encabezado `Tipo` no se reconoce en ese pin y las 80 filas aparecen como donaciones.
 
-| | Motor (nuestro) | Procesador (Selma) |
-|---|---|---|
-| Streams | `eira:trabajos`, `eira:decisiones` | los mismos |
-| Grupo | `procesadores` | `procesadores` (el mismo) |
-| Consumidor | `py-<pid>` | `py-1` (`EIRA_CONSUMIDOR`) |
-| Reintentos | reclama pendientes con `min_idle_time` y marca error tras varios intentos | relee solo sus pendientes al arrancar; no reclama los de otro consumidor |
-| SQLite | `IMPACTO_DB` (`data/impacto.sqlite`, `db/esquema.sql`) | `py/.estado/eira.sqlite` (`EIRA_ESTADO_DIR`) |
-| Escritura | incremental (`HINCRBY`, `SADD`) | borra y reescribe todo lo derivado en un `MULTI` por cada trabajo o decisión |
+## Tablero y reportes actuales (fase 3)
 
-## 3. Clave por clave
+`/tablero`, `/tablero/version` y los reportes con filtros usan `EIRA_TABLERO_DB` en modo Selma, incluso si también está definido `IMPACTO_DB`. Si falta la ruta del Atlas, es un error de configuración: no se abre la base del otro motor.
 
-| Clave | Contrato | Motor | Selma | Diferencia |
-|---|---|---|---|---|
-| `eira:trabajo:<id>` `estado` | procesando, listo, duplicado, error | igual | igual | ninguna |
-| `mensaje`, `nivel_duplicado`, `fuente`, `fuente_original`, `filas*`, `mapeo`, `terminado_en` | sí | sí | sí | campos del motor uno a uno: SIN VERIFICAR |
-| `eira:archivo:<id>` | lo escribe el frontend, 1 h | lo lee y lo borra al terminar | lo lee y no lo borra | el crudo con nombres queda hasta 1 h |
-| `eira:fuentes`, `eira:fuente:<id>` | sí | sí | sí, con los campos del contrato | puntaje del zset: ella usa la hora de carga guardada |
-| `eira:anom:*`, `eira:omitidas:*` | sí | sí | sí | sus `filas_omitidas` incluyen repetidas internas |
-| `eira:per:todas`, `per:programa`, `per:ciudad`, `per:periodo`, `per:servicio` | todas las personas | incluye donantes | solo impactadas | cambia el significado |
-| `eira:per:certeza:<nivel>` | sí | sí | sí | ninguna |
-| `eira:per:impactadas:<prog>` | sí | sí | no | falta, y su borrado de `eira:per:*` elimina las nuestras |
-| `eira:per:donantes:<prog>` | sí | sí | no; usa `eira:don:programa:<prog>` y `eira:don:todas` | nombre fuera de contrato |
-| `eira:per:tipo:<tipo>` | no (propuesta del frontend) | no | no | el frontend cae a `per:programa` |
-| `eira:nac`, `eira:sinid`, `eira:cnt:<unidad>`, `eira:valores:*` | sí | sí | sí | ella no escribe `valores:estado` |
-| `eira:presencia:<alcance>` | sí | sí | no | falta |
-| `eira:pares` | sí | sí, `HSETNX` | sí, misma forma JSON | ids de par e ids de persona distintos entre motores |
-| `eira:huellas:archivo`, `huellas:fila` | sí | sí | no; las guarda en su SQLite | no ve duplicados de lo que cargó el motor |
-| `eira:met:<prog>`, `eira:met:global` | no | no | sí | añadido suyo; el frontend no lo lee |
-| `eira:bitacora`, `eira:eventos`, `eira:contrato` | sí | sí | sí | ella pone `contrato` sin `NX` |
-| Decisiones `persona`, `restituir_fila` | sí | sí | sí | equivalentes |
+| Consulta del frontend | Datos que publica el proyector en el Atlas |
+|---|---|
+| Cargas recientes y servicios por unidad | `fuentes`: una fila por archivo aceptado (id, programa, nombre, corte, carga UTC, estrellas y puntaje). `v_registros_ef.fuente_id` une cada actividad con su carga; `tipo_registro` la une al plural de `tipos_de_registro`. |
+| Revisión de pares y refresco sin recargar | `pares_persona` solo expone estados; `v_pares_pendientes` cuenta pendientes. `bitacora.id` guarda únicamente el último ID de `eira:bitacora`, no su mensaje ni su autor. Los tres se publican en la misma transacción del Atlas. |
+| CSV de aliados y territorial | Usan la selección del tablero. Para la tasa de 25 a 64 años, `edad_objetivo` se calcula al día de la atención en la base privada; el informe no necesita una tabla de nacimientos. |
 
-## 4. Consumidores
+Ensayo de fase 3, base aislada `6398/8`: build limpio de Next, selector 4/4, suite de Selma 7/7. Chromium mantuvo la pestaña abierta durante las cargas: de 0 a 150 personas, cuatro archivos recientes y seis municipios activos en el SVG. Con Melenas + Jalisco quedaron 20 personas tanto en Tablero como en el CSV; agosto mostró comparación con julio. `scripts/cotejar-selma.py` salió `0` con **150 en procesador, Tablero, Metabase, CSV global y CSV de aliados**. También se comprobó la actualización de una copia del Atlas anterior sin rehacer el estado privado. No se ejecutó el corte.
 
-| Lector | Lee | ¿Lo cubre Selma? |
-|---|---|---|
-| `web/lib/datos.ts`: trabajos, fuentes, anomalías, omitidas, pares, bitácora | claves comunes | Sí |
-| `datos.ts`: filtros, conteos, edad (`valores`, `cnt`, `nac`, `sinid`, `perCerteza`) | comunes | Sí |
-| `impactadasIdsDe` y `noImpactadasIdsDe` (vista previa del informe) | `per:tipo:*`, o si no `per:programa` | Parcial: impactadas correctas; las donantes saldrían en 0, porque están en `eira:don:*` (inferido) |
-| `web/lib/territorio.ts` | `eira:presencia:<alcance>` | No: mapa vacío |
-| Metabase (`metabase/provisionar.py`) | vistas `v_global`, `v_conteos`, `v_personas_por_programa`, `v_objetos`, `v_presencia`, `v_presencia_municipios`, `v_calidad`, `v_edad`, `v_cruce_programas`, `v_pares_pendientes` | No: su `eira.sqlite` tiene 4 tablas (`fuentes`, `filas`, `anomalias`, `pares`) y ninguna vista |
+## Evidencia en staging
 
-## 5. Conclusiones
+Valkey aislado en `6396/8`, nuevo SQLite y llave; Next `3196`, Metabase `3296`. Solo datos ficticios.
 
-**(a) Si corriera el suyo en lugar del nuestro**
-- Se rompe: el mapa de presencia, las donantes en el informe y todo Metabase, que se queda sin datos nuevos.
-- Se pierde: el borrado del archivo crudo y la reconstrucción desde `IMPACTO_DB`.
-- Se gana: métricas precalculadas en `eira:met:*`, un catálogo que rechaza programa o tipo inválido con mensaje claro, lectura de CSV y datos de demostración con valores esperados.
+- `pytest tests_procesador -q`: 7 pasaron. `vitest run lib/claves-roles.test.ts`: 4 pasaron (ambos modos, valor por omisión y configuración inválida). `npm run build`: compilación y TypeScript correctos.
+- `python scripts/cargar-demo-selma.py --probar-duplicado`: Tamizaje +120; copia `duplicado/identico` +0; v2 `version_nueva` +8; Nutrición `traslape_parcial` +40; Melenas +60.
+- `python scripts/cotejar-selma.py`: comprueba el titular del HTML y el CSV descargado contra la tarjeta **ejecutada** por Metabase y el procesador; exige además un mapa no vacío y consistente (6 municipios).
+- Melenas filtrado: 20 impactadas, 40 donantes. Quitando el estado de su ficha y publicando un evento, su mapa quedó vacío; al restaurar `14`, recuperó 6 municipios y 60 registros.
+- Prueba por API de archivo inválido: `error` sin bytes. Cero archivos crudos para las cargas listas y duplicadas. El control `procesando` conservó bytes; su evento `listo` los retiró.
 
-**(b) Los dos a la vez en el mismo Valkey**
-- Mismo grupo (situación actual del código): cada trabajo le toca a uno solo, al azar. Como ella borra `eira:per:*`, `eira:cnt:*`, `eira:fuente:*` y `eira:pares` en cada proyección, eliminaría lo escrito por el motor. Su README lo advierte ("un solo trabajador a la vez").
-- Grupos distintos: ambos procesan cada trabajo y cada decisión, con doble escritura, dos ids de fuente y de persona, y el mismo borrado.
-- No deben compartir base de Valkey.
+## Preparación sin despliegue
 
-**(c) Caminos, de menor a mayor esfuerzo**
+Ejecutar desde `integra-selma`, en Bash. El directorio del adaptador y el export de Selma deben quedar fijos y privados. Si la referencia de Selma ya cambió, reutilizar el export previamente verificado del pin, no desplegar su último tip sin pruebas.
 
-| Opción | Minutos | Riesgo |
-|---|---|---|
-| 1. Mantener el motor en la demo y documentar el suyo (esta tabla) | 10 | Ninguno técnico |
-| 2. Correr el suyo en otra base de Valkey con `EIRA_ESTADO_DIR` propio y comparar cifras con `subir_demo.py` | 30 a 45 | Bajo. Ojo: la fusión de la rama reescribe `py/tests/conftest.py` y puede romper `test_motor.py` (inferido) |
-| 3. Adaptar nombres: que ella escriba `per:donantes`, `per:impactadas`, `presencia` y `huellas`, o portar al motor su `eira:met:*` y su catálogo | 90 a 180 | Alto antes de la demo; Metabase sigue sin cubrirse en la primera dirección |
+```bash
+set -euo pipefail
+umask 077
+PIN=13a806dee7fd9e00117c02b06264a56b11d30049
+REL="$HOME/.local/share/eira/releases"; mkdir -p "$REL"
+export EIRA_ADAPTADOR=$(mktemp -d "$REL/integra.XXXXXX")
+git archive HEAD | tar -xf - -C "$EIRA_ADAPTADOR"
+SRC=$(mktemp -d "$REL/selma.XXXXXX")
+test "$(git rev-parse origin/soe_python)" = "$PIN"
+git archive origin/soe_python | tar -xf - -C "$SRC"
+test "$(git rev-parse origin/soe_python)" = "$PIN"
+export SELMA_PY="$SRC/py" SELMA_PYTHON="$SRC/venv/bin/python"
+uv venv "$SRC/venv"
+uv pip install --python "$SELMA_PYTHON" -r "$SELMA_PY/requirements.txt"
+(cd "$EIRA_ADAPTADOR/web" && npm ci && npm run build)
+export EIRA_ESTADO_DIR="$HOME/.local/state/eira/demo-selma-$PIN"
+test ! -e "$EIRA_ESTADO_DIR"; install -d -m 700 "$EIRA_ESTADO_DIR"
+```
 
-**(d) Preguntas abiertas**
-- Selma: ¿`eira:per:todas` debe excluir donantes? Eso cambia el contrato.
-- Selma: ¿aceptaría `eira:per:donantes:<prog>` en vez de `eira:don:*`?
-- Selma: ¿quién iba a leer `eira:met:*`?
-- Selma: ¿piensa escribir presencia?
-- Ian: ¿el total Global es la suma por programa (su regla y la de la vista previa) o personas únicas?
-- Ian: ¿Metabase es parte obligatoria de la demo?
-- Ian: ¿se fusiona `soe_python` a `main` antes o después de la demo?
+## Corte, solo con tráfico cerrado y GO explícito
 
-SIN VERIFICAR: comportamiento real del frontend con sus datos (no levanté nada), campos de `eira:trabajo` del motor uno a uno, y el efecto de la fusión sobre nuestras pruebas.
+Confirmar respaldo restaurable de la base anterior y que se autoriza **recargar una demo nueva**, no migrar pacientes, decisiones ni aprobaciones. Reservar una base vacía de la misma instancia para guardar la 4 anterior. Nunca `FLUSHDB`. Completar en la misma shell: `RESERVA` (número reservado), `VK` (binario valkey-cli), `APP_URL`, `TABLERO_MB` (URL pública de Impacto), `METABASE_URL`. Inyectar la sesión administrativa de Metabase (`MB_SESSION`) o sus credenciales por entorno; si Valkey requiere contraseña, inyectar `VALKEYCLI_AUTH` al CLI y `VALKEY_PASSWORD` a los servicios mediante sus archivos protegidos.
+
+```bash
+: "${RESERVA:?}" "${VK:?}" "${APP_URL:?}" "${TABLERO_MB:?}" "${METABASE_URL:?}"
+[[ $RESERVA =~ ^(0|[1-9][0-9]*)$ && $RESERVA != 4 ]]
+export VALKEY_URL=redis://127.0.0.1:6379/4 APP_URL TABLERO_MB METABASE_URL
+export EIRA_TABLERO_DB="$EIRA_ESTADO_DIR/atlas-selma.sqlite"
+CFG="$HOME/.config/eira"; U="$HOME/.config/systemd/user"
+cd "$EIRA_ADAPTADOR"
+install -d -m 700 "$CFG" "$U/eira-app.service.d"
+[[ ! -e "$CFG/selma.env" && ! -e "$CFG/app-selma.env" && ! -e "$U/eira-app.service.d/95-selma.conf" ]]
+[[ ! -e "$U/eira-selma.service" && ! -e "$U/eira-selma-vistas.service" ]]
+MB_ANTES=$("$SELMA_PYTHON" scripts/conexion-metabase-selma.py)
+MB_NUEVA="$EIRA_ESTADO_DIR/metabase-selma.sqlite"
+printf '%s\n' "$MB_ANTES" > "$CFG/metabase-antes"
+printf '%s\n' "EIRA_ADAPTADOR=$EIRA_ADAPTADOR" "SELMA_PY=$SELMA_PY" \
+ "SELMA_PYTHON=$SELMA_PYTHON" "EIRA_ESTADO_DIR=$EIRA_ESTADO_DIR" "VALKEY_URL=$VALKEY_URL" > "$CFG/selma.env"
+printf '%s\n' "EIRA_MOTOR=selma" "EIRA_TABLERO_DB=$EIRA_TABLERO_DB" "VALKEY_URL=$VALKEY_URL" > "$CFG/app-selma.env"
+install -m 644 scripts/eira-selma{,-vistas}.service "$U/"
+printf '[Service]\nWorkingDirectory=%s/web\nEnvironmentFile=%s/app-selma.env\n' \
+ "$EIRA_ADAPTADOR" "$CFG" > "$U/eira-app.service.d/95-selma.conf"
+systemctl --user daemon-reload
+systemctl --user stop eira-app
+for flujo in trabajos decisiones; do
+  "$VK" -p 6379 -n 4 --json XINFO GROUPS "eira:$flujo" |
+    jq -e 'any(.[]; .name=="procesadores" and .pending==0 and .lag==0)' >/dev/null
+done
+test "$("$VK" -p 6379 -n "$RESERVA" --raw DBSIZE)" = 0
+systemctl --user stop eira-motor
+test "$("$VK" -p 6379 --raw SWAPDB 4 "$RESERVA")" = OK
+test "$("$VK" -p 6379 -n 4 --raw DBSIZE)" = 0
+systemctl --user start eira-selma eira-selma-vistas
+for i in {1..30}; do [[ -f $EIRA_TABLERO_DB ]] && break; sleep 1; done
+test -f "$EIRA_TABLERO_DB"
+systemctl --user start eira-app
+curl --retry 10 --retry-connrefused -fsS "$APP_URL/api/salud"
+"$SELMA_PYTHON" scripts/cargar-demo-selma.py --probar-duplicado
+"$SELMA_PYTHON" -m db.exportar_selma  # reconstruir ambas bases de lectura al final de la recarga
+"$SELMA_PYTHON" scripts/conexion-metabase-selma.py --desde "$MB_ANTES" --hasta "$MB_NUEVA"
+"$SELMA_PYTHON" scripts/cotejar-selma.py
+systemctl --user is-active eira-app eira-selma eira-selma-vistas
+```
+
+No reabrir tráfico sin cotejo `0` y mapa con datos. Respaldar juntos `eira.sqlite` y su `hmac.key` (0600), fuera de git. Si se desea persistencia al reiniciar: registrar `systemctl --user is-enabled eira-motor`; tras aceptar el corte, `systemctl --user disable eira-motor && systemctl --user enable eira-selma`. El worker solicita el proyector con `Wants=`.
+
+## Vuelta atrás
+
+Solo si el primer intercambio se confirmó y todavía no se admitieron escrituras reales. De lo contrario, guardar y reconciliar el delta antes de volver. Si el corte falló **antes** del intercambio, no hacer el `SWAPDB` inverso.
+
+```bash
+systemctl --user stop eira-app eira-selma eira-selma-vistas
+test "$("$VK" -p 6379 --raw SWAPDB 4 "$RESERVA")" = OK
+MB_ANTES=$(cat "$CFG/metabase-antes")
+ACTUAL=$("$SELMA_PYTHON" scripts/conexion-metabase-selma.py)
+if [[ $ACTUAL == "$MB_NUEVA" ]]; then
+  "$SELMA_PYTHON" scripts/conexion-metabase-selma.py --desde "$MB_NUEVA" --hasta "$MB_ANTES"
+else
+  test "$ACTUAL" = "$MB_ANTES"
+fi
+mv "$U/eira-app.service.d/95-selma.conf" "$CFG/95-selma-retirado.conf"
+systemctl --user daemon-reload
+systemctl --user start eira-motor eira-app
+systemctl --user is-active eira-motor eira-app
+```
+
+Restaurar la política anterior de arranque si se cambió. **UNVERIFIED**: respaldo, corte/rollback en producción, tráfico público y reinicio de host. No se tocaron los servicios activos ni la base 4.

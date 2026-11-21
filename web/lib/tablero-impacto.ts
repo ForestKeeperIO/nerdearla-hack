@@ -3,6 +3,9 @@ import { resolve } from 'node:path';
 import { CAMPOS, periodoAnterior, type Campo, type Seleccion } from './seleccion-tablero';
 import type { Opciones } from './filtros-comun';
 import { alias } from './facetas';
+import { motorActivo } from './claves';
+import { rolesDe } from './datos';
+import { baseAnalitica } from './base-analitica';
 
 const columnas = { estado: 'r.estado_clave', municipio: 'r.municipio_clave', programa: 'r.iniciativa_id', servicio: 'r.servicio' };
 const nombres = { estado: 'r.estado', municipio: 'm.municipio', programa: 'i.nombre', servicio: 'r.servicio' };
@@ -29,7 +32,10 @@ export type Cifras = { personas: number; edad: number | null; municipios: number
 export type Carga = { nombre: string; programa: string; fecha: string; estrellas: number | null; puntaje: number | null };
 export type Servicio = Punto & { unidad: string; cantidad: number };
 
-const abrir = () => new DatabaseSync(process.env.IMPACTO_DB || resolve('..', 'data', 'impacto.sqlite'), { readOnly: true });
+function abrir() {
+  const ruta = baseAnalitica() || resolve('..', 'data', 'impacto.sqlite');
+  return new DatabaseSync(ruta, { readOnly: true });
+}
 
 // Este marcador también se lee dentro de la transacción de la pantalla:
 // una carga confirmada durante el render no queda entre dos suscripciones.
@@ -45,7 +51,9 @@ export function leerRevision() {
   try { return revisionDe(db); } finally { db.close(); }
 }
 
-export function leerTablero(f: Seleccion) {
+export async function leerTablero(f: Seleccion) {
+  const soloProgramas = !f.estado.length && !f.municipio.length && !f.servicio.length && !f.desde && !f.hasta;
+  const roles = motorActivo() === 'selma' && soloProgramas ? await rolesDe(f.programa) : null;
   const db = abrir();
   try {
     // Una transacción de lectura: ni un archivo nuevo ni una decisión de par
@@ -105,7 +113,8 @@ export function leerTablero(f: Seleccion) {
       (SELECT COUNT(*) ${fuente} WHERE r.contado=1 AND i.clase <> 'fuente_publica'
       AND r.persona_ef IS NULL) sinId, (SELECT MAX(fecha_corte) FROM fuentes) corte`).get() as
       { pares: number; decididos: number; sinId: number; corte: string | null };
-    return { ...kpi, ...calidad, revision: revisionDe(db), lugares, meses, servicios, unidades, cargas, edades, opciones,
+    return { ...kpi, ...(roles && { personas: roles.totalImpactadas, donantes: roles.totalDonantes }),
+      ...calidad, revision: revisionDe(db), lugares, meses, servicios, unidades, cargas, edades, opciones,
       comparacion: comparacion?.registros ? comparacion : null, anterior,
       conDonantes: !f.programa.length || f.programa.includes('melenas-en-movimiento') };
   } finally { db.close(); }

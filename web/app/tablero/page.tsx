@@ -34,7 +34,7 @@ function Cifra({ titulo, valor, unidad, corte, regla, id, previo, referencia }: 
 }
 
 export default async function Tablero({ searchParams }: PageProps<'/tablero'>) {
-  const q = await searchParams, f = seleccionDe(q), d = leerTablero(f);
+  const q = await searchParams, f = seleccionDe(q), d = await leerTablero(f);
   const corte = d.corte || '';
   const referencia = d.anterior ? periodoTexto(d.anterior) : '';
   const avanzado = impactoPublico();

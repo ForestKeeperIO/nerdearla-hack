@@ -1,5 +1,15 @@
 # STATE: Impacto EIRA (Nerdearla Vibeathon)
 
+15:29 CDMX, fase 3: `integra-selma` incorporó `cb1094e`, los reportes de `f79e096` y el corpus de `611b009`. Staging aislado `6398/8`: procesador, Tablero, Metabase y ambos CSV = 150; seis municipios. Chromium observó el refresco de la misma pestaña, cuatro cargas recientes, 20 personas con Melenas/Jalisco y comparación mensual; cero errores de página. Build limpio, selector 4/4 y Selma 7/7. El GO cubre solo este staging, no es un corte.
+
+15:19 CDMX, fase 3: merge de `main@cb1094e` en curso. Se conservan revisión, cargas y comparación; pruebas del pin de Selma: 7/7. Falta validar el Atlas ampliado en el navegador y cotejar los cuatro lectores en una base 8 nueva. No usar el GO de la fase 2 para este corte.
+
+15:04 CDMX, integración fijada en `13a806d`: **GO de staging, no de producción**. Selector de roles `EIRA_MOTOR`, Atlas y proyector por eventos probados en `6396/8`. HTML, tarjeta Metabase y CSV = 150; mapa = 6 municipios; bytes terminales = 0. Melenas del export de Selma. Vigente: `docs/integracion-selma.md`; los bloqueos de las notas anteriores corresponden al ensayo previo.
+
+Integración (rama `integra-selma`, 14:30 CDMX): export de `soe_python@13a806d`, siete pruebas del procesador pasaron con Valkey privado. Base del frontend `6abb898`: `rolesDe` necesita dos claves del procesador. Staging sin acceso a los servicios en línea; evidencia y criterios de corte en `docs/integracion-selma.md`.
+
+14:42 CDMX: 7 cargas listas y 7 duplicadas por API, ambas v2 agregan 8 filas; decisión de separar confirmada. Las 17 tarjetas Metabase leen el exportador. Puerta de corte roja: procesador/Metabase 245, tablero/CSV 0; Melenas de `reportes/` se lee 80 donaciones y 0 entregas. Próximo: repetir con tip nuevo de Selma y FE corregido. No activar producción.
+
 Snapshot taken 2026-11-21 between 20:35 and 20:52 CET (13:35 to 13:52 CDMX) by a read-only worker. Hours below are CET. Paths are relative to `~/projects/` on the VPS.
 
 Everything here was checked against the real thing in this session unless it says **UNVERIFIED**. Other agents were committing while this was written: `main` moved from `81dad45` to `526b2b2` during the snapshot. Run the commands in "How to refresh" before you rely on a row.

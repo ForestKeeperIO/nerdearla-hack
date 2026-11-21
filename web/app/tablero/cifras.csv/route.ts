@@ -9,10 +9,10 @@ function celda(valor: string | number | null) {
   return `"${(/^[\s]*[=+\-@]/.test(s) ? "'" + s : s).replaceAll('"', '""')}"`;
 }
 
-export function GET(req: NextRequest) {
+export async function GET(req: NextRequest) {
   const q = req.nextUrl.searchParams;
   const f = seleccionDe(Object.fromEntries([...q.keys()].map(k => [k, q.getAll(k).join(',')])));
-  const d = leerTablero(f);
+  const d = await leerTablero(f);
   const rows = [
     ['Corte', d.corte], ...CAMPOS.map(k => [k, f[k].length ? f[k].map(v =>
       resumenCampo(k, { ...f, [k]: [v] }, d.opciones)).join('; ') : 'Todos']),

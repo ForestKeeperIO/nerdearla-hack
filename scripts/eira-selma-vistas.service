@@ -1,0 +1,14 @@
+[Unit]
+Description=Proyeccion de lectura de EIRA para Metabase
+After=eira-selma.service
+PartOf=eira-selma.service
+
+[Service]
+EnvironmentFile=%h/.config/eira/selma.env
+ExecStart=/bin/bash -c 'cd "$EIRA_ADAPTADOR" && exec "$SELMA_PYTHON" -m db.exportar_selma --eventos'
+UMask=0077
+Restart=on-failure
+RestartSec=3
+
+[Install]
+WantedBy=eira-selma.service
