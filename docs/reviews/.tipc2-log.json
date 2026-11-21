@@ -1,0 +1,1083 @@
+[
+ {
+  "w": 1440,
+  "paso": "llegada",
+  "url": "/tablero",
+  "cifras": [
+   "158 | personas alcanzadas",
+   "45.4 | edad promedio (n=158) al 30/09/2026",
+   "6 | municipios con personas"
+  ],
+  "iframe": "https://conclusions-potatoes-dealt-scanners.trycloudflare.com/public/dashboard/<id>",
+  "metabase": "Impacto Programa Mes Municipio Tipo de servicio 126 Personas impactadas 45.4 años Edad promedio · todos los programas 6 Municipios con presencia 60 Donantes de cabello Cómo leer estas cifras. Las personas se cuentan una sola vez por programa aunque tengan varios registros; quien está en dos programas cuenta en cada uno. Atenciones, donaciones y pelucas se cuentan por separado y no se suman entre sí. Las donantes de cabello no son personas impactadas. Los filtros de mes y tipo de servicio aplican a las gráficas de actividad, y el de municipio a las de presencia; las cifras de personas solo cambian con el programa. Actividad por tipo de registro 128 60 20 Atenciones Donaciones de cabello Pelucas entregadas 0 50 100 Personas por programa Personas impactadas Donantes de cabello 0 20 40 60 80 100 120 Tamizaje Rosa Melenas en Movimiento 106 20 0 60 Actividad por mes Tamizaje Rosa Melenas en Mo",
+  "scrollW": 1440,
+  "alto": 2373
+ },
+ {
+  "w": 1440,
+  "dims": [
+   {
+    "dim": "programa",
+    "ops": [
+     "melenas-en-movimiento",
+     "tamizaje-rosa"
+    ]
+   },
+   {
+    "dim": "ciudad",
+    "ops": [
+     "Gómez Farías",
+     "Jocotepec",
+     "San Martín Hidalgo",
+     "Sayula",
+     "Tapalpa",
+     "Zapotlán el Grande"
+    ]
+   },
+   {
+    "dim": "periodo",
+    "ops": [
+     "abr 2026",
+     "may 2026",
+     "jun 2026",
+     "jul 2026",
+     "ago 2026",
+     "sep 2026"
+    ]
+   },
+   {
+    "dim": "servicio",
+    "ops": [
+     "Exploración clínica",
+     "Papanicolaou",
+     "Peluca oncológica",
+     "Trenza",
+     "Ultrasonido de mama"
+    ]
+   }
+  ]
+ },
+ {
+  "w": 1440,
+  "paso": "filtro programa +melenas-en-movimiento",
+  "url": "/tablero?programa=melenas-en-movimiento",
+  "cifras": [
+   "73 | personas alcanzadas (con filtros)",
+   "45.2 | edad promedio (n=73) al 30/09/2026",
+   "6 | municipios con personas"
+  ],
+  "iframe": "https://conclusions-potatoes-dealt-scanners.trycloudflare.com/public/dashboard/<id>?programa=melenas-en-movimiento",
+  "metabase": "Impacto Programa: Melenas en Movimiento Mes Municipio Tipo de servicio 20 Personas impactadas 45.4 años Edad promedio · todos los programas 6 Municipios con presencia 60 Donantes de cabello Cómo leer estas cifras. Las personas se cuentan una sola vez por programa aunque tengan varios registros; quien está en dos programas cuenta en cada uno. Atenciones, donaciones y pelucas se cuentan por separado y no se suman entre sí. Las donantes de cabello no son personas impactadas. Los filtros de mes y tipo de servicio aplican a las gráficas de actividad, y el de municipio a las de presencia; las cifras de personas solo cambian con el programa. Actividad por tipo de registro 60 20 Donaciones de cabello Pelucas entregadas 0 20 40 60 Personas por programa Personas impactadas Donantes de cabello 0 10 20 30 40 50 60 Melenas en Movimiento 20 60 Actividad por mes Melenas en Movimiento 0 2 4 6 8 10 12 fe"
+ },
+ {
+  "w": 1440,
+  "paso": "filtro programa +tamizaje-rosa",
+  "url": "/tablero?programa=melenas-en-movimiento%2Ctamizaje-rosa",
+  "cifras": [
+   "158 | personas alcanzadas (con filtros)",
+   "45.4 | edad promedio (n=158) al 30/09/2026",
+   "6 | municipios con personas"
+  ],
+  "iframe": "https://conclusions-potatoes-dealt-scanners.trycloudflare.com/public/dashboard/<id>?programa=melenas-en-movimiento&programa=tamizaje-rosa",
+  "metabase": "Impacto Programa: Melenas en Movimiento Mes Municipio Tipo de servicio 16 Personas impactadas 45.4 años Edad promedio · todos los programas 6 Municipios con presencia 60 Donantes de cabello Cómo leer estas cifras. Las personas se cuentan una sola vez por programa aunque tengan varios registros; quien está en dos programas cuenta en cada uno. Atenciones, donaciones y pelucas se cuentan por separado y no se suman entre sí. Las donantes de cabello no son personas impactadas. Los filtros de mes y tipo de servicio aplican a las gráficas de actividad, y el de municipio a las de presencia; las cifras de personas solo cambian con el programa. Actividad por tipo de registro 60 20 Donaciones de cabello Pelucas entregadas 0 20 40 60 Personas por programa Personas impactadas Donantes de cabello 0 10 20 30 40 50 60 Melenas en Movimiento 20 60 Actividad por mes Melenas en Movimiento 0 2 4 6 8 10 12 fe"
+ },
+ {
+  "w": 1440,
+  "paso": "limpiar tras programa",
+  "url": "/tablero"
+ },
+ {
+  "w": 1440,
+  "paso": "filtro ciudad +Gómez Farías",
+  "url": "/tablero?ciudad=G%C3%B3mez+Far%C3%ADas",
+  "cifras": [
+   "26 | personas alcanzadas (con filtros)",
+   "45.5 | edad promedio (n=26) al 30/09/2026",
+   "6 | municipios con personas"
+  ],
+  "iframe": "https://conclusions-potatoes-dealt-scanners.trycloudflare.com/public/dashboard/<id>?municipio=G%C3%B3mez+Far%C3%ADas",
+  "metabase": "Impacto Programa Mes Municipio: Gómez Farías Tipo de servicio 126 Personas impactadas 45.4 años Edad promedio · todos los programas 6 Municipios con presencia 60 Donantes de cabello Cómo leer estas cifras. Las personas se cuentan una sola vez por programa aunque tengan varios registros; quien está en dos programas cuenta en cada uno. Atenciones, donaciones y pelucas se cuentan por separado y no se suman entre sí. Las donantes de cabello no son personas impactadas. Los filtros de mes y tipo de servicio aplican a las gráficas de actividad, y el de municipio a las de presencia; las cifras de personas solo cambian con el programa. Actividad por tipo de registro 128 60 20 Atenciones Donaciones de cabello Pelucas entregadas 0 50 100 Personas por programa Personas impactadas Donantes de cabello 0 20 40 60 80 100 120 Tamizaje Rosa Melenas en Movimiento 106 20 0 60 Actividad por mes Tamizaje Rosa"
+ },
+ {
+  "w": 1440,
+  "paso": "filtro ciudad +Jocotepec",
+  "url": "/tablero?ciudad=G%C3%B3mez+Far%C3%ADas%2CJocotepec",
+  "cifras": [
+   "52 | personas alcanzadas (con filtros)",
+   "44.1 | edad promedio (n=52) al 30/09/2026",
+   "6 | municipios con personas"
+  ],
+  "iframe": "https://conclusions-potatoes-dealt-scanners.trycloudflare.com/public/dashboard/<id>?municipio=G%C3%B3mez+Far%C3%ADas&municipio=Jocotepec",
+  "metabase": "Impacto Programa Mes Municipio: Gómez Farías Tipo de servicio 126 Personas impactadas 45.4 años Edad promedio · todos los programas 6 Municipios con presencia 60 Donantes de cabello Cómo leer estas cifras. Las personas se cuentan una sola vez por programa aunque tengan varios registros; quien está en dos programas cuenta en cada uno. Atenciones, donaciones y pelucas se cuentan por separado y no se suman entre sí. Las donantes de cabello no son personas impactadas. Los filtros de mes y tipo de servicio aplican a las gráficas de actividad, y el de municipio a las de presencia; las cifras de personas solo cambian con el programa. Actividad por tipo de registro 128 60 20 Atenciones Donaciones de cabello Pelucas entregadas 0 50 100 Personas por programa Personas impactadas Donantes de cabello 0 20 40 60 80 100 120 Tamizaje Rosa Melenas en Movimiento 106 20 0 60 Actividad por mes Tamizaje Rosa"
+ },
+ {
+  "w": 1440,
+  "paso": "limpiar tras ciudad",
+  "url": "/tablero"
+ },
+ {
+  "w": 1440,
+  "paso": "filtro periodo +abr 2026",
+  "url": "/tablero?periodo=2026-04",
+  "cifras": [
+   "53 | personas alcanzadas (con filtros)",
+   "46.0 | edad promedio (n=53) al 30/09/2026",
+   "6 | municipios con personas"
+  ],
+  "iframe": "https://conclusions-potatoes-dealt-scanners.trycloudflare.com/public/dashboard/<id>?mes=2026-04",
+  "metabase": "Impacto Programa Mes: abr 2026 Municipio Tipo de servicio 108 Personas impactadas 45.4 años Edad promedio · todos los programas 6 Municipios con presencia 60 Donantes de cabello Cómo leer estas cifras. Las personas se cuentan una sola vez por programa aunque tengan varios registros; quien está en dos programas cuenta en cada uno. Atenciones, donaciones y pelucas se cuentan por separado y no se suman entre sí. Las donantes de cabello no son personas impactadas. Los filtros de mes y tipo de servicio aplican a las gráficas de actividad, y el de municipio a las de presencia; las cifras de personas solo cambian con el programa. Actividad por tipo de registro 20 7 2 Atenciones Donaciones de cabello Pelucas entregadas 0 5 10 15 20 Personas por programa Personas impactadas Donantes de cabello 0 20 40 60 80 100 120 Tamizaje Rosa Melenas en Movimiento 106 20 0 60 Actividad por mes Tamizaje Rosa Me"
+ },
+ {
+  "w": 1440,
+  "paso": "filtro periodo +may 2026",
+  "url": "/tablero?periodo=2026-04%2C2026-05",
+  "cifras": [
+   "73 | personas alcanzadas (con filtros)",
+   "45.6 | edad promedio (n=73) al 30/09/2026",
+   "6 | municipios con personas"
+  ],
+  "iframe": "https://conclusions-potatoes-dealt-scanners.trycloudflare.com/public/dashboard/<id>?mes=2026-04&mes=2026-05",
+  "metabase": "Impacto Programa Mes: abr 2026 Municipio Tipo de servicio 126 Personas impactadas 45.4 años Edad promedio · todos los programas 6 Municipios con presencia 51 Donantes de cabello Cómo leer estas cifras. Las personas se cuentan una sola vez por programa aunque tengan varios registros; quien está en dos programas cuenta en cada uno. Atenciones, donaciones y pelucas se cuentan por separado y no se suman entre sí. Las donantes de cabello no son personas impactadas. Los filtros de mes y tipo de servicio aplican a las gráficas de actividad, y el de municipio a las de presencia; las cifras de personas solo cambian con el programa. Actividad por tipo de registro 20 7 2 Atenciones Donaciones de cabello Pelucas entregadas 0 5 10 15 20 Personas por programa Personas impactadas Donantes de cabello 0 20 40 60 80 100 120 Tamizaje Rosa Melenas en Movimiento 106 20 0 60 Actividad por mes Tamizaje Rosa Me"
+ },
+ {
+  "w": 1440,
+  "paso": "limpiar tras periodo",
+  "url": "/tablero"
+ },
+ {
+  "w": 1440,
+  "paso": "filtro servicio +Exploración clínica",
+  "url": "/tablero?servicio=Exploraci%C3%B3n+cl%C3%ADnica",
+  "cifras": [
+   "40 | personas alcanzadas (con filtros)",
+   "45.7 | edad promedio (n=40) al 30/09/2026",
+   "4 | municipios con personas"
+  ],
+  "iframe": "https://conclusions-potatoes-dealt-scanners.trycloudflare.com/public/dashboard/<id>?servicio=Exploraci%C3%B3n+cl%C3%ADnica",
+  "metabase": "Impacto Programa Mes Municipio Tipo de servicio: Exploración clínica 126 Personas impactadas 45.4 años Edad promedio · todos los programas 6 Municipios con presencia 60 Donantes de cabello Cómo leer estas cifras. Las personas se cuentan una sola vez por programa aunque tengan varios registros; quien está en dos programas cuenta en cada uno. Atenciones, donaciones y pelucas se cuentan por separado y no se suman entre sí. Las donantes de cabello no son personas impactadas. Los filtros de mes y tipo de servicio aplican a las gráficas de actividad, y el de municipio a las de presencia; las cifras de personas solo cambian con el programa. Actividad por tipo de registro 41 Atenciones 0 10 20 30 40 Personas por programa Personas impactadas Donantes de cabello 0 20 40 60 80 100 120 Tamizaje Rosa Melenas en Movimiento 106 20 0 60 Actividad por mes Tamizaje Rosa 0 1 2 3 4 5 6 feb 2026 mar 2026 abr"
+ },
+ {
+  "w": 1440,
+  "paso": "filtro servicio +Papanicolaou",
+  "url": "/tablero?servicio=Exploraci%C3%B3n+cl%C3%ADnica%2CPapanicolaou",
+  "cifras": [
+   "74 | personas alcanzadas (con filtros)",
+   "46.1 | edad promedio (n=74) al 30/09/2026",
+   "6 | municipios con personas"
+  ],
+  "iframe": "https://conclusions-potatoes-dealt-scanners.trycloudflare.com/public/dashboard/<id>?servicio=Exploraci%C3%B3n+cl%C3%ADnica&servicio=Papanicolaou",
+  "metabase": "Impacto Programa Mes Municipio Tipo de servicio: Exploración clínica 126 Personas impactadas 45.4 años Edad promedio · todos los programas 6 Municipios con presencia 60 Donantes de cabello Cómo leer estas cifras. Las personas se cuentan una sola vez por programa aunque tengan varios registros; quien está en dos programas cuenta en cada uno. Atenciones, donaciones y pelucas se cuentan por separado y no se suman entre sí. Las donantes de cabello no son personas impactadas. Los filtros de mes y tipo de servicio aplican a las gráficas de actividad, y el de municipio a las de presencia; las cifras de personas solo cambian con el programa. Actividad por tipo de registro 41 Atenciones 0 10 20 30 40 Personas por programa Personas impactadas Donantes de cabello 0 20 40 60 80 100 120 Tamizaje Rosa Melenas en Movimiento 106 20 0 60 Actividad por mes Tamizaje Rosa 0 1 2 3 4 5 6 feb 2026 mar 2026 abr"
+ },
+ {
+  "w": 1440,
+  "paso": "limpiar tras servicio",
+  "url": "/tablero"
+ },
+ {
+  "w": 1440,
+  "paso": "combinado+recarga",
+  "antes": {
+   "url": "/tablero?programa=melenas-en-movimiento&ciudad=G%C3%B3mez+Far%C3%ADas",
+   "cifras": [
+    "12 | personas alcanzadas (con filtros)",
+    "51.5 | edad promedio (n=12) al 30/09/2026",
+    "6 | municipios con personas"
+   ],
+   "iframe": "https://conclusions-potatoes-dealt-scanners.trycloudflare.com/public/dashboard/<id>?programa=melenas-en-movimiento&municipio=G%C3%B3mez+Far%C3%ADas",
+   "metabase": "Impacto Programa: Melenas en Movimiento Mes Municipio: Gómez Farías Tipo de servicio 20 Personas impactadas 45.4 años Edad promedio · todos los programas 6 Municipios con presencia 51 Donantes de cabello Cómo leer estas cifras. Las personas se cuentan una sola vez por programa aunque tengan varios registros; quien está en dos programas cuenta en cada uno. Atenciones, donaciones y pelucas se cuentan por separado y no se suman entre sí. Las donantes de cabello no son personas impactadas. Los filtros de mes y tipo de servicio aplican a las gráficas de actividad, y el de municipio a las de presencia; las cifras de personas solo cambian con el programa. Actividad por tipo de registro 60 20 Donaciones de cabello Pelucas entregadas 0 20 40 60 Personas por programa Personas impactadas Donantes de cabello 0 10 20 30 40 50 60 Melenas en Movimiento 20 60 Actividad por mes Melenas en Movimiento 0 2 "
+  },
+  "igualTrasRecarga": true
+ },
+ {
+  "w": 1440,
+  "paso": "informes",
+  "url": "/informe",
+  "enlaces": [
+   "/informe/tamizaje-rosa/subir",
+   "/informe/tamizaje-rosa/calidad",
+   "/informe/melenas-en-movimiento/calidad",
+   "/informe/global/calidad"
+  ],
+  "botones": [
+   "Subir archivos",
+   "Continuar: Tamizaje Rosa"
+  ]
+ },
+ {
+  "w": 1440,
+  "paso": "tamizaje-rosa/subir",
+  "final": "/informe/tamizaje-rosa/subir",
+  "h1": "Subir archivos",
+  "actual": [
+   "Informes",
+   "1Subir"
+  ],
+  "botones": [
+   "Subir archivos",
+   "Guardar fecha de corte",
+   "elige archivos",
+   "Volver a los informes",
+   "Continuar a Calidad"
+  ],
+  "chevrons": [],
+  "scrollW": 1440,
+  "minFont": "12px: Primero revisa la calidad de los datos.",
+  "tecnico": []
+ },
+ {
+  "w": 1440,
+  "paso": "tamizaje-rosa/calidad",
+  "final": "/informe/tamizaje-rosa/calidad",
+  "h1": "Calidad de los datos",
+  "actual": [
+   "Informes",
+   "2Calidad"
+  ],
+  "botones": [
+   "Subir archivos",
+   "Dato faltante, 1 fila",
+   "Fecha posterior al corte, 1 fila",
+   "Ciudad no reconocida, 1 fila",
+   "Es la misma persona",
+   "Son dos personas",
+   "Volver",
+   "Continuar con 3 por decidir"
+  ],
+  "chevrons": [
+   1,
+   1,
+   1
+  ],
+  "scrollW": 1440,
+  "minFont": "12px: Primero revisa la calidad de los datos.",
+  "tecnico": []
+ },
+ {
+  "w": 1440,
+  "paso": "tamizaje-rosa/calidad tras decidir",
+  "botones": [
+   "Subir archivos",
+   "Dato faltante, 1 fila",
+   "Fecha posterior al corte, 1 fila",
+   "Ciudad no reconocida, 1 fila",
+   "Volver",
+   "Continuar a Vista previa"
+  ],
+  "texto": "Todos los informes\n\nTamizaje Rosa\n\nSubir\n2\nCalidad\nVista previa\nPrimero revisa la calidad de los datos.\nExportar\nPrimero revisa la calidad de los datos.\nCalidad de los datos\n\nLa calificación de cada archivo, lo que le falta y los casos que solo una persona puede decidir.\n\ntamizaje-rosa.xlsx\n\n132 filas contadas, corte 30/09/2026\n\n4 / 5\n\nQué le falta: 8 registros sin persona identificada; 3 anomalías de calidad; 6 inasistencias registradas.\n\nDato faltante, 1 fila\nfila 17\nid: ID vacío\nFecha posterior al corte, 1 fila\nfila 44\nfecha: La fecha de servicio es posterior al corte\nCiudad no reconocida, "
+ },
+ {
+  "w": 1440,
+  "paso": "tamizaje-rosa tras Continuar",
+  "url": "/informe/tamizaje-rosa/vista-previa"
+ },
+ {
+  "w": 1440,
+  "paso": "tamizaje-rosa/vista-previa",
+  "final": "/informe/tamizaje-rosa/vista-previa",
+  "h1": "Vista previa del informe",
+  "actual": [
+   "Informes",
+   "3Vista previa"
+  ],
+  "botones": [
+   "Subir archivos",
+   "Volver",
+   "Las cifras son correctas"
+  ],
+  "chevrons": [],
+  "scrollW": 1440,
+  "minFont": "12px: Primero confirma las cifras en la vista ",
+  "tecnico": []
+ },
+ {
+  "w": 1440,
+  "paso": "tamizaje-rosa tras confirmar cifras",
+  "url": "/informe/tamizaje-rosa/exportar"
+ },
+ {
+  "w": 1440,
+  "paso": "tamizaje-rosa/exportar",
+  "final": "/informe/tamizaje-rosa/exportar",
+  "h1": "Exportar informe",
+  "actual": [
+   "Informes",
+   "4Exportar"
+  ],
+  "botones": [
+   "Subir archivos",
+   "Descargar CSV",
+   "Imprimir o guardar PDF",
+   "Volver"
+  ],
+  "chevrons": [],
+  "scrollW": 1440,
+  "minFont": "11.25px: 3",
+  "tecnico": []
+ },
+ {
+  "w": 1440,
+  "paso": "melenas-en-movimiento/subir",
+  "final": "/informe/melenas-en-movimiento/subir",
+  "h1": "Subir archivos",
+  "actual": [
+   "Informes",
+   "1Subir"
+  ],
+  "botones": [
+   "Subir archivos",
+   "Guardar fecha de corte",
+   "elige archivos",
+   "Volver a los informes",
+   "Continuar a Calidad"
+  ],
+  "chevrons": [],
+  "scrollW": 1440,
+  "minFont": "12px: Primero revisa la calidad de los datos.",
+  "tecnico": []
+ },
+ {
+  "w": 1440,
+  "paso": "melenas-en-movimiento/calidad",
+  "final": "/informe/melenas-en-movimiento/calidad",
+  "h1": "Calidad de los datos",
+  "actual": [
+   "Informes",
+   "2Calidad"
+  ],
+  "botones": [
+   "Subir archivos",
+   "Dato faltante, 1 fila",
+   "Fecha no reconocida, 1 fila",
+   "Contar de todos modos",
+   "Volver",
+   "Continuar a Vista previa"
+  ],
+  "chevrons": [
+   1,
+   1
+  ],
+  "scrollW": 1440,
+  "minFont": "12px: Primero revisa la calidad de los datos.",
+  "tecnico": []
+ },
+ {
+  "w": 1440,
+  "paso": "melenas-en-movimiento/calidad tras decidir",
+  "botones": [
+   "Subir archivos",
+   "Dato faltante, 1 fila",
+   "Fecha no reconocida, 1 fila",
+   "Contar de todos modos",
+   "Volver",
+   "Continuar a Vista previa"
+  ],
+  "texto": "Todos los informes\n\nMelenas en Movimiento\n\nSubir\n2\nCalidad\nVista previa\nPrimero revisa la calidad de los datos.\nExportar\nPrimero revisa la calidad de los datos.\nCalidad de los datos\n\nLa calificación de cada archivo, lo que le falta y los casos que solo una persona puede decidir.\n\nmelenas-en-movimiento.xlsx\n\n85 filas contadas, corte 30/09/2026\n\n3 / 5\n\nQué le falta: 60 donaciones y 20 entregas de peluca en un solo archivo; 5 registros sin persona identificada; 2 anomalías de calidad.\n\nDato faltante, 1 fila\nfila 23\nlargo: Largo de la trenza vacío\nFecha no reconocida, 1 fila\nfila 61\nfecha: Formato"
+ },
+ {
+  "w": 1440,
+  "paso": "melenas-en-movimiento tras Continuar",
+  "url": "/informe/melenas-en-movimiento/vista-previa"
+ },
+ {
+  "w": 1440,
+  "paso": "melenas-en-movimiento/vista-previa",
+  "final": "/informe/melenas-en-movimiento/vista-previa",
+  "h1": "Vista previa del informe",
+  "actual": [
+   "Informes",
+   "3Vista previa"
+  ],
+  "botones": [
+   "Subir archivos",
+   "Volver",
+   "Las cifras son correctas"
+  ],
+  "chevrons": [],
+  "scrollW": 1440,
+  "minFont": "12px: Primero confirma las cifras en la vista ",
+  "tecnico": []
+ },
+ {
+  "w": 1440,
+  "paso": "melenas-en-movimiento tras confirmar cifras",
+  "url": "/informe/melenas-en-movimiento/exportar"
+ },
+ {
+  "w": 1440,
+  "paso": "melenas-en-movimiento/exportar",
+  "final": "/informe/melenas-en-movimiento/exportar",
+  "h1": "Exportar informe",
+  "actual": [
+   "Informes",
+   "4Exportar"
+  ],
+  "botones": [
+   "Subir archivos",
+   "Descargar CSV",
+   "Imprimir o guardar PDF",
+   "Volver"
+  ],
+  "chevrons": [],
+  "scrollW": 1440,
+  "minFont": "11.25px: 3",
+  "tecnico": []
+ },
+ {
+  "w": 1440,
+  "paso": "global/subir",
+  "final": "/informe/global/calidad",
+  "h1": "Calidad de los datos",
+  "actual": [
+   "Informes",
+   "1Calidad"
+  ],
+  "botones": [
+   "Subir archivos",
+   "Es la misma persona",
+   "Son dos personas",
+   "Volver a los informes",
+   "Continuar con 3 por decidir"
+  ],
+  "chevrons": [],
+  "scrollW": 1440,
+  "minFont": "12px: Primero revisa la calidad de los datos.",
+  "tecnico": []
+ },
+ {
+  "w": 1440,
+  "paso": "global/calidad",
+  "final": "/informe/global/calidad",
+  "h1": "Calidad de los datos",
+  "actual": [
+   "Informes",
+   "1Calidad"
+  ],
+  "botones": [
+   "Subir archivos",
+   "Es la misma persona",
+   "Son dos personas",
+   "Volver a los informes",
+   "Continuar con 3 por decidir"
+  ],
+  "chevrons": [],
+  "scrollW": 1440,
+  "minFont": "12px: Primero revisa la calidad de los datos.",
+  "tecnico": []
+ },
+ {
+  "w": 1440,
+  "paso": "global/calidad tras decidir",
+  "botones": [
+   "Subir archivos",
+   "Volver a los informes",
+   "Continuar a Vista previa"
+  ],
+  "texto": "Todos los informes\n\nGlobal · todos los programas\n\n1\nCalidad\nVista previa\nPrimero revisa la calidad de los datos.\nExportar\nPrimero revisa la calidad de los datos.\nCalidad de los datos\n\nLo que solo se ve al juntar los programas: personas que aparecen en más de uno y filas que dos coordinaciones registraron igual.\n\n15\n\npersonas en melenas-en-movimiento y tamizaje-rosa\n\n8\n\nfilas registradas igual por dos coordinaciones (se cuentan una vez)\n\nCómo se calculó\n\nNo quedan casos por decidir.\n\nVolver a los informes\nContinuar a Vista previa"
+ },
+ {
+  "w": 1440,
+  "paso": "global tras Continuar",
+  "url": "/informe/global/vista-previa"
+ },
+ {
+  "w": 1440,
+  "paso": "global/vista-previa",
+  "final": "/informe/global/vista-previa",
+  "h1": "Vista previa del informe",
+  "actual": [
+   "Informes",
+   "2Vista previa"
+  ],
+  "botones": [
+   "Subir archivos",
+   "Volver",
+   "Las cifras son correctas"
+  ],
+  "chevrons": [],
+  "scrollW": 1440,
+  "minFont": "12px: Primero confirma las cifras en la vista ",
+  "tecnico": []
+ },
+ {
+  "w": 1440,
+  "paso": "global tras confirmar cifras",
+  "url": "/informe/global/exportar"
+ },
+ {
+  "w": 1440,
+  "paso": "global/exportar",
+  "final": "/informe/global/exportar",
+  "h1": "Exportar informe",
+  "actual": [
+   "Informes",
+   "3Exportar"
+  ],
+  "botones": [
+   "Subir archivos",
+   "Descargar CSV",
+   "Imprimir o guardar PDF",
+   "Volver"
+  ],
+  "chevrons": [],
+  "scrollW": 1440,
+  "minFont": "11.25px: 3",
+  "tecnico": []
+ },
+ {
+  "w": 1440,
+  "erroresConsola": [
+   "Executing inline event handler violates the following Content Security Policy directive 'script-src 'self'  https://maps.google.com https://accounts.google.com https://www.google-analytics.com   'sha2",
+   "Applying inline style violates the following Content Security Policy directive 'style-src 'self' 'nonce-Tp4VGHGOl6'    https://accounts.google.com'. Either the 'unsafe-inline' keyword, a hash ('sha256",
+   "Applying inline style violates the following Content Security Policy directive 'style-src 'self' 'nonce-eP8JLbZcM9'    https://accounts.google.com'. Either the 'unsafe-inline' keyword, a hash ('sha256",
+   "Applying inline style violates the following Content Security Policy directive 'style-src 'self' 'nonce-sYqiH0kUuM'    https://accounts.google.com'. Either the 'unsafe-inline' keyword, a hash ('sha256",
+   "Applying inline style violates the following Content Security Policy directive 'style-src 'self' 'nonce-MjReW2cT3a'    https://accounts.google.com'. Either the 'unsafe-inline' keyword, a hash ('sha256",
+   "Applying inline style violates the following Content Security Policy directive 'style-src 'self' 'nonce-UXNF2Ot1JH'    https://accounts.google.com'. Either the 'unsafe-inline' keyword, a hash ('sha256",
+   "Applying inline style violates the following Content Security Policy directive 'style-src 'self' 'nonce-kugcwiJQZ4'    https://accounts.google.com'. Either the 'unsafe-inline' keyword, a hash ('sha256",
+   "Applying inline style violates the following Content Security Policy directive 'style-src 'self' 'nonce-Ve4PSOvCum'    https://accounts.google.com'. Either the 'unsafe-inline' keyword, a hash ('sha256",
+   "Applying inline style violates the following Content Security Policy directive 'style-src 'self' 'nonce-5Utr63kILP'    https://accounts.google.com'. Either the 'unsafe-inline' keyword, a hash ('sha256",
+   "Applying inline style violates the following Content Security Policy directive 'style-src 'self' 'nonce-pDw3BldRSb'    https://accounts.google.com'. Either the 'unsafe-inline' keyword, a hash ('sha256",
+   "Applying inline style violates the following Content Security Policy directive 'style-src 'self' 'nonce-0HxOKH49bE'    https://accounts.google.com'. Either the 'unsafe-inline' keyword, a hash ('sha256",
+   "Applying inline style violates the following Content Security Policy directive 'style-src 'self' 'nonce-HXL55tIS6s'    https://accounts.google.com'. Either the 'unsafe-inline' keyword, a hash ('sha256"
+  ]
+ },
+ {
+  "w": 390,
+  "paso": "llegada",
+  "url": "/tablero",
+  "cifras": [
+   "158 | personas alcanzadas",
+   "45.4 | edad promedio (n=158) al 30/09/2026",
+   "6 | municipios con personas"
+  ],
+  "iframe": "https://conclusions-potatoes-dealt-scanners.trycloudflare.com/public/dashboard/<id>",
+  "metabase": "Impacto Programa Mes Municipio Tipo de servicio 126 Personas impactadas 45.4 años Edad promedio · todos los programas 6 Municipios con presencia 60 Donantes de cabello Cómo leer estas cifras. Las personas se cuentan una sola vez por programa aunque tengan varios registros; quien está en dos programas cuenta en cada uno. Atenciones, donaciones y pelucas se cuentan por separado y no se suman entre sí. Las donantes de cabello no son personas impactadas. Los filtros de mes y tipo de servicio aplican a las gráficas de actividad, y el de municipio a las de presencia; las cifras de personas solo cambian con el programa. Actividad por tipo de registro 128 60 20 Atenciones Donaciones de cabello Pelucas entregadas 0 100 Personas por programa Personas impactadas Donantes de cabello 0 20 40 60 80 100 Tamizaje Rosa Melenas en Movimiento 92 16 0 51 Actividad por mes Tamizaje Rosa Melenas en Movimiento",
+  "scrollW": 390,
+  "alto": 3173
+ },
+ {
+  "w": 390,
+  "dims": [
+   {
+    "dim": "programa",
+    "ops": [
+     "melenas-en-movimiento",
+     "tamizaje-rosa"
+    ]
+   },
+   {
+    "dim": "ciudad",
+    "ops": [
+     "Gómez Farías",
+     "Jocotepec",
+     "San Martín Hidalgo",
+     "Sayula",
+     "Tapalpa",
+     "Zapotlán el Grande"
+    ]
+   },
+   {
+    "dim": "periodo",
+    "ops": [
+     "abr 2026",
+     "may 2026",
+     "jun 2026",
+     "jul 2026",
+     "ago 2026",
+     "sep 2026"
+    ]
+   },
+   {
+    "dim": "servicio",
+    "ops": [
+     "Exploración clínica",
+     "Papanicolaou",
+     "Peluca oncológica",
+     "Trenza",
+     "Ultrasonido de mama"
+    ]
+   }
+  ]
+ },
+ {
+  "w": 390,
+  "paso": "filtro programa +melenas-en-movimiento",
+  "url": "/tablero?programa=melenas-en-movimiento",
+  "cifras": [
+   "73 | personas alcanzadas (con filtros)",
+   "45.2 | edad promedio (n=73) al 30/09/2026",
+   "6 | municipios con personas"
+  ],
+  "iframe": "https://conclusions-potatoes-dealt-scanners.trycloudflare.com/public/dashboard/<id>?programa=melenas-en-movimiento",
+  "metabase": "Impacto Programa: Melenas en Movimiento Mes Municipio Tipo de servicio 16 Personas impactadas 45.4 años Edad promedio · todos los programas 6 Municipios con presencia 60 Donantes de cabello Cómo leer estas cifras. Las personas se cuentan una sola vez por programa aunque tengan varios registros; quien está en dos programas cuenta en cada uno. Atenciones, donaciones y pelucas se cuentan por separado y no se suman entre sí. Las donantes de cabello no son personas impactadas. Los filtros de mes y tipo de servicio aplican a las gráficas de actividad, y el de municipio a las de presencia; las cifras de personas solo cambian con el programa. Actividad por tipo de registro 60 20 Donaciones de cabello Pelucas entregadas 0 50 Personas por programa Personas impactadas Donantes de cabello 0 10 20 30 40 50 60 Melenas en Movimiento 20 60 Actividad por mes Melenas en Movimiento 0 2 4 6 8 10 12 feb 2026"
+ },
+ {
+  "w": 390,
+  "paso": "filtro programa +tamizaje-rosa",
+  "url": "/tablero?programa=melenas-en-movimiento%2Ctamizaje-rosa",
+  "cifras": [
+   "158 | personas alcanzadas (con filtros)",
+   "45.4 | edad promedio (n=158) al 30/09/2026",
+   "6 | municipios con personas"
+  ],
+  "iframe": "https://conclusions-potatoes-dealt-scanners.trycloudflare.com/public/dashboard/<id>?programa=melenas-en-movimiento&programa=tamizaje-rosa",
+  "metabase": "Impacto Programa: Melenas en Movimiento Mes Municipio Tipo de servicio 20 Personas impactadas 45.4 años Edad promedio · todos los programas 6 Municipios con presencia 51 Donantes de cabello Cómo leer estas cifras. Las personas se cuentan una sola vez por programa aunque tengan varios registros; quien está en dos programas cuenta en cada uno. Atenciones, donaciones y pelucas se cuentan por separado y no se suman entre sí. Las donantes de cabello no son personas impactadas. Los filtros de mes y tipo de servicio aplican a las gráficas de actividad, y el de municipio a las de presencia; las cifras de personas solo cambian con el programa. Actividad por tipo de registro 60 20 Donaciones de cabello Pelucas entregadas 0 50 Personas por programa Personas impactadas Donantes de cabello 0 10 20 30 40 50 60 Melenas en Movimiento 16 51 Actividad por mes Melenas en Movimiento 0 2 4 6 8 10 12 feb 2026"
+ },
+ {
+  "w": 390,
+  "paso": "limpiar tras programa",
+  "url": "/tablero"
+ },
+ {
+  "w": 390,
+  "paso": "filtro ciudad +Gómez Farías",
+  "url": "/tablero?ciudad=G%C3%B3mez+Far%C3%ADas",
+  "cifras": [
+   "26 | personas alcanzadas (con filtros)",
+   "45.5 | edad promedio (n=26) al 30/09/2026",
+   "6 | municipios con personas"
+  ],
+  "iframe": "https://conclusions-potatoes-dealt-scanners.trycloudflare.com/public/dashboard/<id>?municipio=G%C3%B3mez+Far%C3%ADas",
+  "metabase": "Impacto Programa Mes Municipio: Gómez Farías Tipo de servicio 126 Personas impactadas 45.4 años Edad promedio · todos los programas 6 Municipios con presencia 51 Donantes de cabello Cómo leer estas cifras. Las personas se cuentan una sola vez por programa aunque tengan varios registros; quien está en dos programas cuenta en cada uno. Atenciones, donaciones y pelucas se cuentan por separado y no se suman entre sí. Las donantes de cabello no son personas impactadas. Los filtros de mes y tipo de servicio aplican a las gráficas de actividad, y el de municipio a las de presencia; las cifras de personas solo cambian con el programa. Actividad por tipo de registro 128 60 20 Atenciones Donaciones de cabello Pelucas entregadas 0 100 Personas por programa Personas impactadas Donantes de cabello 0 20 40 60 80 100 120 Tamizaje Rosa Melenas en Movimiento 106 20 0 60 Actividad por mes Tamizaje Rosa Me"
+ },
+ {
+  "w": 390,
+  "paso": "filtro ciudad +Jocotepec",
+  "url": "/tablero?ciudad=G%C3%B3mez+Far%C3%ADas%2CJocotepec",
+  "cifras": [
+   "52 | personas alcanzadas (con filtros)",
+   "44.1 | edad promedio (n=52) al 30/09/2026",
+   "6 | municipios con personas"
+  ],
+  "iframe": "https://conclusions-potatoes-dealt-scanners.trycloudflare.com/public/dashboard/<id>?municipio=G%C3%B3mez+Far%C3%ADas&municipio=Jocotepec",
+  "metabase": "Impacto Programa Mes Municipio: Gómez Farías Tipo de servicio 126 Personas impactadas 45.4 años Edad promedio · todos los programas 6 Municipios con presencia 60 Donantes de cabello Cómo leer estas cifras. Las personas se cuentan una sola vez por programa aunque tengan varios registros; quien está en dos programas cuenta en cada uno. Atenciones, donaciones y pelucas se cuentan por separado y no se suman entre sí. Las donantes de cabello no son personas impactadas. Los filtros de mes y tipo de servicio aplican a las gráficas de actividad, y el de municipio a las de presencia; las cifras de personas solo cambian con el programa. Actividad por tipo de registro 128 60 20 Atenciones Donaciones de cabello Pelucas entregadas 0 100 Personas por programa Personas impactadas Donantes de cabello 0 20 40 60 80 100 120 Tamizaje Rosa Melenas en Movimiento 106 20 0 60 Actividad por mes Tamizaje Rosa Me"
+ },
+ {
+  "w": 390,
+  "paso": "limpiar tras ciudad",
+  "url": "/tablero"
+ },
+ {
+  "w": 390,
+  "paso": "filtro periodo +abr 2026",
+  "url": "/tablero?periodo=2026-04",
+  "cifras": [
+   "53 | personas alcanzadas (con filtros)",
+   "46.0 | edad promedio (n=53) al 30/09/2026",
+   "6 | municipios con personas"
+  ],
+  "iframe": "https://conclusions-potatoes-dealt-scanners.trycloudflare.com/public/dashboard/<id>?mes=2026-04",
+  "metabase": "Impacto Programa Mes: abr 2026 Municipio Tipo de servicio 108 Personas impactadas 45.4 años Edad promedio · todos los programas 6 Municipios con presencia 60 Donantes de cabello Cómo leer estas cifras. Las personas se cuentan una sola vez por programa aunque tengan varios registros; quien está en dos programas cuenta en cada uno. Atenciones, donaciones y pelucas se cuentan por separado y no se suman entre sí. Las donantes de cabello no son personas impactadas. Los filtros de mes y tipo de servicio aplican a las gráficas de actividad, y el de municipio a las de presencia; las cifras de personas solo cambian con el programa. Actividad por tipo de registro 20 7 2 Atenciones Donaciones de cabello Pelucas entregadas 0 10 20 Personas por programa Personas impactadas Donantes de cabello 0 20 40 60 80 100 Tamizaje Rosa Melenas en Movimiento 92 16 0 51 Actividad por mes Tamizaje Rosa Melenas en M"
+ },
+ {
+  "w": 390,
+  "paso": "filtro periodo +may 2026",
+  "url": "/tablero?periodo=2026-04%2C2026-05",
+  "cifras": [
+   "73 | personas alcanzadas (con filtros)",
+   "45.6 | edad promedio (n=73) al 30/09/2026",
+   "6 | municipios con personas"
+  ],
+  "iframe": "https://conclusions-potatoes-dealt-scanners.trycloudflare.com/public/dashboard/<id>?mes=2026-04&mes=2026-05",
+  "metabase": "Impacto Programa Mes: abr 2026 Municipio Tipo de servicio 108 Personas impactadas 45.4 años Edad promedio · todos los programas 6 Municipios con presencia 60 Donantes de cabello Cómo leer estas cifras. Las personas se cuentan una sola vez por programa aunque tengan varios registros; quien está en dos programas cuenta en cada uno. Atenciones, donaciones y pelucas se cuentan por separado y no se suman entre sí. Las donantes de cabello no son personas impactadas. Los filtros de mes y tipo de servicio aplican a las gráficas de actividad, y el de municipio a las de presencia; las cifras de personas solo cambian con el programa. Actividad por tipo de registro 20 7 2 Atenciones Donaciones de cabello Pelucas entregadas 0 10 20 Personas por programa Personas impactadas Donantes de cabello 0 20 40 60 80 100 120 Tamizaje Rosa Melenas en Movimiento 106 20 0 60 Actividad por mes Tamizaje Rosa Melenas"
+ },
+ {
+  "w": 390,
+  "paso": "limpiar tras periodo",
+  "url": "/tablero"
+ },
+ {
+  "w": 390,
+  "paso": "filtro servicio +Exploración clínica",
+  "url": "/tablero?servicio=Exploraci%C3%B3n+cl%C3%ADnica",
+  "cifras": [
+   "40 | personas alcanzadas (con filtros)",
+   "45.7 | edad promedio (n=40) al 30/09/2026",
+   "4 | municipios con personas"
+  ],
+  "iframe": "https://conclusions-potatoes-dealt-scanners.trycloudflare.com/public/dashboard/<id>?servicio=Exploraci%C3%B3n+cl%C3%ADnica",
+  "metabase": "Impacto Programa Mes Municipio Tipo de servicio: Exploración clínica 108 Personas impactadas 45.4 años Edad promedio · todos los programas 6 Municipios con presencia 51 Donantes de cabello Cómo leer estas cifras. Las personas se cuentan una sola vez por programa aunque tengan varios registros; quien está en dos programas cuenta en cada uno. Atenciones, donaciones y pelucas se cuentan por separado y no se suman entre sí. Las donantes de cabello no son personas impactadas. Los filtros de mes y tipo de servicio aplican a las gráficas de actividad, y el de municipio a las de presencia; las cifras de personas solo cambian con el programa. Actividad por tipo de registro 41 Atenciones 0 10 20 30 40 Personas por programa Personas impactadas Donantes de cabello 0 20 40 60 80 100 Tamizaje Rosa Melenas en Movimiento 92 16 0 51 Actividad por mes Tamizaje Rosa 0 1 2 3 4 5 6 feb 2026 mar 2026 abr 2026"
+ },
+ {
+  "w": 390,
+  "paso": "filtro servicio +Papanicolaou",
+  "url": "/tablero?servicio=Exploraci%C3%B3n+cl%C3%ADnica%2CPapanicolaou",
+  "cifras": [
+   "74 | personas alcanzadas (con filtros)",
+   "46.1 | edad promedio (n=74) al 30/09/2026",
+   "6 | municipios con personas"
+  ],
+  "iframe": "https://conclusions-potatoes-dealt-scanners.trycloudflare.com/public/dashboard/<id>?servicio=Exploraci%C3%B3n+cl%C3%ADnica&servicio=Papanicolaou",
+  "metabase": "Impacto Programa Mes Municipio Tipo de servicio: Exploración clínica 126 Personas impactadas 45.4 años Edad promedio · todos los programas 6 Municipios con presencia 51 Donantes de cabello Cómo leer estas cifras. Las personas se cuentan una sola vez por programa aunque tengan varios registros; quien está en dos programas cuenta en cada uno. Atenciones, donaciones y pelucas se cuentan por separado y no se suman entre sí. Las donantes de cabello no son personas impactadas. Los filtros de mes y tipo de servicio aplican a las gráficas de actividad, y el de municipio a las de presencia; las cifras de personas solo cambian con el programa. Actividad por tipo de registro 41 Atenciones 0 10 20 30 40 Personas por programa Personas impactadas Donantes de cabello 0 20 40 60 80 100 120 Tamizaje Rosa Melenas en Movimiento 106 20 0 60 Actividad por mes Tamizaje Rosa 0 1 2 3 4 5 6 feb 2026 mar 2026 abr"
+ },
+ {
+  "w": 390,
+  "paso": "limpiar tras servicio",
+  "url": "/tablero"
+ },
+ {
+  "w": 390,
+  "paso": "combinado+recarga",
+  "antes": {
+   "url": "/tablero?programa=melenas-en-movimiento&ciudad=G%C3%B3mez+Far%C3%ADas",
+   "cifras": [
+    "12 | personas alcanzadas (con filtros)",
+    "51.5 | edad promedio (n=12) al 30/09/2026",
+    "6 | municipios con personas"
+   ],
+   "iframe": "https://conclusions-potatoes-dealt-scanners.trycloudflare.com/public/dashboard/<id>?programa=melenas-en-movimiento&municipio=G%C3%B3mez+Far%C3%ADas",
+   "metabase": "Impacto Programa: Melenas en Movimiento Mes Municipio: Gómez Farías Tipo de servicio 20 Personas impactadas 45.4 años Edad promedio · todos los programas 6 Municipios con presencia 60 Donantes de cabello Cómo leer estas cifras. Las personas se cuentan una sola vez por programa aunque tengan varios registros; quien está en dos programas cuenta en cada uno. Atenciones, donaciones y pelucas se cuentan por separado y no se suman entre sí. Las donantes de cabello no son personas impactadas. Los filtros de mes y tipo de servicio aplican a las gráficas de actividad, y el de municipio a las de presencia; las cifras de personas solo cambian con el programa. Actividad por tipo de registro 60 20 Donaciones de cabello Pelucas entregadas 0 50 Personas por programa Personas impactadas Donantes de cabello 0 10 20 30 40 50 60 Melenas en Movimiento 20 60 Actividad por mes Melenas en Movimiento 0 2 4 6 8 "
+  },
+  "igualTrasRecarga": true
+ },
+ {
+  "w": 390,
+  "paso": "informes",
+  "url": "/informe",
+  "enlaces": [
+   "/informe/tamizaje-rosa/subir",
+   "/informe/tamizaje-rosa/exportar",
+   "/informe/melenas-en-movimiento/exportar",
+   "/informe/global/exportar"
+  ],
+  "botones": [
+   "Subir archivos",
+   "Ver informe: Tamizaje Rosa"
+  ]
+ },
+ {
+  "w": 390,
+  "paso": "tamizaje-rosa/subir",
+  "final": "/informe/tamizaje-rosa/subir",
+  "h1": "Subir archivos",
+  "actual": [
+   "Informes",
+   "1Subir"
+  ],
+  "botones": [
+   "Subir archivos",
+   "Guardar fecha de corte",
+   "elige archivos",
+   "Volver a los informes",
+   "Continuar a Calidad"
+  ],
+  "chevrons": [],
+  "scrollW": 390,
+  "minFont": "13px: Tablero",
+  "tecnico": []
+ },
+ {
+  "w": 390,
+  "paso": "tamizaje-rosa/calidad",
+  "final": "/informe/tamizaje-rosa/calidad",
+  "h1": "Calidad de los datos",
+  "actual": [
+   "Informes",
+   "2Calidad"
+  ],
+  "botones": [
+   "Subir archivos",
+   "Dato faltante, 1 fila",
+   "Fecha posterior al corte, 1 fila",
+   "Ciudad no reconocida, 1 fila",
+   "Es la misma persona",
+   "Son dos personas",
+   "Volver",
+   "Continuar con 3 por decidir"
+  ],
+  "chevrons": [
+   1,
+   1,
+   1
+  ],
+  "scrollW": 390,
+  "minFont": "12px: Conteo exacto leído de la base de datos ",
+  "tecnico": []
+ },
+ {
+  "w": 390,
+  "paso": "tamizaje-rosa/calidad tras decidir",
+  "botones": [
+   "Subir archivos",
+   "Dato faltante, 1 fila",
+   "Fecha posterior al corte, 1 fila",
+   "Ciudad no reconocida, 1 fila",
+   "Volver",
+   "Continuar a Vista previa"
+  ],
+  "texto": "Todos los informes\n\nTamizaje Rosa\n\nPaso 2 de 4: Calidad\n\nCalidad de los datos\n\nLa calificación de cada archivo, lo que le falta y los casos que solo una persona puede decidir.\n\ntamizaje-rosa.xlsx\n\n132 filas contadas, corte 30/09/2026\n\n4 / 5\n\nQué le falta: 8 registros sin persona identificada; 3 anomalías de calidad; 6 inasistencias registradas.\n\nDato faltante, 1 fila\nfila 17\nid: ID vacío\nFecha posterior al corte, 1 fila\nfila 44\nfecha: La fecha de servicio es posterior al corte\nCiudad no reconocida, 1 fila\nfila 88\nciudad: Municipio no reconocido en el catálogo\nCómo se calculó\n\nNo quedan casos p"
+ },
+ {
+  "w": 390,
+  "paso": "tamizaje-rosa tras Continuar",
+  "url": "/informe/tamizaje-rosa/vista-previa"
+ },
+ {
+  "w": 390,
+  "paso": "tamizaje-rosa/vista-previa",
+  "final": "/informe/tamizaje-rosa/vista-previa",
+  "h1": "Vista previa del informe",
+  "actual": [
+   "Informes",
+   "3Vista previa"
+  ],
+  "botones": [
+   "Subir archivos",
+   "Volver",
+   "Las cifras son correctas"
+  ],
+  "chevrons": [],
+  "scrollW": 390,
+  "minFont": "12px: personas impactadas (rango: hay registro",
+  "tecnico": []
+ },
+ {
+  "w": 390,
+  "paso": "tamizaje-rosa tras confirmar cifras",
+  "url": "/informe/tamizaje-rosa/exportar"
+ },
+ {
+  "w": 390,
+  "paso": "tamizaje-rosa/exportar",
+  "final": "/informe/tamizaje-rosa/exportar",
+  "h1": "Exportar informe",
+  "actual": [
+   "Informes",
+   "4Exportar"
+  ],
+  "botones": [
+   "Subir archivos",
+   "Descargar CSV",
+   "Imprimir o guardar PDF",
+   "Volver"
+  ],
+  "chevrons": [],
+  "scrollW": 390,
+  "minFont": "11.25px: 3",
+  "tecnico": []
+ },
+ {
+  "w": 390,
+  "paso": "melenas-en-movimiento/subir",
+  "final": "/informe/melenas-en-movimiento/subir",
+  "h1": "Subir archivos",
+  "actual": [
+   "Informes",
+   "1Subir"
+  ],
+  "botones": [
+   "Subir archivos",
+   "Guardar fecha de corte",
+   "elige archivos",
+   "Volver a los informes",
+   "Continuar a Calidad"
+  ],
+  "chevrons": [],
+  "scrollW": 390,
+  "minFont": "13px: Tablero",
+  "tecnico": []
+ },
+ {
+  "w": 390,
+  "paso": "melenas-en-movimiento/calidad",
+  "final": "/informe/melenas-en-movimiento/calidad",
+  "h1": "Calidad de los datos",
+  "actual": [
+   "Informes",
+   "2Calidad"
+  ],
+  "botones": [
+   "Subir archivos",
+   "Dato faltante, 1 fila",
+   "Fecha no reconocida, 1 fila",
+   "Contar de todos modos",
+   "Volver",
+   "Continuar a Vista previa"
+  ],
+  "chevrons": [
+   1,
+   1
+  ],
+  "scrollW": 390,
+  "minFont": "12px: Conteo exacto leído de la base de datos ",
+  "tecnico": []
+ },
+ {
+  "w": 390,
+  "paso": "melenas-en-movimiento/calidad tras decidir",
+  "botones": [
+   "Subir archivos",
+   "Dato faltante, 1 fila",
+   "Fecha no reconocida, 1 fila",
+   "Contar de todos modos",
+   "Volver",
+   "Continuar a Vista previa"
+  ],
+  "texto": "Todos los informes\n\nMelenas en Movimiento\n\nPaso 2 de 4: Calidad\n\nCalidad de los datos\n\nLa calificación de cada archivo, lo que le falta y los casos que solo una persona puede decidir.\n\nmelenas-en-movimiento.xlsx\n\n85 filas contadas, corte 30/09/2026\n\n3 / 5\n\nQué le falta: 60 donaciones y 20 entregas de peluca en un solo archivo; 5 registros sin persona identificada; 2 anomalías de calidad.\n\nDato faltante, 1 fila\nfila 23\nlargo: Largo de la trenza vacío\nFecha no reconocida, 1 fila\nfila 61\nfecha: Formato de fecha no reconocido\n8 filas no se contaron por ya estar en otro archivo\nCómo se calculó\n\nNo "
+ },
+ {
+  "w": 390,
+  "paso": "melenas-en-movimiento tras Continuar",
+  "url": "/informe/melenas-en-movimiento/vista-previa"
+ },
+ {
+  "w": 390,
+  "paso": "melenas-en-movimiento/vista-previa",
+  "final": "/informe/melenas-en-movimiento/vista-previa",
+  "h1": "Vista previa del informe",
+  "actual": [
+   "Informes",
+   "3Vista previa"
+  ],
+  "botones": [
+   "Subir archivos",
+   "Volver",
+   "Las cifras son correctas"
+  ],
+  "chevrons": [],
+  "scrollW": 390,
+  "minFont": "12px: personas impactadas (rango: hay registro",
+  "tecnico": []
+ },
+ {
+  "w": 390,
+  "paso": "melenas-en-movimiento tras confirmar cifras",
+  "url": "/informe/melenas-en-movimiento/exportar"
+ },
+ {
+  "w": 390,
+  "paso": "melenas-en-movimiento/exportar",
+  "final": "/informe/melenas-en-movimiento/exportar",
+  "h1": "Exportar informe",
+  "actual": [
+   "Informes",
+   "4Exportar"
+  ],
+  "botones": [
+   "Subir archivos",
+   "Descargar CSV",
+   "Imprimir o guardar PDF",
+   "Volver"
+  ],
+  "chevrons": [],
+  "scrollW": 390,
+  "minFont": "11.25px: 3",
+  "tecnico": []
+ },
+ {
+  "w": 390,
+  "paso": "global/subir",
+  "final": "/informe/global/exportar",
+  "h1": "Exportar informe",
+  "actual": [
+   "Informes",
+   "3Exportar"
+  ],
+  "botones": [
+   "Subir archivos",
+   "Descargar CSV",
+   "Imprimir o guardar PDF",
+   "Volver"
+  ],
+  "chevrons": [],
+  "scrollW": 390,
+  "minFont": "11.25px: 3",
+  "tecnico": []
+ },
+ {
+  "w": 390,
+  "paso": "global/calidad",
+  "final": "/informe/global/calidad",
+  "h1": "Calidad de los datos",
+  "actual": [
+   "Informes",
+   "1Calidad"
+  ],
+  "botones": [
+   "Subir archivos",
+   "Es la misma persona",
+   "Son dos personas",
+   "Volver a los informes",
+   "Continuar con 3 por decidir"
+  ],
+  "chevrons": [],
+  "scrollW": 390,
+  "minFont": "12px: Conteo exacto leído de la base de datos ",
+  "tecnico": []
+ },
+ {
+  "w": 390,
+  "paso": "global/calidad tras decidir",
+  "botones": [
+   "Subir archivos",
+   "Volver a los informes",
+   "Continuar a Vista previa"
+  ],
+  "texto": "Todos los informes\n\nGlobal · todos los programas\n\nPaso 1 de 3: Calidad\n\nCalidad de los datos\n\nLo que solo se ve al juntar los programas: personas que aparecen en más de uno y filas que dos coordinaciones registraron igual.\n\n15\n\npersonas en melenas-en-movimiento y tamizaje-rosa\n\n8\n\nfilas registradas igual por dos coordinaciones (se cuentan una vez)\n\nCómo se calculó\n\nNo quedan casos por decidir.\n\nVolver a los informes\nContinuar a Vista previa"
+ },
+ {
+  "w": 390,
+  "paso": "global tras Continuar",
+  "url": "/informe/global/vista-previa"
+ },
+ {
+  "w": 390,
+  "paso": "global/vista-previa",
+  "final": "/informe/global/vista-previa",
+  "h1": "Vista previa del informe",
+  "actual": [
+   "Informes",
+   "2Vista previa"
+  ],
+  "botones": [
+   "Subir archivos",
+   "Volver",
+   "Las cifras son correctas"
+  ],
+  "chevrons": [],
+  "scrollW": 390,
+  "minFont": "12px: personas impactadas (suma de los program",
+  "tecnico": []
+ },
+ {
+  "w": 390,
+  "paso": "global tras confirmar cifras",
+  "url": "/informe/global/exportar"
+ },
+ {
+  "w": 390,
+  "paso": "global/exportar",
+  "final": "/informe/global/exportar",
+  "h1": "Exportar informe",
+  "actual": [
+   "Informes",
+   "3Exportar"
+  ],
+  "botones": [
+   "Subir archivos",
+   "Descargar CSV",
+   "Imprimir o guardar PDF",
+   "Volver"
+  ],
+  "chevrons": [],
+  "scrollW": 390,
+  "minFont": "11.25px: 3",
+  "tecnico": []
+ },
+ {
+  "w": 390,
+  "erroresConsola": [
+   "Executing inline event handler violates the following Content Security Policy directive 'script-src 'self'  https://maps.google.com https://accounts.google.com https://www.google-analytics.com   'sha2",
+   "Applying inline style violates the following Content Security Policy directive 'style-src 'self' 'nonce-s9htQeyfUF'    https://accounts.google.com'. Either the 'unsafe-inline' keyword, a hash ('sha256",
+   "Applying inline style violates the following Content Security Policy directive 'style-src 'self' 'nonce-EtQ3K4F7PB'    https://accounts.google.com'. Either the 'unsafe-inline' keyword, a hash ('sha256",
+   "Applying inline style violates the following Content Security Policy directive 'style-src 'self' 'nonce-e29uHNdHWU'    https://accounts.google.com'. Either the 'unsafe-inline' keyword, a hash ('sha256",
+   "Applying inline style violates the following Content Security Policy directive 'style-src 'self' 'nonce-W2Wmb7MN3b'    https://accounts.google.com'. Either the 'unsafe-inline' keyword, a hash ('sha256",
+   "Applying inline style violates the following Content Security Policy directive 'style-src 'self' 'nonce-PFoUTF2HHi'    https://accounts.google.com'. Either the 'unsafe-inline' keyword, a hash ('sha256",
+   "Applying inline style violates the following Content Security Policy directive 'style-src 'self' 'nonce-DwJmIc2U46'    https://accounts.google.com'. Either the 'unsafe-inline' keyword, a hash ('sha256",
+   "Applying inline style violates the following Content Security Policy directive 'style-src 'self' 'nonce-6N323pNAFr'    https://accounts.google.com'. Either the 'unsafe-inline' keyword, a hash ('sha256",
+   "Applying inline style violates the following Content Security Policy directive 'style-src 'self' 'nonce-pJE2lCmM3b'    https://accounts.google.com'. Either the 'unsafe-inline' keyword, a hash ('sha256",
+   "Applying inline style violates the following Content Security Policy directive 'style-src 'self' 'nonce-oAPCW26WDl'    https://accounts.google.com'. Either the 'unsafe-inline' keyword, a hash ('sha256",
+   "Applying inline style violates the following Content Security Policy directive 'style-src 'self' 'nonce-etCOi0bt2G'    https://accounts.google.com'. Either the 'unsafe-inline' keyword, a hash ('sha256",
+   "Applying inline style violates the following Content Security Policy directive 'style-src 'self' 'nonce-igQunLyFMT'    https://accounts.google.com'. Either the 'unsafe-inline' keyword, a hash ('sha256"
+  ]
+ }
+]
