@@ -24,8 +24,8 @@ export function AccionesTablero() {
     <span>{ocupado ? 'Actualizando…' : minutos ? `Actualizado hace ${minutos} min` : 'Actualizado hace un momento'}</span>
     <button type="button" aria-label="Actualizar cifras" title="Actualizar cifras" disabled={ocupado}
       onClick={() => start(() => router.refresh())}><RefreshCw size={16} strokeWidth={1.5} aria-hidden /></button>
-    <a className="bento-csv" href={`/tablero/cifras.csv${destino}`} download title="Descargar esta selección en CSV" aria-label="Exportar">
+    <a className="btn btn--secundario" href={`/tablero/cifras.csv${destino}`} download title="Descargar esta selección en CSV" aria-label="Exportar">
       <Download size={16} strokeWidth={1.5} aria-hidden /><span>Exportar</span></a>
-    <Link className="atlas-accion" href={`/reportes?origen=tablero${canonica ? `&${canonica}` : ''}`} prefetch={false}>Sacar reporte <ArrowUpRight size={16} aria-hidden /></Link>
+    <Link className="btn btn--primario" href={`/reportes?origen=tablero${canonica ? `&${canonica}` : ''}`} prefetch={false}>Sacar reporte <ArrowUpRight size={16} aria-hidden /></Link>
   </div>;
 }

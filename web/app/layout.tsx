@@ -1,17 +1,17 @@
 import type { Metadata } from "next";
 import Link from "next/link";
-import { Suspense } from "react";
-import { Manrope, Montserrat, IBM_Plex_Mono, Rosarivo } from "next/font/google";
+import { Geist, Montserrat, IBM_Plex_Mono, Rosarivo } from "next/font/google";
 import "./globals.css";
+import "./expediente.css";
+import "./bento.css";
 import "./atlas.css";
 import { TooltipProvider } from "@/components/ui/tooltip";
 import { NavPrincipal } from "@/components/nav-principal";
-import { AccionesTablero } from "@/components/acciones-tablero";
 
 const montserrat = Montserrat({ variable: "--font-montserrat", subsets: ["latin"] });
 const plexMono = IBM_Plex_Mono({ variable: "--font-plex-mono", subsets: ["latin"], weight: ["400", "500"] });
 const rosarivo = Rosarivo({ variable: "--font-rosarivo", subsets: ["latin"], weight: "400" });
-const manrope = Manrope({ variable: "--font-manrope", subsets: ["latin"], display: "swap" });
+const geist = Geist({ variable: "--font-eira-bento", subsets: ["latin"] });
 
 export const metadata: Metadata = {
   title: "Impacto EIRA",
@@ -21,14 +21,13 @@ export const metadata: Metadata = {
 
 export default async function RootLayout({ children }: LayoutProps<"/">) {
   return (
-    <html lang="es" className={`${montserrat.variable} ${plexMono.variable} ${rosarivo.variable} ${manrope.variable} h-full antialiased`}>
+    <html lang="es" className={`${geist.variable} ${montserrat.variable} ${plexMono.variable} ${rosarivo.variable} h-full antialiased`}>
       <body className="min-h-full">
         <TooltipProvider>
-          <header className="no-imprimir atlas-mastil">
-            <div className="atlas-mastil-interior">
-              <Link href="/" className="atlas-firma" aria-label="EIRA, inicio">EIRA</Link>
+          <header className="no-imprimir eira-cabecera">
+            <div className="eira-mastil">
+              <Link href="/" className="eira-firma" aria-label="EIRA, inicio">EIRA <span>Movimiento Rosa A.C.</span></Link>
               <NavPrincipal />
-              <Suspense fallback={null}><AccionesTablero /></Suspense>
             </div>
           </header>
           <main className="container contenido">{children}</main>
