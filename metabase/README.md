@@ -15,8 +15,48 @@ uv run --with requests,pytest pytest metabase/test_metabase.py
 
 El JAR, la base interna de Metabase y `credenciales.json` quedan en
 `.metabase/` (ignorado por git). Los enlaces públicos quedan en
-`metabase/enlaces.json` con la forma `{"impacto": <url>, "calidad": <url>,
-"entornos": {...}}`; el frontend incrusta esas direcciones.
+`metabase/enlaces.json`; el frontend incrusta esas direcciones.
+
+## Entornos y colecciones
+
+`--entorno blanco|real` crea una conexión por entorno y mete preguntas y
+tableros en la colección **Impacto EIRA · Real** o **Impacto EIRA · En
+blanco**: el entorno se distingue por la colección, no en el título visible
+(los nombres son simplemente «Impacto», «Calidad», «Personas impactadas»…).
+La primera pasada usaba sufijos `[real]`/`(blanco)`; `provisionar.py` los
+renombra y los mueve a su colección conservando ids y enlaces públicos. El
+proceso es idempotente: reutiliza base, preguntas y tableros por nombre
+dentro de su colección, y el enlace público ya creado.
+
+## Enlaces públicos y filtro por programa
+
+`enlaces.json` tiene, por entorno (`real`, `blanco`):
+
+| Clave | Qué es |
+|---|---|
+| `impacto` | URL pública del tablero Impacto sin filtrar (el «Global») |
+| `impacto_por_programa` | Plantilla de la misma URL con el parámetro de filtro |
+| `calidad` | URL pública del tablero Calidad |
+
+El tablero **Impacto** tiene el filtro de dashboard `programa`, conectado a
+todas sus preguntas (variable opcional `{{programa}}` en cada SQL nativa).
+Para incrustar el tablero de una sola iniciativa se sustituye `{programa}`
+por el id de la iniciativa del catálogo (`catalogos/iniciativas.json`):
+
+    <impacto>?programa=tamizaje-rosa
+    <impacto>?programa=melenas-en-movimiento
+
+Sin `?programa=` muestra el Global (personas impactadas = suma por programa,
+donantes aparte). El filtro también puede elegirse en el propio tablero: el
+control «Programa» lista los ids del demo (lista estática; si el catálogo
+crece hay que actualizar `values_source_config.values` en
+`metabase/tableros.json`).
+
+Las preguntas consultan **solo vistas `v_*`** de `db/esquema.sql` (rama
+`motor`): `v_conteos`, `v_personas_por_programa`, `v_presencia`,
+`v_presencia_municipios`, `v_calidad` y `v_pares_pendientes`. Las series de
+las gráficas usan la paleta de EIRA (`docs/referencias/paleta-eira.md`):
+vino `#7d3b3b`, ciruela `#6a2b51`, pizarra `#7e8ba3`, en ese orden.
 
 ## Variables
 
@@ -29,10 +69,6 @@ El JAR, la base interna de Metabase y `credenciales.json` quedan en
 | `METABASE_URL_PUBLICA` | URL para armar los enlaces públicos (túnel) | `METABASE_URL` |
 | `IMPACTO_DB` | Ruta del SQLite a conectar | `data/impacto.sqlite` |
 | `MB_ADMIN_EMAIL`, `MB_ADMIN_PASSWORD` | Cuenta de administración | se generan en `.metabase/credenciales.json` |
-
-`--entorno blanco|real` crea una conexión y tableros separados por entorno
-(p. ej. `Calidad (blanco)` apunta a una base vacía de control). Es idempotente:
-reutiliza base, preguntas y tableros por nombre y el enlace público ya creado.
 
 ## Detener y reiniciar
 
@@ -49,15 +85,15 @@ desde otro puerto: el tablero se renderiza dentro del iframe).
 
 ## Datos de demostración
 
-`datos_prueba.py` crea un SQLite temporal con el SQL de la Tarea 1 del plan
-(`esquema_prueba.sql`, que incluye las vistas escritas para esta tarea) y unas
-decenas de filas **ficticias**: identificadores opacos (`p` + hex), sin nombres
-completos ni el ID de EIRA en claro; denominadores marcados como ficticios.
-Cuando exista `db/esquema.sql` en la rama del motor, hay que usar ese esquema
-y retirar `esquema_prueba.sql`. Ojo con dos desviaciones del plan que el motor
-debe adoptar o la Tarea 4 ajustar: `v_calidad` expone `filas_nuevas` y
-`filas_omitidas`, y existe una vista extra `v_pares_pendientes` (necesarias
-para el tablero Calidad sin consultar tablas directamente).
+`datos_prueba.py` crea el SQLite con el esquema **real** del motor
+(`db/esquema.sql`) y los catálogos de `catalogos/iniciativas.json` y
+`publicos/municipios_mexico.json`, más filas **ficticias** de los dos
+programas del demo: tamizaje-rosa (atenciones y estudios, rol beneficiaria)
+y melenas-en-movimiento (donaciones de trenza con rol donante —no cuentan
+como personas impactadas— y pelucas entregadas, rol beneficiaria).
+Identificadores opacos (`p` + hex), sin nombres completos ni el ID de EIRA
+en claro; las etiquetas de pares son iniciales + municipio. `--vacia` crea
+solo esquema y catálogos, para el entorno en blanco.
 
 ## Fuentes consultadas (verificado contra el código, no de memoria)
 
