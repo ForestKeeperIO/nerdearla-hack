@@ -16,7 +16,7 @@ describe('Revisión local de encabezados', () => {
       expect(r.columnas.map(c => c.campo)).toEqual(['id_eira', 'nombre', 'estudio', 'edad', 'ciudad', 'asistencia', 'fecha']);
     });
   it('exige dos campos distintos, no dos alias de un mismo campo', async () => {
-    const r = await revisarArchivo(new File(['Nombre|Paciente|"Comentario, libre"\nA|B|C'], 'ejemplo.csv'));
+    const r = await revisarArchivo(new File(['Ciudad|Municipio|"Comentario, libre"\nA|B|C'], 'ejemplo.csv'));
     expect(r.faltan).toBe(1);
     expect(r.columnas[2].encabezado).toBe('Comentario, libre');
   });
