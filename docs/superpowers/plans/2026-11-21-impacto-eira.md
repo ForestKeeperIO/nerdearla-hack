@@ -4,11 +4,50 @@
 
 **Goal:** Una herramienta que importa archivos de distintos programas de EIRA, los lleva a un modelo común, señala problemas de calidad y produce indicadores e informes donde cada cifra dice de dónde sale, qué cuenta y con qué certeza, demostrando el caso de la guía (120 atenciones y 80 participaciones con personas repetidas).
 
-**Architecture:** Los archivos originales son la fuente de verdad y quedan en disco. Valkey es el motor de cálculo: cada registro importado alimenta conjuntos de personas por dimensión, contadores por unidad y un flujo de ajustes; los indicadores se responden con operaciones de conjuntos exactas, nunca con estimaciones. Una persona se identifica por niveles de certeza: **verificada** por folio (tarjeta NFC o tecleado), **probable** por nombre más fecha de nacimiento, o **sin identificar**; las personas únicas se reportan como cifra verificada más un rango, no como un solo número.
+**Architecture:** Los archivos originales son la fuente de verdad y quedan en disco. Valkey es el motor de cálculo: cada registro importado alimenta conjuntos de personas por dimensión, contadores por unidad y un flujo de ajustes; los indicadores se responden con operaciones de conjuntos exactas, nunca con estimaciones. Una persona se identifica por niveles de certeza: **verificada** por folio de tarjeta NFC o CURP, **probable** por el ID que EIRA ya usa (iniciales más fecha de nacimiento), o **sin identificar**; las personas únicas se reportan como cifra verificada más un rango, no como un solo número.
 
 **Tech Stack:** Node 22, TypeScript, Hono + @hono/node-server, iovalkey, Valkey 8, papaparse, SheetJS (`xlsx` desde cdn.sheetjs.com), React 18 + Vite, Recharts, Vitest.
 
 **Spec:** Guía de EIRA, sección "RETO 3" y secciones 5 y 6: https://drive.google.com/file/d/1W-t7xGprXyj7PjzC7iCw32aiDgoZGXXl/view. Reglas: https://vibeathon-mexico-2026.devpost.com/rules. Este plan reemplaza a los dos anteriores del mismo día.
+
+## Validado con EIRA (2026-11-21, 11:41)
+
+Notas de la conversación con el equipo de EIRA. Donde esta sección contradiga a otra parte del plan, manda esta.
+
+**Lo que dijeron**
+
+- Registran en Excel, una fila por evento por persona. Columnas típicas: nombre, estudio, edad, ciudad, asistencia y tipo de servicio (por ejemplo, nutrióloga).
+- Cada programa lleva su propio archivo y Presidencia los consolida a mano. El dolor principal es concentrar los Excel de tres o más coordinaciones: es lento y propenso a errores.
+- Ya tienen un identificador: iniciales de apellido paterno, materno y nombre, más la fecha de nacimiento (`AAAAMMDD`). Reconocen el riesgo de colisión entre personas con las mismas iniciales y fecha. Mejoras que discutieron: agregar iniciales del estado de origen, o usar la CURP.
+- Lo que más piden donantes y aliados: número de personas impactadas, edad promedio y desglose por ciudad. Las preguntas cambian por aliado; quieren una plantilla base con preguntas adicionales.
+- Lo que imaginan: subir el Excel, aplicar filtros de calidad, ver una vista previa y exportar, con una calificación de calidad en estrellas.
+- Pendiente de su parte: compartir archivos Excel de ejemplo. Pendiente conjunto: definir los dos informes más importantes y su audiencia (ejemplo: Tamizaje Rosa para socios estratégicos).
+
+**Decisiones que salen de ahí**
+
+1. **Se respeta su ID.** El campo `idEira` (formato `^[A-ZÑ]{3}\d{8}$`, tres iniciales y `AAAAMMDD`) se importa tal cual. La fecha de nacimiento se obtiene del ID cuando no hay columna propia.
+2. **Niveles de certeza, redefinidos:**
+   - `verificada`: folio de tarjeta (`id:<folio>`) o CURP con formato válido (`curp:<HMAC>`).
+   - `probable`: ID de EIRA válido (`eira:<HMAC del ID>`). Es probable y no verificada porque el ID puede chocar.
+   - `sin_identificar`: sin folio, sin CURP y sin ID válido.
+   Firma: `clavePersona(d: { folio?: string | null; curp?: string | null; idEira?: string | null }, hmacKey: string): { clave: string | null; certeza: Certeza }`, con esa prioridad. Sustituye a la firma por nombre y fecha de más abajo.
+3. **Detección de colisiones de ID** (regla `colision_id`): mismo `idEira` con nombres completos normalizados cuya similitud Jaro-Winkler es menor a 0.85. Cada colisión genera un `ParDuplicado` con motivo "Mismo ID, nombres distintos" y la pregunta inversa: "¿Son dos personas distintas?". Si se confirma que son distintas, se separan en dos claves (`eira:<HMAC>#1`, `#2`) y queda en la bitácora. Es la pieza que demuestra con sus propios datos el riesgo que ya intuyen.
+4. **Puente al folio.** Al grabar una tarjeta NFC se asocia el folio con el ID de EIRA de esa persona (`HSET imp:alias`), de modo que sus registros pasan de `probable` a `verificada` sin recapturar nada. El folio es opaco y no choca; la CURP no se graba en la tarjeta porque revela datos personales.
+5. **`Asistencia`**: las filas con valor negativo ("No", "N", "0", vacío cuando la columna existe) no cuentan como atención ni participación; se cuentan aparte como `inasistencias` y se muestran en Calidad.
+6. **`Edad`**: indicador nuevo `edad_promedio`, sobre personas únicas, usando la fecha del ID y la fecha de corte; si solo hay columna `Edad`, se usa esa y se advierte. Regla `edad_inconsistente` cuando la edad capturada difiere en más de un año de la calculada. En Valkey: `HSET imp:nac <personaClave> <AAAA-MM-DD>`.
+7. **`Ciudad`** se mapea al campo `municipio` con el catálogo y sus alias (Ciudad Guzmán → Zapotlán el Grande). El desglose se rotula "Ciudad" en la interfaz, que es su palabra.
+8. **Calificación en estrellas** (`CalidadArchivo`), visible en la vista previa antes de importar y por archivo en el Tablero. `puntaje = 0.4 × identificados + 0.3 × sinAnomalias + 0.3 × completos`; estrellas: menos de 50 = 1, menos de 65 = 2, menos de 80 = 3, menos de 92 = 4, 92 o más = 5. `motivos` dice qué subiría la calificación ("12 filas sin ID"). Sustituye a "Certeza del dato" como métrica principal; el desglose verificada / probable / sin identificar se conserva debajo.
+9. **Flujo en cuatro pasos, con sus palabras:** Subir → Calidad → Vista previa → Exportar. La pantalla Importar muestra esos pasos como guía.
+10. **Roles:** `coordinacion` sube y corrige el archivo de su programa; `presidencia` ve el consolidado, confirma colisiones y exporta. Usuarios simulados: `coord1/1111`, `coord2/1111`, `presi1/2222`. Sustituye al rol `direccion`.
+11. **Plantillas de informe** (`PlantillaInforme`): una base con personas impactadas (cifra verificada y rango), edad promedio y desglose por ciudad, más indicadores adicionales que se activan por audiencia. Dos plantillas sembradas: "Tamizaje Rosa · socios estratégicos" (agrega atenciones por estudio y cobertura por ciudad) y "Informe general · donantes" (agrega participaciones y cruce entre programas). Ruta: `GET /api/plantillas` y `GET /api/informe?plantilla=<id>`.
+12. **Archivos de prueba:** tres Excel con sus columnas (tabla en la Tarea 2).
+
+**Sigue sin validar**
+
+- Los encabezados exactos y el orden del ID (si las iniciales van antes o después de la fecha): se ajusta al recibir sus archivos.
+- Cuáles son sus dos informes más importantes, aparte del ejemplo de Tamizaje Rosa.
+- Si aceptan capturar la CURP y si llevan un Android a las jornadas (viabilidad del NFC).
+- La transcripción de la conversación no estuvo disponible; esto sale del resumen de la nota.
 
 ## Global Constraints
 
@@ -72,8 +111,8 @@ Tras la Tarea 1 corren en paralelo las Tareas 2, 3 y 5. La Tarea 4 integra 2 y 3
 ```ts
 export type Unidad = 'persona' | 'atencion' | 'estudio' | 'participacion' | 'entrega_insumo';
 export type Certeza = 'verificada' | 'probable' | 'sin_identificar';
-export type Campo = 'folio' | 'nombres' | 'apellidos' | 'nombreCompleto' | 'fechaNacimiento' | 'municipio'
-  | 'servicio' | 'fecha' | 'cantidad' | 'ignorar';
+export type Campo = 'folio' | 'idEira' | 'curp' | 'nombres' | 'apellidos' | 'nombreCompleto' | 'fechaNacimiento' | 'edad'
+  | 'municipio' | 'servicio' | 'fecha' | 'asistencia' | 'cantidad' | 'ignorar';
 export type Mapeo = Record<string, Campo>;              // encabezado original → campo común
 export interface Fuente {
   id: string; nombreArchivo: string; huella: string;     // sha256 del archivo
@@ -89,7 +128,13 @@ export interface Registro {
   personaClave: string | null; certeza: Certeza; cantidad: number;
 }
 export type ReglaCalidad = 'faltante' | 'fecha_invalida' | 'fecha_futura' | 'municipio_desconocido'
-  | 'duplicado_probable' | 'folio_invalido' | 'discrepancia_total';
+  | 'duplicado_probable' | 'folio_invalido' | 'id_invalido' | 'colision_id' | 'edad_inconsistente' | 'curp_invalida' | 'discrepancia_total';
+export interface CalidadArchivo {                      // la "calificación en estrellas" que pidió EIRA
+  estrellas: 1 | 2 | 3 | 4 | 5; puntaje: number;       // puntaje 0 a 100
+  identificados: number; completos: number; sinAnomalias: number;   // porcentajes 0 a 100
+  motivos: string[];                                   // qué le falta para subir una estrella
+}
+export interface PlantillaInforme { id: string; nombre: string; audiencia: string; indicadoresBase: string[]; indicadoresExtra: string[]; }
 export interface Anomalia { id: string; fuenteId: string; fila: number; regla: ReglaCalidad; campo: string | null; detalle: string; }
 export interface Filtro { programa?: string; periodoDesde?: string; periodoHasta?: string; municipioClave?: string; servicio?: string; }
 export interface Indicador {
@@ -148,27 +193,33 @@ export interface Ajuste { id: string; en: string; por: string; tipo: 'importacio
   - `normalizarTexto(s: string): string` — minúsculas, sin diacríticos, `ñ`→`n`, espacios colapsados
   - `parseFecha(v: unknown): string | null` — acepta `DD/MM/AAAA`, `D/M/AA`, `AAAA-MM-DD` y número de serie de Excel; devuelve `YYYY-MM-DD`
   - `claveMunicipio(nombre: string): string | null` — contra el catálogo de Jalisco (clave INEGI de 5 dígitos), con alias (`"Cd. Guzmán"`, `"Ciudad Guzmán"` → `14023` Zapotlán el Grande)
-  - `clavePersona(d: { folio?: string | null; nombreCompleto?: string | null; fechaNacimiento?: string | null }, hmacKey: string): { clave: string | null; certeza: Certeza }`
+  - `clavePersona(d: { folio?: string | null; curp?: string | null; idEira?: string | null }, hmacKey: string): { clave: string | null; certeza: Certeza }`
+  - `parseIdEira(id: string): { iniciales: string; fechaNacimiento: string } | null` — `^[A-ZÑ]{3}\d{8}$` con fecha válida; tolera minúsculas, espacios y guiones
+  - `calificar(registros: Registro[], anomalias: Anomalia[], totalFilas: number): CalidadArchivo`
   - `leerArchivo(buf: Buffer, nombre: string): { encabezados: string[]; filas: Record<string, unknown>[] }` — CSV (detecta UTF-8 o Latin-1) y XLSX
   - `proponerMapeo(encabezados: string[]): Mapeo`
   - `proponerMapeoDetallado(encabezados: string[], d: Decisor): Promise<{ encabezado: string; campo: Campo; probabilidad: number; porConfirmar: boolean }[]>` — `porConfirmar` es `true` si la probabilidad es menor a 0.90
   - `interface Decisor { elegir(estado: string, pregunta: string, opciones: string[]): Promise<{ opcion: string; probabilidad: number }[]> }` y `class DecisorReglas implements Decisor` en `server/decisor.ts` (sinónimos exactos = 1.0; si no, la mejor similitud Jaro-Winkler contra los sinónimos; resultado ordenado de mayor a menor). Pruebas: `'Fecha de atención'` → `fecha` con probabilidad 1.0; `'Fcha atencion'` → `fecha` con probabilidad entre 0.80 y 0.99 y `porConfirmar: true`; `'Observaciones'` → `ignorar`.
-  - `aRegistros(filas, mapeo: Mapeo, fuente: Fuente, hmacKey: string): { registros: Registro[]; anomalias: Anomalia[] }`
-  - `npm run datos` genera, con semilla fija, `sinteticos/tamizaje-rosa.csv` y `sinteticos/salud-que-florece.xlsx`
+  - `aRegistros(filas, mapeo: Mapeo, fuente: Fuente, hmacKey: string): { registros: Registro[]; anomalias: Anomalia[]; inasistencias: number; nombres: Map<string, string> }` (`nombres`: id de registro → nombre normalizado, solo en memoria, para detectar colisiones) — ``
+  - `npm run datos` genera, con semilla fija, los tres Excel de la tabla en `sinteticos/` y `sinteticos/esperado.json`: la verdad con la que se construyeron los archivos (no calculada por el importador), con esta forma: `{ archivos: { [nombre]: { filas, asistencias, inasistencias, sinIdentificar, anomalias: Record<ReglaCalidad, number> } }, personas: { verificadas, probables, registrosSinIdentificar }, cruces: { tamizaje_florece, tamizaje_nutricion }, colisiones: 2, edadPromedio }`. Las pruebas comparan lo que produce el sistema contra ese archivo.
 
 Archivos sintéticos (valores exactos que usan las pruebas):
 
-| | `tamizaje-rosa.csv` | `salud-que-florece.xlsx` |
-|---|---|---|
-| Unidad y programa | `atencion`, Tamizaje Rosa | `participacion`, Salud que Florece |
-| Filas | 120 | 80 |
-| Encabezados | `Folio`, `Nombre completo`, `Fecha de nacimiento`, `Municipio`, `Servicio`, `Fecha de atención` | `NOMBRE`, `APELLIDOS`, `F. NAC`, `Localidad`, `Taller`, `fecha_evento` |
-| Codificación y fechas | Latin-1, `DD/MM/AAAA` | fechas como número de serie de Excel |
-| Personas distintas | 90 (30 con dos atenciones) | 70 (10 con dos participaciones) |
-| Con folio | 60 personas | 0 |
-| Sin fecha de nacimiento ni folio | 8 filas | 12 filas |
-| En ambos archivos | 15 personas: 10 con nombre y fecha idénticos tras normalizar, 5 con el nombre escrito distinto | |
-| Anomalías sembradas | 3 fechas inválidas, 2 municipios desconocidos, 4 filas duplicadas exactas | 2 fechas futuras, 1 municipio desconocido |
+| | `tamizaje-rosa.xlsx` | `salud-que-florece.xlsx` | `nutricion.xlsx` |
+|---|---|---|---|
+| Coordinación y unidad | Tamizaje Rosa, `atencion` | Salud que Florece, `participacion` | Tamizaje Rosa (nutrición), `atencion` |
+| Filas (una por evento por persona) | 126: 120 asistencias y 6 inasistencias | 84: 80 y 4 | 42: 40 y 2 |
+| Encabezados | `ID`, `Nombre`, `Estudio`, `Edad`, `Ciudad`, `Asistencia`, `Fecha` | `Id usuario`, `NOMBRE COMPLETO`, `Taller`, `EDAD`, `Ciudad`, `Asistió`, `fecha_evento` | `ID`, `Nombre`, `Tipo de servicio`, `Edad`, `Ciudad`, `Asistencia`, `Fecha`, `CURP` |
+| Fechas | `DD/MM/AAAA` como texto | número de serie de Excel | fecha de Excel |
+| Personas distintas | 90 (30 con dos atenciones) | 70 (10 con dos participaciones) | 30 (10 con dos atenciones) |
+| Con ID de EIRA válido | 82 personas | 58 personas | 30 personas |
+| Con CURP | 0 | 0 | 20 personas |
+| Sin ID ni CURP | 8 filas | 12 filas | 0 |
+| Presentes en más de un archivo | 15 personas entre los dos primeros con el mismo ID; 10 del tercero están también en el primero | | |
+| Colisiones de ID sembradas | 2 pares: mismo ID de EIRA y nombres completos distintos (uno dentro del primer archivo, otro entre el primero y el segundo) | | |
+| Otras anomalías sembradas | 3 fechas inválidas, 2 ciudades desconocidas, 4 filas duplicadas exactas, 3 ID con formato inválido | 2 fechas futuras, 1 ciudad desconocida, 5 edades que no coinciden con la fecha del ID | 1 CURP con formato inválido |
+
+El caso de la guía (120 atenciones y 80 participaciones) son los dos primeros archivos; el tercero existe porque EIRA consolida tres o más coordinaciones. Los encabezados se cambian por los reales en cuanto EIRA comparta sus archivos de ejemplo.
 
 - [ ] **Step 1:** Pruebas que fallan:
 
@@ -184,32 +235,50 @@ test('municipio con acento, alias y desconocido', () => {
   expect(claveMunicipio('CD. GUZMAN')).toBe('14023');
   expect(claveMunicipio('Villa Inexistente')).toBeNull();
 });
-test('clave de persona por niveles', () => {
+test('clave de persona por niveles y prioridad', () => {
   const k = 'k'.repeat(32);
-  expect(clavePersona({ folio: FOLIO_OK }, k)).toEqual({ clave: `id:${FOLIO_OK}`, certeza: 'verificada' });
-  const a = clavePersona({ nombreCompleto: 'María  Ejemplo López', fechaNacimiento: '1984-03-12' }, k);
-  const b = clavePersona({ nombreCompleto: 'MARIA EJEMPLO LOPEZ', fechaNacimiento: '1984-03-12' }, k);
-  expect(a.certeza).toBe('probable'); expect(a.clave).toBe(b.clave); expect(a.clave).toMatch(/^nf:[0-9a-f]{64}$/);
-  expect(clavePersona({ nombreCompleto: 'María Ejemplo' }, k)).toEqual({ clave: null, certeza: 'sin_identificar' });
-  expect(clavePersona({ folio: 'EIRA-XXXX-XXXX', nombreCompleto: 'A B', fechaNacimiento: '1990-01-01' }, k).certeza).toBe('probable');
+  expect(clavePersona({ folio: FOLIO_OK, curp: CURP_OK, idEira: 'ELM19840312' }, k)).toEqual({ clave: `id:${FOLIO_OK}`, certeza: 'verificada' });
+  const c = clavePersona({ curp: CURP_OK, idEira: 'ELM19840312' }, k);
+  expect(c.certeza).toBe('verificada'); expect(c.clave).toMatch(/^curp:[0-9a-f]{64}$/);
+  const a = clavePersona({ idEira: 'ELM19840312' }, k), b = clavePersona({ idEira: ' elm-19840312 ' }, k);
+  expect(a.certeza).toBe('probable'); expect(a.clave).toBe(b.clave); expect(a.clave).toMatch(/^eira:[0-9a-f]{64}$/);
+  expect(clavePersona({ idEira: 'ELM19841340' }, k)).toEqual({ clave: null, certeza: 'sin_identificar' });   // fecha imposible
+  expect(clavePersona({ folio: 'EIRA-XXXX-XXXX', idEira: 'ELM19840312' }, k).certeza).toBe('probable');     // folio inválido se ignora
 });
-test('la clave no contiene el nombre y cambia con otra llave', ...);
-test('propone el mapeo de ambos archivos sintéticos', () => {
-  expect(proponerMapeo(['Folio','Nombre completo','Fecha de nacimiento','Municipio','Servicio','Fecha de atención']))
-    .toEqual({ 'Folio':'folio','Nombre completo':'nombreCompleto','Fecha de nacimiento':'fechaNacimiento','Municipio':'municipio','Servicio':'servicio','Fecha de atención':'fecha' });
-  expect(proponerMapeo(['NOMBRE','APELLIDOS','F. NAC','Localidad','Taller','fecha_evento']))
-    .toEqual({ 'NOMBRE':'nombres','APELLIDOS':'apellidos','F. NAC':'fechaNacimiento','Localidad':'municipio','Taller':'servicio','fecha_evento':'fecha' });
+test('parseIdEira saca iniciales y fecha', () => {
+  expect(parseIdEira('ELM19840312')).toEqual({ iniciales: 'ELM', fechaNacimiento: '1984-03-12' });
+  expect(parseIdEira('EL19840312')).toBeNull();
 });
-test('lee Latin-1 sin romper la ñ', ...);                 // un municipio con ñ queda igual que en UTF-8
-test('tamizaje-rosa.csv: 120 registros y las anomalías sembradas', () => {
-  const { registros, anomalias } = importarSintetico('tamizaje-rosa.csv');
-  expect(registros).toHaveLength(120);
-  expect(cuenta(anomalias, 'fecha_invalida')).toBe(3);
-  expect(cuenta(anomalias, 'municipio_desconocido')).toBe(2);
-  expect(cuenta(anomalias, 'duplicado_probable')).toBe(4);
-  expect(registros.filter(r => r.certeza === 'sin_identificar')).toHaveLength(8);
+test('la clave no contiene el ID ni la CURP y cambia con otra llave', ...);
+test('propone el mapeo de los tres archivos sintéticos', () => {
+  expect(proponerMapeo(['ID','Nombre','Estudio','Edad','Ciudad','Asistencia','Fecha']))
+    .toEqual({ ID:'idEira', Nombre:'nombreCompleto', Estudio:'servicio', Edad:'edad', Ciudad:'municipio', Asistencia:'asistencia', Fecha:'fecha' });
+  expect(proponerMapeo(['Id usuario','NOMBRE COMPLETO','Taller','EDAD','Ciudad','Asistió','fecha_evento']))
+    .toEqual({ 'Id usuario':'idEira', 'NOMBRE COMPLETO':'nombreCompleto', Taller:'servicio', EDAD:'edad', Ciudad:'municipio', 'Asistió':'asistencia', fecha_evento:'fecha' });
+  expect(proponerMapeo(['ID','Nombre','Tipo de servicio','Edad','Ciudad','Asistencia','Fecha','CURP']).CURP).toBe('curp');
 });
-test('salud-que-florece.xlsx: 80 registros, 2 fechas futuras, 1 municipio desconocido, 12 sin identificar', ...);
+test('cada archivo sintético coincide con esperado.json', () => {
+  for (const [nombre, e] of Object.entries(esperado.archivos)) {
+    const { registros, anomalias, inasistencias } = importarSintetico(nombre);
+    expect(registros).toHaveLength(e.asistencias);
+    expect(inasistencias).toBe(e.inasistencias);
+    expect(registros.filter(r => r.certeza === 'sin_identificar')).toHaveLength(e.sinIdentificar);
+    for (const [regla, n] of Object.entries(e.anomalias)) expect(cuenta(anomalias, regla)).toBe(n);
+  }
+});
+test('valores fijos del caso de la guía', () => {
+  expect(esperado.archivos['tamizaje-rosa.xlsx'].asistencias).toBe(120);
+  expect(esperado.archivos['salud-que-florece.xlsx'].asistencias).toBe(80);
+  expect(esperado.colisiones).toBe(2);
+});
+test('mismo ID con nombres distintos genera colision_id; con nombres parecidos no', ...);
+test('edad capturada que difiere más de un año de la del ID genera edad_inconsistente', ...);
+test('calificar: archivo perfecto da 5 estrellas; con 30 % sin ID baja y el motivo lo dice', () => {
+  expect(calificar(perfectos, [], 100).estrellas).toBe(5);
+  const c = calificar(con30SinId, [], 100);
+  expect(c.estrellas).toBeLessThan(5);
+  expect(c.motivos).toContainEqual(expect.stringMatching(/30 filas sin ID/));
+});
 test('una fila con fecha inválida conserva su registro con fecha y periodo nulos', ...);
 ```
 
@@ -233,6 +302,8 @@ test('una fila con fecha inválida conserva su registro con fecha y periodo nulo
   - `cruce(v, programaA: string, programaB: string): Promise<{ enAmbos: number; soloA: number; soloB: number; advertencias: string[] }>`
   - `sumar(a: Indicador, b: Indicador): Indicador` — lanza `ErrorUnidades` si `a.unidad !== b.unidad`
   - `paresPendientes(v): Promise<ParDuplicado[]>`; `decidirPar(v, id: string, decision: 'misma' | 'distinta', por: string): Promise<void>`
+  - `ligarFolio(v, d: { folio: string; idEira: string; por: string }): Promise<void>` — `HSET imp:alias`, mueve la clave en los conjuntos dentro de `MULTI`, `XADD imp:ajustes`, `PUBLISH imp:eventos`
+  - `edadPromedio(v, f: Filtro): Promise<Indicador>` — sobre los miembros del conjunto filtrado, con `HMGET imp:nac`
   - `registrarAsistencia(v, d: { folio: string; programa: string; servicio: string; municipioClave: string; por: string }): Promise<Registro>`
   - `indicadores(v, f: Filtro): Promise<Indicador[]>`
   - `ajustes(v, desde?: string): Promise<Ajuste[]>`
@@ -251,35 +322,51 @@ Comandos por operación:
 | Asistencia por NFC | igual que la ingesta de un registro, más `PUBLISH imp:eventos` |
 | Cobertura | `ZADD imp:rank:cobertura`, `ZREVRANGE ... WITHSCORES` |
 
-Pares de duplicado probable que se generan al ingerir: dos claves `nf:` con la misma fecha de nacimiento y nombre normalizado con similitud Jaro-Winkler ≥ 0.92. Para compararlas sin guardar nombres en Valkey, `ingerir` recibe en memoria, junto a cada registro, el nombre normalizado, lo usa para proponer pares y lo descarta.
+Pares que se generan al ingerir: cada `colision_id` (mismo ID de EIRA, nombres completos con similitud Jaro-Winkler menor a 0.85). `ingerir` recibe en memoria el mapa `nombres` de la Tarea 2, lo usa para comparar y lo descarta: en Valkey no queda ningún nombre.
 
 - [ ] **Step 1:** Pruebas que fallan (con los dos archivos sintéticos ya convertidos por la Tarea 2; si aún no existe, construir registros equivalentes a mano en el archivo de prueba):
 
 ```ts
 test('conteos por unidad', async () => {
-  expect(await conteo(v, 'atencion', {})).toBe(120);
+  expect(await conteo(v, 'atencion', {})).toBe(160);          // 120 de tamizaje + 40 de nutrición
+  expect(await conteo(v, 'atencion', { servicio: undefined, programa: 'Tamizaje Rosa' })).toBe(160);
   expect(await conteo(v, 'participacion', {})).toBe(80);
 });
 test('importar dos veces el mismo archivo no cambia nada', async () => {
   expect((await ingerir(v, fuenteA, regsA, anomA, 'coord1')).nuevo).toBe(false);
-  expect(await conteo(v, 'atencion', {})).toBe(120);
+  expect(await conteo(v, 'atencion', {})).toBe(160);
 });
-test('personas únicas: verificadas, probables, rango', async () => {
+test('personas únicas coinciden con esperado.json y el rango es coherente', async () => {
   const p = await personasUnicas(v, {});
-  expect(p.verificadas).toBe(60);
-  expect(p.registrosSinIdentificar).toBe(20);
-  expect(p.maximo).toBe(p.minimo + 20);
-  expect(p.advertencias).toContainEqual(expect.stringMatching(/20 registros sin identificar/));
+  expect(p.verificadas).toBe(esperado.personas.verificadas);
+  expect(p.probables).toBe(esperado.personas.probables);
+  expect(p.registrosSinIdentificar).toBe(esperado.personas.registrosSinIdentificar);
+  expect(p.minimo).toBe(p.verificadas + p.probables);
+  expect(p.maximo).toBe(p.minimo + p.registrosSinIdentificar);
 });
-test('cruce entre programas cuenta solo coincidencias exactas hasta que alguien confirma', async () => {
-  expect((await cruce(v, 'Tamizaje Rosa', 'Salud que Florece')).enAmbos).toBe(10);
-  expect(await paresPendientes(v)).toHaveLength(5);
-  const [par] = await paresPendientes(v);
-  await decidirPar(v, par.id, 'misma', 'coord1');
-  expect((await cruce(v, 'Tamizaje Rosa', 'Salud que Florece')).enAmbos).toBe(11);
-  expect((await ajustes(v)).at(-1)).toMatchObject({ tipo: 'duplicado', por: 'coord1' });
+test('cruce entre programas por ID compartido', async () => {
+  expect((await cruce(v, 'Tamizaje Rosa', 'Salud que Florece')).enAmbos).toBe(esperado.cruces.tamizaje_florece);
 });
-test('decidir "distinta" no cambia cifras y no se vuelve a proponer', ...);
+test('una colisión confirmada como dos personas las separa y queda en la bitácora', async () => {
+  const pares = await paresPendientes(v);
+  expect(pares).toHaveLength(2);
+  const antes = (await personasUnicas(v, {})).probables;
+  await decidirPar(v, pares[0].id, 'distinta', 'presi1');
+  expect((await personasUnicas(v, {})).probables).toBe(antes + 1);
+  expect((await ajustes(v)).at(-1)).toMatchObject({ tipo: 'duplicado', por: 'presi1' });
+});
+test('ligar un folio a un ID pasa a esa persona de probable a verificada sin cambiar el total', async () => {
+  const antes = await personasUnicas(v, {});
+  await ligarFolio(v, { folio: FOLIO_OK, idEira: ID_CONOCIDO, por: 'coord1' });
+  const despues = await personasUnicas(v, {});
+  expect(despues.verificadas).toBe(antes.verificadas + 1);
+  expect(despues.probables).toBe(antes.probables - 1);
+  expect(despues.minimo).toBe(antes.minimo);
+});
+test('edad promedio sobre personas únicas, con fecha de corte', async () => {
+  expect((await edadPromedio(v, {})).valor).toBeCloseTo(esperado.edadPromedio, 1);
+});
+test('decidir "misma" en una colisión no cambia cifras y no se vuelve a proponer', ...);
 test('sumar unidades distintas lanza error explicado', () => {
   expect(() => sumar(indAtenciones, indParticipaciones)).toThrow(/no se pueden sumar: atencion y participacion/);
 });
@@ -310,12 +397,12 @@ test('ningún valor guardado contiene un nombre sembrado', async () => {
 - Create: `server/app.ts`, `server/main.ts`
 - Test: `server/app.test.ts`
 
-**Interfaces (JSON; `Authorization: Bearer <token>`; usuarios simulados `coord1/1111` rol `coordinacion`, `dir1/2222` rol `direccion`):**
+**Interfaces (JSON; `Authorization: Bearer <token>`; usuarios simulados `coord1/1111` y `coord2/1111` rol `coordinacion`, `presi1/2222` rol `presidencia`; donde las tablas dicen `direccion` o "ambos", léase `presidencia`):**
 
 | Método y ruta | Rol | Respuesta |
 |---|---|---|
 | `POST /api/login` | público | `{ token, role }` |
-| `POST /api/fuentes/previa` (multipart `archivo`) | coordinacion | `{ encabezados, muestra: 5 filas, mapeoPropuesto: { encabezado, campo, probabilidad, porConfirmar }[], yaImportado: boolean }` |
+| `POST /api/fuentes/previa` (multipart `archivo`) | coordinacion | `{ calidad: CalidadArchivo, encabezados, muestra: 5 filas, mapeoPropuesto: { encabezado, campo, probabilidad, porConfirmar }[], yaImportado: boolean }` |
 | `POST /api/fuentes` (multipart `archivo`, `programa`, `unidad`, `fechaCorte`, `mapeo`) | coordinacion | `{ fuente, registros: number, anomalias: number, nuevo: boolean }` |
 | `GET /api/fuentes` | ambos | `Fuente[]` |
 | `GET /api/calidad?fuenteId=` | ambos | `{ porRegla: Record<ReglaCalidad, number>; anomalias: Anomalia[] }` |
@@ -328,7 +415,7 @@ test('ningún valor guardado contiene un nombre sembrado', async () => {
 | `GET /api/informe?<Filtro>&formato=json\|csv` | ambos | informe con indicadores, definiciones, fuentes, advertencias y ajustes |
 | `GET /api/health` | público | `{ ok: true, valkey: boolean, claves: number }` |
 
-- [ ] **Step 1:** Pruebas que fallan: sin token 401; `direccion` no puede importar ni decidir duplicados (403); `/api/sumar` con atenciones y participaciones responde 422 con el texto del error; el CSV del informe no contiene nombres y trae columnas `indicador,valor,unidad,definicion,fecha_corte,fuentes,denominador,advertencias`; `/api/asistencia` con folio inválido 400; importar el mismo archivo dos veces devuelve `nuevo: false`.
+- [ ] **Step 1:** Pruebas que fallan: sin token 401; `presidencia` no puede importar (403) y `coordinacion` no puede decidir colisiones ni exportar el consolidado (403); la vista previa devuelve `calidad: CalidadArchivo` antes de importar; `/api/sumar` con atenciones y participaciones responde 422 con el texto del error; el CSV del informe no contiene nombres y trae columnas `indicador,valor,unidad,definicion,fecha_corte,fuentes,denominador,advertencias`; `/api/asistencia` con folio inválido 400; importar el mismo archivo dos veces devuelve `nuevo: false`.
 - [ ] **Step 2:** Correr, esperado FAIL. Implementar. `main.ts` sirve `dist/`, puerto `PORT` o 8787, y se suscribe a `imp:eventos` con una conexión aparte para el SSE.
 - [ ] **Step 3:** Correr todo `npx vitest run`, esperado PASS. Commit `feat: HTTP API, live events and report export`.
 
@@ -391,8 +478,8 @@ Cada cifra de EIRA con su acta de nacimiento: qué cuenta, de qué archivo sali�
 ## Tres piezas con nombre
 
 1. **"Esto no se suma".** El sistema se niega a sumar atenciones con participaciones y explica por qué.
-2. **Personas con certeza.** Verificadas por folio, probables por nombre y fecha, y un rango honesto con lo que no se puede identificar.
-3. **Toque que verifica.** La tarjeta NFC con folio convierte cada asistencia futura en un dato verificado, y el tablero lo muestra en vivo. Es el camino para que el rango se cierre con el tiempo.
+2. **Colisiones a la vista y estrellas.** El sistema detecta cuando el ID de EIRA apunta a dos personas distintas, y califica cada archivo con estrellas diciendo qué le falta.
+3. **Toque que verifica.** La tarjeta NFC liga un folio opaco al ID que ya tienen, sin recapturar nada: los registros de esa persona pasan de probable a verificada y el tablero lo muestra en vivo.
 
 ## Preguntas para EIRA (Reto 3) y lo que fijan
 
@@ -422,12 +509,12 @@ Territorio para los datos de prueba: EIRA trabaja en Jalisco, Colima, Michoacán
 
 ## Pitch de 2 minutos
 
-- 0:00–0:15 "EIRA reporta más de 51,000 personas beneficiadas, y su propia guía aclara que no son pacientes únicas. Hoy nadie puede decir cuántas son."
-- 0:15–0:45 Importar los dos archivos; el mapeo se propone solo; 120 atenciones y 80 participaciones, separadas.
-- 0:45–1:10 Calidad: anomalías; "¿es la misma persona?"; al confirmar, el cruce cambia y queda en la bitácora.
-- 1:10–1:30 Intento de sumar unidades: el sistema se niega. Personas: 60 verificadas, y un rango.
-- 1:30–1:45 Toque de la tarjeta NFC en el celular: sube el contador en la laptop.
-- 1:45–2:00 Cobertura contra población del municipio; informe exportado con fuentes; qué es real y qué simulado.
+- 0:00–0:15 "Hoy Presidencia junta a mano los Excel de cada coordinación, y el ID que usan, iniciales más fecha de nacimiento, puede chocar entre dos personas. Esto lo consolida, lo califica y lo deja listo para el donante."
+- 0:15–0:45 Subir tres Excel; el mapeo se propone solo; cada archivo recibe su calificación en estrellas y dice qué le falta.
+- 0:45–1:10 Calidad: el sistema encuentra dos personas distintas con el mismo ID; al separarlas cambia la cifra y queda en la bitácora.
+- 1:10–1:30 Vista previa del informe para socios estratégicos: personas impactadas, edad promedio, desglose por ciudad. Atenciones y participaciones no se suman.
+- 1:30–1:45 Toque de la tarjeta NFC: el folio se liga al ID de la paciente y sus registros pasan de probable a verificada, en vivo.
+- 1:45–2:00 Exportar; cobertura contra población de INEGI; qué es real y qué simulado.
 
 ## Costos y sostenibilidad (para el README)
 
