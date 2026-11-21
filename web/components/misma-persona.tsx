@@ -1,7 +1,7 @@
 'use client';
 
 // "¿Es la misma persona?": un caso a la vez, dos registros lado a lado, dos botones.
-import { useState, useTransition } from 'react';
+import { useTransition } from 'react';
 import type { Par } from '@/lib/comun';
 import { decidirPar } from '@/lib/acciones';
 
@@ -19,12 +19,15 @@ export function MismaPersona({
   alcance,
   pares,
   nombreFuente,
+  decididos,
+  alDecidir,
 }: {
   alcance: string;
   pares: Par[];
   nombreFuente: Record<string, string>;
+  decididos: Set<string>;
+  alDecidir: (id: string) => void;
 }) {
-  const [decididos, setDecididos] = useState<Set<string>>(new Set());
   const [cargando, start] = useTransition();
 
   const pendientes = pares.filter((p) => !decididos.has(p.id));
@@ -35,7 +38,7 @@ export function MismaPersona({
     const id = actual.id;
     start(async () => {
       await decidirPar(alcance, id, decision);
-      setDecididos((s) => new Set(s).add(id));
+      alDecidir(id);
     });
   }
 

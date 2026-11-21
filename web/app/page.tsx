@@ -28,16 +28,35 @@ function avance(e: EstadoRecorrido): { texto: string; accion: string; ruta: stri
 
 export default async function Portada() {
   const estados = await Promise.all(alcancesDemo().map((a) => estadoRecorrido(a)));
+  // Una sola acción primaria: empezar (o seguir) el primer informe de programa.
+  const siguiente = estados.find((e) => e.alcance !== 'global' && e.fuentes === 0)
+    ?? estados.find((e) => e.alcance !== 'global');
+  const a = siguiente ? avance(siguiente) : null;
+  const cta = a?.ruta
+    ? { href: a.ruta, texto: siguiente!.fuentes === 0 ? 'Subir archivos' : `${a.accion}: ${tituloInforme(siguiente!.alcance)}` }
+    : { href: '/informe/tamizaje-rosa/subir', texto: 'Subir archivos' };
 
   return (
     <div>
-      <h1>Informes de impacto</h1>
-      <p className="lead mt-3" style={{ maxWidth: '56ch', color: 'var(--tinta-suave)' }}>
-        Sube los reportes de cada coordinación; el informe se arma solo, sin contar dos veces
-        el mismo archivo, la misma fila ni la misma persona.
-      </p>
+      {/* Llegada: qué es esto y qué hacer, en una mirada */}
+      <section aria-labelledby="titulo-llegada">
+        <h1 id="titulo-llegada">¿Cuántas personas apoyó EIRA?</h1>
+        <p className="lead mt-3" style={{ maxWidth: '56ch', color: 'var(--tinta-suave)' }}>
+          Sube los Excel de cada coordinación y el informe de impacto se arma solo:
+          sin contar dos veces el mismo archivo, la misma fila ni la misma persona.
+        </p>
+        <p className="etiqueta mono" style={{ marginTop: 'var(--sp-3)', letterSpacing: '0.06em', textTransform: 'uppercase' }}>
+          Subir → Calidad → Vista previa → Exportar
+        </p>
+        <div style={{ marginTop: 'var(--sp-6)' }}>
+          <Link href={cta.href} className="btn btn--primario no-underline">{cta.texto}</Link>
+        </div>
+      </section>
 
-      <div className="mt-10" role="list">
+      <h2 className="etiqueta" style={{ marginTop: 'var(--sp-10)', fontWeight: 500 }}>
+        Informes
+      </h2>
+      <div className="mt-3" role="list">
         {estados.map((e, i) => {
           const a = avance(e);
           const ini = e.alcance === 'global' ? null : iniciativa(e.alcance);
