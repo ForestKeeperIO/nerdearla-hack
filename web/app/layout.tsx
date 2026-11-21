@@ -5,8 +5,10 @@ import "./globals.css";
 import "./expediente.css";
 import "./bento.css";
 import "./atlas.css";
+import "./demo.css";
 import { TooltipProvider } from "@/components/ui/tooltip";
 import { NavPrincipal } from "@/components/nav-principal";
+import { DemoGuiado } from "@/components/demo-guiado";
 
 const montserrat = Montserrat({ variable: "--font-montserrat", subsets: ["latin"] });
 const plexMono = IBM_Plex_Mono({ variable: "--font-plex-mono", subsets: ["latin"], weight: ["400", "500"] });
@@ -40,6 +42,7 @@ export default async function RootLayout({ children }: LayoutProps<"/">) {
             <p className="etiqueta"><strong>Informes que unen.</strong> {LEMA}</p>
             <p className="etiqueta">Datos ficticios de demostración — EIRA Movimiento Rosa A.C.</p>
           </footer>
+          <DemoGuiado />
         </TooltipProvider>
       </body>
     </html>

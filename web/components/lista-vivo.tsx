@@ -67,7 +67,7 @@ export function ListaVivo({ alcance, inicial, lectura = false }: { alcance: stri
     .map(t => [t.fuente, t.mapeo]));
 
   return (
-    <div>
+    <div data-demo="archivos">
       <div className="flex items-baseline justify-between gap-3" style={{ marginBottom: 'var(--sp-2)' }}>
         <h2 style={{ fontSize: 16 }}>Archivos</h2>
         <span className="etiqueta" role="status">{alDia ? 'Se actualiza solo' : 'Sin conexión; se reintenta solo'}</span>
