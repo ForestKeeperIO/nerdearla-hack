@@ -11,3 +11,5 @@ __pycache__/
 .venv/
 reportes/agregado_publico.csv
 plugins/
+.pytest_cache/
+py/.estado/
