@@ -37,5 +37,6 @@ API key, el componente se reimplementó con código propio sobre shadcn/ui (MIT)
 
 ## Tipografías
 
-Inter e IBM Plex Mono, servidas por `next/font/google` desde Google Fonts
+Rosarivo, Montserrat e IBM Plex Mono — las de eiraac.org más una monoespaciada
+para identificadores — servidas por `next/font/google` desde Google Fonts
 (Open Font License). No se copiaron tipografías de pago ni imágenes de details.so.
