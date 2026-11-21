@@ -21,7 +21,7 @@
 - Sin conteos aproximados. Unidades que no se suman: `atencion`, `estudio`, `participacion`, `entrega_insumo`.
 - Licencias: nuestro código es MIT. Metabase es AGPL: se ejecuta como servicio aparte y no se copia código suyo al repositorio. Splink, pandas, DuckDB y Valkey son MIT o BSD.
 - Aspecto del frontend: de gama alta, con las referencias de la auditoría de details.so (`docs/referencias/auditoria-componentes.md`, rama `referencias`), reproduciendo el patrón con código propio (sin copiar su código, tipografías de pago ni imágenes).
-- **Ningún rosa, magenta ni fucsia, en ninguna tonalidad**, en el frontend ni en los tableros de Metabase. Paleta neutra con un solo acento que no sea rosa.
+- Color y tipografía: la paleta de EIRA mejorada, según `docs/referencias/paleta-eira.md` (decisión de las 13:10; sustituye a la regla anterior de "ningún rosa" y al acento verde). Vale para el frontend y para los tableros de Metabase. La prueba automática de color comprueba que solo se usen colores de esa paleta.
 - El recorrido es guiado: no se puede saltar a un paso sin resolver el anterior. No hay barra lateral, ni selector de rol, ni segunda navegación.
 - Dos versiones en línea: una en blanco (sin datos) y otra con reportes reales de fuentes públicas ya procesados. Cada una con su propia base de Valkey (número de base distinto) y su propio archivo SQLite.
 - Texto visible en español. Se dice "Valkey", nunca "Redis"; "seudonimizado", nunca "anónimo".

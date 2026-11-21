@@ -100,9 +100,10 @@ Límite que se declara en la propia versión con fuentes reales: los datos públ
 
 ## Aspecto
 
-- De gama alta: sobrio, preciso, con jerarquía clara. Las referencias salen de la auditoría de details.so (`docs/referencias/auditoria-componentes.md` en la rama `referencias`), reproduciendo el patrón con código propio.
-- **Ningún rosa, magenta ni fucsia, en ninguna tonalidad.** Paleta neutra con un solo acento que no sea rosa.
-- Texto de 16 px o más. Estados con palabras además de color. Todo operable con teclado.
+- De gama alta: sobrio, preciso, con jerarquía clara. La estructura, el espaciado y la jerarquía salen de la auditoría de details.so (`docs/referencias/auditoria-componentes.md`, rama `referencias`), reproduciendo el patrón con código propio.
+- **Color y tipografía: la paleta de EIRA, mejorada** (decisión de Ian, 13:10; sustituye a "ningún rosa"). Los valores y las reglas están en `docs/referencias/paleta-eira.md`: vino `#7d3b3b` como único color de acción, ciruela `#6a2b51` como segundo énfasis, y los rosas de su marca solo como matiz en superficies pequeñas, nunca como fondo de pantalla ni en texto. Tipografías de su sitio: Rosarivo para títulos y cifras, Montserrat para la interfaz.
+- Ningún color fuera de esa paleta y sus neutros derivados.
+- Texto de 16 px o más. Estados con palabras e icono además de color. Todo operable con teclado.
 - Sin datos decorativos: nada de variaciones porcentuales ni minigráficas sin un dato real detrás.
 - Sin espacio muerto: una tarjeta ocupa lo que su contenido necesita.
 
