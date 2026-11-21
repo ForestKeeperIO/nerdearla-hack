@@ -8,6 +8,7 @@ const PESTANAS = [
   { href: '/reportes', titulo: 'Reportes' },
   { href: '/subir', titulo: 'Subir archivos' },
   { href: '/como-funciona', titulo: 'Cómo funciona' },
+  { href: '/valkey', titulo: 'Valkey' },
 ];
 
 export function NavPrincipal() {
@@ -19,6 +20,7 @@ export function NavPrincipal() {
         return (
           <Link
             key={p.href}
+            prefetch={pathname === '/valkey' || p.href === '/valkey' ? false : undefined}
             href={p.href === '/reportes' ? '/reportes?programa=tamizaje-rosa' : p.href}
             aria-current={activo ? 'page' : undefined}
           >

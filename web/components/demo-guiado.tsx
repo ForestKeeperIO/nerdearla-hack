@@ -46,7 +46,13 @@ async function subirHoja(e: Estado): Promise<{ id?: string; error?: string }> {
 
 /** Capa del recorrido guiado. Vive en el layout y solo aparece tras entrar por /demo. */
 export function DemoGuiado() {
-  const router = useRouter(), ruta = usePathname();
+  const ruta = usePathname();
+  // El monitor tampoco debe reanudar una carga o emitir el reinicio al cerrar la pestaña.
+  return ruta === '/valkey' ? null : <RecorridoActivo ruta={ruta} />;
+}
+
+function RecorridoActivo({ ruta }: { ruta: string }) {
+  const router = useRouter();
   const [est, fijar] = useState<Estado | null>(null);
   const [caja, medir] = useState<Caja | null>(null);
   const [listo, alistar] = useState(false);
