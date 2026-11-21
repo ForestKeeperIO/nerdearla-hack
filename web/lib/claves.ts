@@ -47,6 +47,8 @@ export const perTodas = () => `${P}per:todas`;
 
 /** Set: personas con al menos un registro en ese programa. */
 export const perPrograma = (programa: string) => `${P}per:programa:${programa}`;
+export const perImpactadas = (programa: string) => `${P}per:impactadas:${programa}`;
+export const perDonantes = (programa: string) => `${P}per:donantes:${programa}`;
 
 /** Set: personas por ciudad. */
 export const perCiudad = (ciudad: string) => `${P}per:ciudad:${ciudad}`;

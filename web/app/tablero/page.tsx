@@ -9,10 +9,10 @@ import { FiltrosBarra } from '@/components/filtros-barra';
 import { ComoSeCalculo } from '@/components/como';
 import { BarList } from '@/components/ui/bar-list';
 import {
-  conteoUnidadMulti, edadPromedioMulti, filtrosDeQuery, hayFiltros,
-  personasPorCiudadMulti, personasUnicasMulti,
+  conteoUnidadMulti, filtrosDeQuery,
+  personasPorCiudadMulti,
 } from '@/lib/filtros';
-import { valoresDe, sinIdentificar, listarFuentes } from '@/lib/datos';
+import { edadPromedioIds, rolesDe, valoresDe, sinIdentificar, listarFuentes } from '@/lib/datos';
 import { fechaCorteDe, paresDe } from '@/lib/informe';
 import { ParesMasa } from '@/components/pares-masa';
 import { fechaEs, personasTxt } from '@/lib/comun';
@@ -62,10 +62,11 @@ export default async function Tablero({ searchParams }: { searchParams: Promise<
   const f = filtrosDeQuery(sp);
   const corte = await fechaCorteDe('global');
 
-  const [opcPrograma, opcCiudad, opcPeriodo, opcServicio, personas, edad, porCiudad, pares, sinId, fuentes, ...unidades] =
+  const roles = await rolesDe(f.programa);
+  const [opcPrograma, opcCiudad, opcPeriodo, opcServicio, edad, porCiudad, pares, sinId, fuentes, ...unidades] =
     await Promise.all([
       valoresDe('programa'), valoresDe('ciudad'), valoresDe('periodo'), valoresDe('servicio'),
-      personasUnicasMulti(f), edadPromedioMulti(f, corte), personasPorCiudadMulti(f),
+      edadPromedioIds(roles.idsUnicos, corte), personasPorCiudadMulti(f),
       paresDe('global'), sinIdentificar({}), listarFuentes(),
       ...UNIDADES.map((u) => conteoUnidadMulti(u.id, f)),
     ]);
@@ -94,9 +95,7 @@ export default async function Tablero({ searchParams }: { searchParams: Promise<
         />
       </Suspense>
       <p className="etiqueta" style={{ marginTop: 'var(--sp-2)' }}>
-        {hayFiltros(f)
-          ? `Filtros activos: ${f.programa.length + f.ciudad.length + f.periodo.length + f.servicio.length}. Recalculan las cifras, el desglose y la tabla de esta página. En las gráficas de Metabase, hoy solo aplica el filtro Programa.`
-          : 'Los filtros recalculan todas las cifras de esta página. En las gráficas de Metabase, hoy solo aplica el filtro Programa.'}
+        Personas, donantes y edad responden solo a Programa. Los demás filtros acotan los servicios.
       </p>
 
       {/* Advertencias de calidad: banda neutral de una línea con la acción a la derecha. */}
@@ -118,9 +117,14 @@ export default async function Tablero({ searchParams }: { searchParams: Promise<
       <section aria-label="Indicadores" className="tarjeta mt-6" style={{ padding: 0, overflow: 'hidden' }}>
         <div className="banda-cifras">
           <div>
-            <p className="cifra">{personasTxt(personas.valor)}</p>
-            <p className="rotulo-cifra">personas alcanzadas{hayFiltros(f) ? ' (con filtros)' : ''}</p>
-            <ComoSeCalculo med={personas} />
+            <p className="cifra">{personasTxt(roles.totalImpactadas)}</p>
+            <p className="rotulo-cifra">personas impactadas (suma por programa)</p>
+            <details className="calculo"><summary>Cómo se calculó</summary>Una persona identificada cuenta una vez en cada programa donde recibió atención o participó.</details>
+          </div>
+          <div>
+            <p className="cifra">{personasTxt(roles.totalDonantes)}</p>
+            <p className="rotulo-cifra">donantes identificadas</p>
+            <details className="calculo"><summary>Cómo se calculó</summary>Cada donante identificada cuenta una vez, sin sumar donaciones como atenciones.</details>
           </div>
           <div>
             <p className="cifra">{edad.valor.promedio === null ? '—' : edad.valor.promedio.toFixed(1)}</p>

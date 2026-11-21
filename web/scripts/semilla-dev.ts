@@ -7,7 +7,7 @@ import { createHash } from 'node:crypto';
 import { Valkey } from 'iovalkey';
 import {
   anom, bitacora, campoConteo, cnt, contrato, fuente, fuentes, nac, omitidas,
-  pares, perCerteza, perCiudad, perPeriodo, perPrograma, perServicio, perTipo,
+  pares, perCerteza, perCiudad, perDonantes, perImpactadas, perPeriodo, perPrograma, perServicio, perTipo,
   perTodas, presencia, sinid, trabajo, trabajos, valores,
 } from '../lib/claves';
 
@@ -72,6 +72,7 @@ async function registrar(
   pipe.hincrby(presencia('global'), MUNICIPIO[ciudad], 1);
   pipe.sadd(perTodas(), id);
   pipe.sadd(perPrograma(programa), id);
+  pipe.sadd(unidad === 'donacion' ? perDonantes(programa) : perImpactadas(programa), id);
   pipe.sadd(perTipo(unidad), id);
   pipe.sadd(perCiudad(ciudad), id);
   pipe.sadd(perPeriodo(periodo), id);

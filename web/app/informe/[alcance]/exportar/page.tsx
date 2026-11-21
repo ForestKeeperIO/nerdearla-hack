@@ -1,11 +1,11 @@
 import { exigirPaso } from '@/lib/guardia';
 import { fechaCorteDe, fuentesDe, tituloInforme } from '@/lib/informe';
 import {
-  edadPromedioIds, filtrosDe, impactadasIdsDe, noImpactadasIdsDe,
+  edadPromedioIds, filtrosDe, rolesDe,
   personasEnMasDeUnPrograma, personasPorCiudadIds, personasTxt, resumenTiposDe,
   sinIdentificar, type ResumenTipo,
 } from '@/lib/datos';
-import { nombrePrograma, pluralRol, pluralTipo, programasDemo, rolDe } from '@/lib/catalogo';
+import { nombrePrograma, pluralRol, pluralTipo, rolDe } from '@/lib/catalogo';
 import { presenciaDe } from '@/lib/territorio';
 import { MarcoInforme } from '@/components/marco';
 import { PieDePaso } from '@/components/pie-de-paso';
@@ -23,21 +23,11 @@ export default async function PaginaExportar({ params }: { params: Promise<{ alc
   const fuentes = await fuentesDe(alcance);
   const nombresFuentes = fuentes.valor.map((x) => x.nombre).join('; ') || 'sin archivos';
 
-  const demos = programasDemo();
-  const programaIds = esGlobal ? demos.map((d) => d.id) : [alcance];
-  const porPrograma = await Promise.all(
-    programaIds.map(async (id) => {
-      const [ids, resumen, noImp] = await Promise.all([
-        impactadasIdsDe(id),
-        resumenTiposDe(id),
-        noImpactadasIdsDe(id),
-      ]);
-      return { id, nombre: nombrePrograma(id), ids: ids.valor, resumen, noImpactadas: noImp.valor.length };
-    }),
-  );
-
-  const totalImpactadas = porPrograma.reduce((s, p) => s + p.ids.length, 0);
-  const idsUnicos = [...new Set(porPrograma.flatMap((p) => p.ids))];
+  const { porPrograma: roles, totalImpactadas, idsUnicos, totalDonantes } = await rolesDe(esGlobal ? [] : [alcance]);
+  const programaIds = roles.map((p) => p.id);
+  const porPrograma = await Promise.all(roles.map(async (p) => ({
+    ...p, nombre: nombrePrograma(p.id), resumen: await resumenTiposDe(p.id),
+  })));
 
   const f = await filtrosDe(alcance);
   const [sinId, edad, porCiudad] = await Promise.all([
@@ -46,7 +36,6 @@ export default async function PaginaExportar({ params }: { params: Promise<{ alc
     personasPorCiudadIds(idsUnicos),
   ]);
   const enAmbos = esGlobal ? (await personasEnMasDeUnPrograma(programaIds)).valor : 0;
-  const totalNoImpactadas = porPrograma.reduce((s, p) => s + p.noImpactadas, 0);
   const presencia = await presenciaDe(alcance);
 
   const hoy = new Date().toLocaleDateString('es-MX', { day: 'numeric', month: 'long', year: 'numeric' });
@@ -59,7 +48,7 @@ export default async function PaginaExportar({ params }: { params: Promise<{ alc
   ];
   if (esGlobal) {
     notas.push('El total global es la suma de las personas impactadas de cada programa: quien aparece en dos programas cuenta dos veces. Dentro de un mismo programa cada persona cuenta una sola vez.');
-    if (totalNoImpactadas > 0) notas.push('Las personas que solo aportan (donantes y otros roles) se reportan aparte y no cuentan como impactadas.');
+    if (totalDonantes > 0) notas.push('Donar no cuenta como recibir atención. Las donantes se reportan por separado.');
   }
 
   const filaTipo = (programaId: string, r: ResumenTipo) => (
@@ -115,10 +104,10 @@ export default async function PaginaExportar({ params }: { params: Promise<{ alc
                 <span className="fila__dato mono"><strong>{personasTxt(enAmbos)}</strong></span>
               </li>
             )}
-            {esGlobal && totalNoImpactadas > 0 && (
+            {totalDonantes > 0 && (
               <li className="fila" style={{ paddingBlock: 'var(--sp-2)' }}>
-                <span className="fila__cuerpo">Personas que solo aportan (no impactadas)<sup aria-label="nota 5"> 5</sup></span>
-                <span className="fila__dato mono"><strong>{personasTxt(totalNoImpactadas)}</strong></span>
+                <span className="fila__cuerpo">Donantes identificadas</span>
+                <span className="fila__dato mono"><strong>{personasTxt(totalDonantes)}</strong></span>
               </li>
             )}
           </ul>
