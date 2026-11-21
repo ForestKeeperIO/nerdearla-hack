@@ -1,12 +1,7 @@
 'use client';
 
-// Calidad, parte interactiva: las decisiones "¿es la misma persona?" y el pie
-// comparten el conteo de pendientes EN ESTA SESIÓN. Las decisiones viajan al
-// Stream eira:decisiones y las aplica el procesador, así que el servidor no
-// sabe cuántas ya decidió la usuaria; el estado vive aquí (defecto conocido:
-// el pie quedaba diciendo "Continuar con 3 por decidir" tras decidir todo).
-import { useState } from 'react';
-import { MismaPersona } from './misma-persona';
+// Los pendientes vienen del hash que escribe el procesador, no de los clics.
+import { ParesMasa } from './pares-masa';
 import { PieDePaso } from './pie-de-paso';
 import type { Par } from '@/lib/comun';
 import type { EstadoRecorrido } from '@/lib/recorrido';
@@ -24,18 +19,16 @@ export function CalidadCliente({
   estado: EstadoRecorrido;
   accion: () => Promise<void>;
 }) {
-  const [decididos, setDecididos] = useState<Set<string>>(new Set());
-  const restantes = pares.filter((p) => !decididos.has(p.id)).length;
+  const restantes = pares.filter((p) => p.estado === 'pendiente').length;
 
   return (
     <>
       <section aria-label="Decisiones pendientes" className="tarjeta">
-        <MismaPersona
+        <h2>Pares por decidir</h2>
+        <ParesMasa
           alcance={alcance}
           pares={pares}
           nombreFuente={nombreFuente}
-          decididos={decididos}
-          alDecidir={(id) => setDecididos((s) => new Set(s).add(id))}
         />
       </section>
       <PieDePaso estado={estado} paso="calidad">

@@ -37,5 +37,5 @@ test('una carga terminada cambia la pestaña abierta y mantiene la selección de
     expect(await page.locator('html').getAttribute('data-sesion-demo')).toBe('continua');
   }
   await page.getByRole('link',{name:'Sacar reporte'}).click();
-  await expect(page).toHaveURL(/\/reportes\?programa=tamizaje-rosa&desde=2026-09&hasta=2026-09/);
+  await expect(page).toHaveURL(/\/reportes\?origen=tablero&programa=tamizaje-rosa&desde=2026-09&hasta=2026-09/);
 });

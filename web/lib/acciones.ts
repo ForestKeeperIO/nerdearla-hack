@@ -7,6 +7,7 @@ import { escribirInforme, esAlcance, paresDe } from './informe';
 import { pares } from './claves';
 import { valkey } from './valkey';
 import type { Alcance } from './recorrido';
+import { opcionesPar, type IntencionPar } from './decision-par';
 
 const POR = 'Presidencia';
 
@@ -21,12 +22,13 @@ export async function decidirPar(alcance: string, parId: string, decision: 'mism
 
 /** Decisión en masa sobre pares seleccionados: un XADD por par en eira:decisiones
     (mismo camino que la decisión individual — el procesador los aplica igual). */
-export async function decidirPares(alcance: string, parIds: string[], decision: 'misma' | 'distinta') {
-  if (!esAlcance(alcance) || !Array.isArray(parIds) || !['misma','distinta'].includes(decision)) return false;
+export async function decidirPares(alcance: string, parIds: string[], intencion: IntencionPar | 'misma') {
+  if (!esAlcance(alcance) || !Array.isArray(parIds) || !(intencion === 'misma' || Object.hasOwn(opcionesPar, intencion))) return false;
+  const decision = intencion === 'distinta' ? 'distinta' : 'misma';
   const pendientes = new Set((await paresDe(alcance)).valor.filter(p => p.estado === 'pendiente').map(p => p.id));
   const ids = [...new Set(parIds)].filter(id => pendientes.has(id));
   for (const parId of ids) {
-    await emitirDecision({ tipo: 'persona', par: parId, decision, por: POR });
+    await emitirDecision({ tipo: 'persona', par: parId, decision, intencion, por: POR });
   }
   // XADD confirma la recepción, no la decisión. La lista y la banda se vuelven
   // a renderizar con el hash que escribió el procesador, nunca con un total local.
@@ -43,6 +45,7 @@ export async function decidirPares(alcance: string, parIds: string[], decision: 
 
 /** "Contar de todos modos" una fila omitida: XADD eira:decisiones (tipo restituir_fila). */
 export async function restituirFila(alcance: string, fuenteId: string, fila: number) {
+  if (process.env.EIRA_VISTA_LECTURA === '1') return;
   if (!esAlcance(alcance)) return;
   if (!fuenteId || !Number.isFinite(fila)) return;
   await emitirDecision({
@@ -58,6 +61,7 @@ export async function restituirFila(alcance: string, fuenteId: string, fila: num
 /** La usuaria termina Calidad (con o sin decisiones pendientes). */
 export async function resolverCalidad(alcance: string) {
   if (!esAlcance(alcance)) return;
+  if (process.env.EIRA_VISTA_LECTURA === '1') redirect(`${base(alcance)}/vista-previa`);
   await escribirInforme(alcance as Alcance, { calidad_resuelta: '1' });
   revalidatePath(base(alcance), 'layout');
   redirect(`${base(alcance)}/vista-previa`);
@@ -66,13 +70,15 @@ export async function resolverCalidad(alcance: string) {
 /** "Las cifras son correctas": abre Exportar. */
 export async function aprobarCifras(alcance: string) {
   if (!esAlcance(alcance)) return;
+  if (process.env.EIRA_VISTA_LECTURA === '1') redirect('/subir');
   await escribirInforme(alcance as Alcance, { cifras_aprobadas: '1' });
   revalidatePath(base(alcance), 'layout');
-  redirect(`${base(alcance)}/exportar`);
+  redirect('/subir');
 }
 
 /** Fecha de corte del informe, la primera vez que se entra. */
 export async function fijarFechaCorte(alcance: string, formData: FormData) {
+  if (process.env.EIRA_VISTA_LECTURA === '1') return;
   if (!esAlcance(alcance)) return;
   const fecha = String(formData.get('fecha_corte') ?? '');
   if (!/^\d{4}-\d{2}-\d{2}$/.test(fecha)) return;

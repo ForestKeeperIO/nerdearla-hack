@@ -36,7 +36,7 @@ test('el rango ocupa un solo filtro y el CSV conserva el cruce', async ({ page }
   expect(await csv.text()).toContain(`"Personas impactadas por programa","${total}"`);
   const reporte = new URL((await page.getByRole('link',{name:'Sacar reporte'}).getAttribute('href'))!,page.url());
   expect(reporte.pathname).toBe('/reportes');
-  expect(Object.fromEntries(reporte.searchParams)).toMatchObject({ programa:'tamizaje-rosa',municipio:'14050,14077,14079',
+  expect(Object.fromEntries(reporte.searchParams)).toMatchObject({ origen:'tablero',programa:'tamizaje-rosa',municipio:'14050,14077,14079',
     servicio:'Exploración clínica',desde:'2026-02',hasta:'2026-10' });
   await page.setViewportSize({width:390,height:844});
   const abrir = page.getByRole('button',{name:'Filtros (4)'});
@@ -50,4 +50,5 @@ test('el rango ocupa un solo filtro y el CSV conserva el cruce', async ({ page }
   await page.getByRole('button',{name:'Limpiar',exact:true}).click();
   await expect(page).toHaveURL(/\/tablero$/);
   await expect(page.locator('[data-kpi=donantes]')).toBeVisible();
+  await expect(page.getByRole('link',{name:'Sacar reporte'})).toHaveAttribute('href','/reportes?origen=tablero');
 });

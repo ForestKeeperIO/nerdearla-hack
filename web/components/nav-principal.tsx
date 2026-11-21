@@ -18,7 +18,7 @@ export function NavPrincipal() {
         return (
           <Link
             key={p.href}
-            href={p.href}
+            href={p.href === '/reportes' ? '/reportes?programa=tamizaje-rosa' : p.href}
             aria-current={activo ? 'page' : undefined}
           >
             {p.titulo}

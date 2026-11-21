@@ -2,7 +2,7 @@
 -- La identidad compuesta reproduce la partición de Selma tras "distinta".
 -- Ni estos identificadores ni los nombres de filas se exportan a Metabase.
 CREATE TEMP VIEW actividad AS
-SELECT s.programa AS iniciativa, s.id AS fuente, f.ciudad, f.periodo, f.servicio,
+SELECT s.programa AS iniciativa, s.id AS fuente, f.ciudad, f.periodo, f.servicio, f.fecha,
        t.tipo, f.nac, t.impactada, t.objetos, f.cantidad,
        CASE WHEN coalesce(f.id_h, '') = '' THEN NULL
             WHEN EXISTS (SELECT 1 FROM pares p WHERE p.estado='distinta'
@@ -80,15 +80,17 @@ FROM pares WHERE estado='pendiente';
 -- Atlas filtrable, en una base distinta de la de Metabase. El ordinal solo
 -- identifica dentro de la foto; no exportamos HMAC, nombres, filas ni fechas de nacimiento.
 CREATE TEMP VIEW atlas_personas AS
-SELECT persona, row_number() OVER (ORDER BY persona) AS ordinal
-FROM (SELECT DISTINCT persona FROM actividad WHERE persona IS NOT NULL);
+SELECT persona, row_number() OVER (ORDER BY persona) AS ordinal, max(nullif(nac,'')) AS nacimiento
+FROM actividad WHERE persona IS NOT NULL GROUP BY persona;
 CREATE TEMP VIEW atlas_registros AS
 SELECT a.iniciativa AS iniciativa_id, a.servicio, a.periodo, p.ordinal AS persona_ef,
        CASE WHEN a.impactada THEN 'impactada' ELSE 'donante' END AS rol_persona,
        1 AS contado, CASE WHEN a.objetos THEN a.cantidad ELSE 1 END AS cantidad,
        coalesce(l.clave,'') AS municipio_clave, coalesce(l.municipio,'') AS municipio,
        coalesce(substr(l.clave,1,2),'') AS estado_clave, coalesce(l.estado,'') AS estado,
-       a.tipo AS tipo_registro, a.fuente AS fuente_id
+       a.tipo AS tipo_registro, a.fuente AS fuente_id, a.fecha, coalesce(l.municipio,'') AS ciudad,
+       (cast(strftime('%Y',a.fecha) AS integer)-cast(strftime('%Y',p.nacimiento) AS integer)
+        -(strftime('%m-%d',a.fecha)<strftime('%m-%d',p.nacimiento))) BETWEEN 25 AND 64 AS edad_objetivo
 FROM actividad a LEFT JOIN atlas_personas p ON p.persona=a.persona
 LEFT JOIN lugares l ON l.fuente=a.fuente AND l.ciudad=a.ciudad;
 CREATE TEMP VIEW atlas_edades AS

@@ -23,6 +23,7 @@ export async function GET(req: NextRequest) {
     ...d.lugares.map(x => ['Municipio', `${x.clave} ${x.nombre}`, x.n, 'registros']),
     ...d.edades.map(x => ['Edad', x.nombre, x.n, 'personas']),
     ...d.servicios.map(x => ['Servicio', x.nombre, x.n, 'registros']),
+    ...d.unidades.map(x => ['Servicio por unidad', x.nombre, x.cantidad, x.unidad]),
     ...d.meses.map(x => ['Mes', x.nombre, x.n, 'registros']),
   ];
   return new Response('\uFEFF' + rows.map(r => r.map(celda).join(',')).join('\r\n'), {

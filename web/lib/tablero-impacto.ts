@@ -5,6 +5,7 @@ import type { Opciones } from './filtros-comun';
 import { alias } from './facetas';
 import { motorActivo } from './claves';
 import { rolesDe } from './datos';
+import { baseAnalitica } from './base-analitica';
 
 const columnas = { estado: 'r.estado_clave', municipio: 'r.municipio_clave', programa: 'r.iniciativa_id', servicio: 'r.servicio' };
 const nombres = { estado: 'r.estado', municipio: 'm.municipio', programa: 'i.nombre', servicio: 'r.servicio' };
@@ -32,9 +33,7 @@ export type Carga = { nombre: string; programa: string; fecha: string; estrellas
 export type Servicio = Punto & { unidad: string; cantidad: number };
 
 function abrir() {
-  const ruta = motorActivo() === 'selma' ? process.env.EIRA_TABLERO_DB :
-    process.env.IMPACTO_DB || resolve('..', 'data', 'impacto.sqlite');
-  if (!ruta) throw new Error('Falta EIRA_TABLERO_DB para el tablero de Selma');
+  const ruta = baseAnalitica() || resolve('..', 'data', 'impacto.sqlite');
   return new DatabaseSync(ruta, { readOnly: true });
 }
 

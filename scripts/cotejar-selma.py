@@ -55,6 +55,8 @@ def main():
     kpi = p.indicadores["personas"]
     csv_global = {r["indicador"]: r["valor"] for r in csv.DictReader(io.StringIO(leer(app + "/informe/global/informe.csv")))}
     informe = csv_global["personas_impactadas"]
+    aliados = next(r["numerador"] for r in csv.DictReader(io.StringIO(
+        leer(app + "/reportes/aliados/datos.csv?programa=global"))) if r["indicador"] == "personas_impactadas")
     card = next(c for c in json.loads(leer(dashboard))["dashcards"]
                 if (c.get("card") or {}).get("name") == "Personas impactadas")
     respuesta = json.loads(leer(f"{dashboard}/dashcard/{card['id']}/card/{card['card_id']}"))
@@ -69,7 +71,8 @@ def main():
         raise SystemExit("Usa el corpus ficticio con 5 o más para comparar cifras sin supresión")
     # El HTML usa toLocaleString('es-MX'); CSV, SQL y Valkey no agrupan millares.
     kpi_decimal = kpi.replace(",", "") if re.fullmatch(r"[0-9]{1,3}(,[0-9]{3})+", kpi) else kpi
-    if not kpi_decimal == mb == informe == esperado:
+    print(f"CSV actual de aliados={aliados}")
+    if not kpi_decimal == mb == informe == aliados == esperado:
         raise SystemExit("NO CORTAR: los lectores discrepan")
     municipios = v.hlen("eira:presencia:global")
     print(f"Presencia: Valkey={municipios}; mapa/tablero={p.indicadores['municipios']}; CSV={csv_global.get('presencia_municipios')}")

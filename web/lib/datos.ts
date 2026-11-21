@@ -12,7 +12,7 @@ import type {
   Anomalia, CiudadConteo, Cobertura, EntradaBitacora, Filtros, Fuente, Med,
   Omitida, Par, Trabajo, Unidad,
 } from './comun';
-import { tiposDe, valoresPrograma } from './catalogo';
+import { nombrePrograma, tiposDe, valoresPrograma } from './catalogo';
 
 export type {
   Anomalia, CiudadConteo, Cobertura, EntradaBitacora, Filtros, Fuente, Med,
@@ -354,7 +354,24 @@ export async function listarPares(): Promise<Med<Par[]>> {
         // ignora entradas mal formadas
       }
     }
-    return lista.sort((a, b) => a.id.localeCompare(b.id));
+    const pendientes = lista.filter(p => p.estado === 'pendiente');
+    if (pendientes.length) {
+      const programas = new Map((await listarFuentes()).valor.map(f => [f.id, nombrePrograma(f.programa)]));
+      const lados = pendientes.flatMap(p=>[p.a,p.b]);
+      const buscados = new Set(lados.map(l=>`${l.fuente}:${l.fila}`));
+      const huellas = new Map<string,string>();
+      let cursor = '0';
+      do {
+        const [sig,lote] = await valkey().hscan('eira:huellas:fila',cursor,'COUNT',500);
+        for (let i=0;i<lote.length;i+=2) if (buscados.has(lote[i+1])) huellas.set(lote[i+1],lote[i]);
+        cursor = sig;
+      } while (cursor !== '0' && huellas.size < buscados.size);
+      for (const lado of lados) {
+        lado.programa ??= programas.get(lado.fuente);
+        lado.huellaFila = huellas.get(`${lado.fuente}:${lado.fila}`);
+      }
+    }
+    return pendientes.sort((a, b) => a.id.localeCompare(b.id));
   });
 }
 

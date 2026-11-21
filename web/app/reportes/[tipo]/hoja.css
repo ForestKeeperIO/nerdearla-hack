@@ -1,0 +1,71 @@
+.hoja { --filete: 1px solid var(--linea-fuerte); }
+.utiles,.lector-filtros { display: flex; flex-wrap: wrap; align-items: end; gap: .7rem; }
+.utiles { margin-block: 1.5rem; }
+.utiles > a:first-child { margin-inline-end: auto; padding-block: .6rem; color: var(--vino); }
+.lector-filtros label { display: grid; gap: .2rem; font-size: .79rem; color: var(--tinta-suave); }
+.lector-filtros select { border: var(--filete); border-radius: .45rem; color: var(--tinta); padding: .42rem .6rem; max-width: 100%; }
+.pliego { background: var(--superficie); padding: clamp(1.3rem,4.5vw,4.5rem); border-top: 3px solid var(--vino-oscuro); }
+.membrete { display: flex; align-items: center; gap: .6rem; border-bottom: var(--filete); padding-bottom: .8rem; }
+.membrete strong { font: 1.65rem/1 var(--font-display); color: var(--vino); }
+.membrete span { font-size: .8rem; color: var(--tinta-suave); }
+.membrete span:last-child { margin-inline-start: auto; text-align: right; }
+.titulo-ficha { display: grid; grid-template-columns: minmax(0,1fr) auto; gap: 1.5rem; align-items: end; margin-block: 2.8rem 2rem; }
+.hoja h1 { font-size: clamp(2.7rem,4.9vw,4.4rem); }
+.titulo-ficha p { margin-block-start: .65rem; color: var(--tinta-suave); }
+.hoja dt { color: var(--tinta-suave); font-size: .79rem; }
+.hoja dd { margin: 0 0 .4rem; overflow-wrap: anywhere; }
+.respuesta,.panel-mapa { display: grid; grid-template-columns: 1fr 1.15fr; align-items: center; gap: 2rem; margin-block: 1.5rem 2rem; }
+.respuesta { background: var(--vino-oscuro); color: var(--papel); padding: 1.6rem 2rem; border-radius: 0 1.25rem 1.25rem 0; }
+.respuesta strong { display: block; font: 400 clamp(3.6rem,6vw,5.8rem)/1.05 var(--font-display); }
+.respuesta p { max-width: 40ch; }
+.columnas { display: grid; grid-template-columns: 1.25fr 1fr; gap: 3rem; }
+.hoja h2 { font-size: clamp(1.65rem,2.4vw,2.3rem); margin-bottom: .6rem; }
+.hoja h3 { font-size: 1.4rem; margin-block: 1.5rem .6rem; }
+.rayas { list-style: none; padding: 0; margin-top: 1rem; }
+.rayas li { display: grid; grid-template-columns: 1fr auto; gap: .2rem 1rem; margin-block: .65rem; font-size: .88rem; }
+.rayas i { grid-column: 1/-1; display: block; height: 3px; background: var(--vino); }
+.nota-norma,.pie-registro { margin-top: 2rem; padding-top: 1rem; border-top: var(--filete,var(--border)); }
+.sin-dato,.sin-lectura { color: var(--tinta-suave); background: var(--papel-2); padding: .8rem 1rem; margin-block-start: .7rem; }
+.panel-mapa { grid-template-columns: minmax(10rem,.68fr) minmax(0,1.32fr); background: var(--papel); padding: 1.5rem; }
+.panel-mapa p { margin-top: .7rem; }
+.atlas-reporte { margin: 0; }
+.atlas-reporte svg { width: 100%; height: auto; }
+.atlas-reporte path { fill: var(--papel-2); stroke: var(--linea-fuerte); stroke-width: 1; }
+.atlas-reporte circle { fill: var(--vino); stroke: var(--papel); stroke-width: 1; }
+.atlas-reporte figcaption { font-size: .76rem; color: var(--tinta-suave); }
+.evidencia,.ficha-metodo { margin-top: 2rem; }
+.tabla-scroll { overflow: auto; max-inline-size: 100%; margin-top: .75rem; }
+.tabla-scroll table { border-collapse: collapse; min-width: 100%; text-align: left; font-size: .875rem; }
+.tabla-scroll :is(th,td) { padding: .6rem .8rem; border-bottom: var(--filete); }
+.tabla-scroll thead th { background: var(--papel-2); }
+.tabla-scroll tbody th { background: var(--superficie); position: sticky; inset-inline-start: 0; font-weight: 500; }
+.ficha-metodo dl { display: grid; grid-template-columns: 12rem minmax(0,1fr); margin-block: 1rem; }
+.ficha-metodo :is(dt,dd) { padding-block: .7rem; border-top: var(--filete); margin: 0; }
+@media (max-width: 767px) {
+  .utiles .lector-filtros { flex-basis: 100%; }
+  .pliego { padding-inline: .9rem; }
+  .titulo-ficha,.respuesta,.columnas,.panel-mapa,.ficha-metodo dl { grid-template-columns: minmax(0,1fr); gap: 1rem; }
+  .titulo-ficha { margin-block: 1.5rem; }
+  .titulo-ficha dl { display: grid; grid-template-columns: auto 1fr; gap: .25rem .7rem; }
+  .ficha-metodo dl { gap: 0; }
+  .ficha-metodo dd { border: 0; padding-top: 0; }
+}
+@media print {
+  @page { size: A4; margin: 14mm; }
+  html:has(.hoja),body:has(.hoja) { height: auto; overflow: visible; }
+  main:has(.hoja) { width: 100%; margin: 0; }
+  .hoja { font-size: 10pt; print-color-adjust: exact; }
+  .pliego { padding: 5mm 0 0; border-top: 2pt solid var(--vino); margin: 0; }
+  .evidencia,.ficha-metodo { break-before: page; }
+  .hoja h1 { font-size: 32pt; }
+  .hoja h2 { font-size: 18pt; }
+  .titulo-ficha { margin: 8mm 0; grid-template-columns: 1fr auto; }
+  .titulo-ficha dl,.ficha-metodo dl { display: block; }
+  .columnas,.panel-mapa,.respuesta { grid-template-columns: 1fr 1fr; gap: 6mm; }
+  .panel-mapa { margin-block: 5mm; }
+  .atlas-reporte svg { max-height: 64mm; }
+  .tabla-scroll { overflow: visible; }
+  .tabla-scroll :is(th,td) { position: static; padding: 2mm; }
+  .hoja tr,.nota-norma { break-inside: avoid; }
+  .ficha-metodo dd { padding-top: 0; border: 0; }
+}
