@@ -58,7 +58,10 @@ export function ListaVivo({ alcance, inicial }: { alcance: string; inicial: Dato
         </p>
       ) : (
         <ul style={{ listStyle: 'none', padding: 0, margin: 0 }}>
-          {datos.trabajos.map((t) => {
+          {/* Un trabajo ya importado también es fuente: no lo listamos dos veces. */}
+          {datos.trabajos
+            .filter((t) => !(t.estado === 'listo' && datos.fuentes.some((f) => f.nombre === t.nombre)))
+            .map((t) => {
             const e = estadoTrabajo(t);
             return (
               <li key={t.id} className="fila">

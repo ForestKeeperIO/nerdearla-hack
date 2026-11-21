@@ -5,13 +5,17 @@ import { useTransition } from 'react';
 import type { Par } from '@/lib/comun';
 import { decidirPar } from '@/lib/acciones';
 
-function Lado({ titulo, etiqueta, fuente, fila }: { titulo: string; etiqueta: string; fuente: string; fila: number }) {
+/** Fila de la comparación: el valor de cada registro, resaltado si difieren. */
+function FilaCampo({ campo, a, b }: { campo: string; a: string; b: string }) {
+  const difiere = a !== b;
+  const celda = { padding: 'var(--sp-2) var(--sp-3)', borderTop: 'var(--border)', verticalAlign: 'top' as const };
+  const resaltado = difiere ? { background: 'var(--rubor)' } : {};
   return (
-    <div className="tarjeta" style={{ padding: 'var(--sp-4)', flex: 1, minWidth: 0 }}>
-      <p className="etiqueta mono" style={{ fontSize: 'var(--fs-meta)', letterSpacing: '0.04em' }}>{titulo}</p>
-      <p style={{ fontWeight: 500, marginTop: 'var(--sp-2)' }}>{etiqueta}</p>
-      <p className="etiqueta" style={{ marginTop: 'var(--sp-1)' }}>{fuente} · fila {fila}</p>
-    </div>
+    <tr>
+      <th scope="row" className="etiqueta" style={{ ...celda, textAlign: 'left', fontWeight: 500, width: '7rem' }}>{campo}</th>
+      <td style={{ ...celda, ...resaltado }}>{a}</td>
+      <td style={{ ...celda, ...resaltado }}>{b}</td>
+    </tr>
   );
 }
 
@@ -57,32 +61,23 @@ export function MismaPersona({
         <p className="etiqueta">Faltan {pendientes.length} por decidir</p>
       </div>
       {actual.motivo && <p className="etiqueta" style={{ marginTop: 'var(--sp-1)' }}>{actual.motivo}</p>}
-      <div className="mt-4 flex flex-col gap-3 sm:flex-row sm:items-stretch">
-        <Lado
-          titulo="Registro A"
-          etiqueta={actual.a.etiqueta}
-          fuente={nombreFuente[actual.a.fuente] ?? actual.a.fuente}
-          fila={actual.a.fila}
-        />
-        <div className="flex items-center justify-center" aria-hidden="true">
-          <span
-            className="mono"
-            style={{
-              fontSize: 'var(--fs-meta)', letterSpacing: '0.12em', textTransform: 'uppercase',
-              color: 'var(--tinta-tenue)', border: 'var(--border)', borderRadius: 'var(--r-sm)',
-              padding: 'var(--sp-1) var(--sp-3)', background: 'var(--superficie)',
-            }}
-          >
-            vs
-          </span>
-        </div>
-        <Lado
-          titulo="Registro B"
-          etiqueta={actual.b.etiqueta}
-          fuente={nombreFuente[actual.b.fuente] ?? actual.b.fuente}
-          fila={actual.b.fila}
-        />
-      </div>
+      <table className="mt-4" style={{ width: '100%', borderCollapse: 'collapse', fontSize: 'var(--fs-small)', border: 'var(--border)', borderRadius: 'var(--r-sm)' }}>
+        <thead>
+          <tr>
+            <th scope="col" className="etiqueta" style={{ padding: 'var(--sp-2) var(--sp-3)', textAlign: 'left', width: '7rem' }}></th>
+            <th scope="col" className="etiqueta" style={{ padding: 'var(--sp-2) var(--sp-3)', textAlign: 'left', fontWeight: 500 }}>Registro A</th>
+            <th scope="col" className="etiqueta" style={{ padding: 'var(--sp-2) var(--sp-3)', textAlign: 'left', fontWeight: 500 }}>Registro B</th>
+          </tr>
+        </thead>
+        <tbody>
+          <FilaCampo campo="Identificación" a={actual.a.etiqueta} b={actual.b.etiqueta} />
+          <FilaCampo campo="Archivo" a={nombreFuente[actual.a.fuente] ?? actual.a.fuente} b={nombreFuente[actual.b.fuente] ?? actual.b.fuente} />
+          <FilaCampo campo="Fila" a={String(actual.a.fila)} b={String(actual.b.fila)} />
+        </tbody>
+      </table>
+      <p className="etiqueta" style={{ marginTop: 'var(--sp-2)' }}>
+        Las celdas sombreadas son las que difieren entre los dos registros.
+      </p>
       <div className="mt-4 flex flex-wrap gap-3">
         <button type="button" className="btn btn--primario" disabled={cargando} onClick={() => decidir('misma')}>
           Es la misma persona
