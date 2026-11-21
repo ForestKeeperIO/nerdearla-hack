@@ -111,7 +111,8 @@ py() { # corre Python del proyecto: uv si hay pyproject, si no python3
   if [ -f "$RAIZ/pyproject.toml" ] && command -v uv >/dev/null; then
     uv run "$@"
   else
-    "$@"
+    shift   # quita el "python" de la llamada
+    python3 "$@"
   fi
 }
 

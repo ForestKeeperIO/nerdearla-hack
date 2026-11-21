@@ -65,9 +65,9 @@ print(f"  {n} claves borradas")
 PY
 
 rm -f "$IMPACTO_DB"
+if [ -f pyproject.toml ] && command -v uv >/dev/null; then PYBIN="uv run python"; else PYBIN="python3"; fi
 if [ -f db/crear.py ]; then
-  if [ -f pyproject.toml ] && command -v uv >/dev/null; then UV="uv run"; else UV=""; fi
-  IMPACTO_DB="$IMPACTO_DB" $UV python -m db.crear
+  IMPACTO_DB="$IMPACTO_DB" $PYBIN -m db.crear
 fi
 
 WPID=""
@@ -106,15 +106,14 @@ PY
 }
 
 procesa() { # archivo | estado esperado | nivel esperado
-  local f="$1" e_est="$2" e_niv="$3" out est niv fn fo r
+  local f="$1" e_est="$2" e_niv="$3" out est niv fn fo r prog unidad
   if [ -f scripts/procesar_local.py ]; then
-    if [ -f pyproject.toml ] && command -v uv >/dev/null; then UV="uv run"; else UV=""; fi
     case "$f" in
       salud-que-florece.xlsx) prog="salud-que-florece"; unidad="participacion" ;;
       nutricion.xlsx) prog="nutricion"; unidad="atencion" ;;
       *) prog="tamizaje-rosa"; unidad="atencion" ;;
     esac
-    out="$($UV python scripts/procesar_local.py "reportes/$f" --programa "$prog" --unidad "$unidad" --por humo 2>&1)" || echo "$out" >&2
+    out="$($PYBIN scripts/procesar_local.py "reportes/$f" --programa "$prog" --unidad "$unidad" --por humo 2>&1)" || echo "$out" >&2
   fi
   IFS='|' read -r est niv fn fo <<<"$(estado_de "$f")"
   r="OK"

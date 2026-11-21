@@ -38,7 +38,7 @@ defunciones_jalisco_mujeres_c50_c53_mensual_2024.csv|contexto-publico|estudio
 egresos_hospitalarios_jalisco_c50_c53_2024.csv|contexto-publico|atencion
 clues_unidades_salud_jalisco_2026.csv|contexto-publico|estudio'
 
-py() { if [ -f pyproject.toml ] && command -v uv >/dev/null; then uv run "$@"; else "$@"; fi; }
+py() { if [ -f pyproject.toml ] && command -v uv >/dev/null; then uv run "$@"; else shift; python3 "$@"; fi; }
 
 if [ ! -f scripts/procesar_local.py ]; then
   echo "Falta scripts/procesar_local.py (rama motor). Cuando esté, este script funciona tal cual." >&2
