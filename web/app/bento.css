@@ -1,7 +1,6 @@
 /* Hallmark · theme: custom EIRA · shape: app screen · signature: corte y evidencia en una mesa de trabajo.
    Direction B: tarjetas de impacto, edad y territorio. Distinguir siempre la falta de datos del cero. */
 :root {
-  --bento-lienzo: #f4f3f1;
   --bento-rayado: repeating-linear-gradient(135deg,var(--papel) 0 6px,var(--papel-2) 6px 8px);
   --bento-fuente: var(--font-eira-bento),var(--font-ui);
   --bento-radio: 24px;
@@ -32,7 +31,7 @@ main.contenido:has(.archivo-eira) { max-width: 88rem; }
 .mini-cabeza,.acciones-lectura,.dato-bento > span,.respuesta > span { display: flex; align-items: center; gap: .65rem; }
 .mini-cabeza { width: 100%; font-size: .95rem; }
 .archivo-eira svg.lucide { width: 1.2rem; height: 1.2rem; stroke-width: 1.5; flex-shrink: 0; }
-.mini-cabeza a,.dato-bento > span a,.respuesta > span a { display: grid; place-items: center; margin-left: auto; border-radius: var(--r-pill); width: 2.3rem; height: 2.3rem; background: var(--papel-2); color: var(--vino-oscuro); }
+.mini-cabeza a,.dato-bento > span :is(a,button),.respuesta > span :is(a,button) { display: grid; place-items: center; margin-left: auto; border-radius: var(--r-pill); width: 2.3rem; height: 2.3rem; min-height: 2.3rem; background: var(--papel-2); color: var(--vino-oscuro); cursor: pointer; }
 .muestra-corte { display: flex; gap: .8rem; align-items: center; margin-block: 1.3rem; }
 .muestra-corte b { font-size: 4.3rem; font-weight: 520; line-height: 1; letter-spacing: -.04em; }
 .muestra-corte span { max-width: 17ch; font-size: .9rem; }

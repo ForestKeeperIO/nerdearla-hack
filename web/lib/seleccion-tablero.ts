@@ -31,6 +31,22 @@ export function periodoTexto(f: Seleccion) {
   return `${f.desde.slice(0,4) === f.hasta.slice(0,4) ? a.split(' ')[0] : a}–${b}`;
 }
 
+export function indiceMes(mes: string) {
+  const [anio, n] = mes.split('-').map(Number);
+  return anio*12 + n-1;
+}
+
+export function mesDeIndice(i: number) {
+  return `${String(Math.floor(i/12)).padStart(4,'0')}-${String(i%12+1).padStart(2,'0')}`;
+}
+
+/** Ventana inmediatamente anterior, de la misma duración; Todo no tiene base comparable. */
+export function periodoAnterior(f: Seleccion): Seleccion | null {
+  if (!f.desde || !f.hasta) return null;
+  const a = indiceMes(f.desde), b = indiceMes(f.hasta);
+  return a-(b-a+1) < 0 ? null : { ...f, desde: mesDeIndice(a-(b-a+1)), hasta: mesDeIndice(a-1) };
+}
+
 export function filtrosActivos(f: Seleccion) {
   return DIMENSIONES.filter(d => d === 'periodo' ? f.desde || f.hasta : f[d].length).length;
 }

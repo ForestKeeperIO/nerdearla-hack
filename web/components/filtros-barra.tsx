@@ -50,7 +50,8 @@ export function FiltrosBarra({ base, activos, corte }: { base: BaseFacetas; acti
       {ETIQUETA_DIM[d]}: {todas[d].find(o => o.valor === v)?.texto ?? 'No disponible'} <X size={14} aria-label="Quitar" />
     </button>))}{cuenta > 0 && <button className="quitar-todo" type="button" onClick={() => navegar(FILTROS_VACIOS)}>Limpiar todo</button>}</div>;
   const estados = todas.estado.filter(o => f.estado.includes(o.valor)).map(o=>o.texto);
-  const resumen = `${resultado.registros} registros en ${resultado.municipios.length} municipios${estados.length ? ` de ${estados.join(', ')}` : ''}.`;
+  const n = resultado.municipios.length;
+  const resumen = `${resultado.registros} ${resultado.registros === 1 ? 'registro' : 'registros'} en ${n} ${n === 1 ? 'municipio' : 'municipios'}${estados.length ? ` de ${estados.join(', ')}` : ''}.`;
   return <div data-parte="filtros">
     <div className="facetas-escritorio">{controles()}</div>
     <button type="button" className="abrir-filtros" onClick={() => dialog.current?.showModal()}><SlidersHorizontal size={17} aria-hidden />Filtros ({cuenta})</button>
@@ -61,10 +62,11 @@ export function FiltrosBarra({ base, activos, corte }: { base: BaseFacetas; acti
     {cuenta > 0 && chips}
     <div className="facetas-pie"><p aria-live="polite" aria-atomic="true">
       {pendiente ? 'Actualizando…' : resumen}{(f.servicio.length > 0 || f.periodo.length > 0) && ` Actividad: ${resultado.unidades.map(u => `${u.cantidad} ${u.nombre}`).join('; ') || 'sin resultados'}.`}
+      {resultado.sinCruce > 0 && ` No se pudo verificar el municipio de ${resultado.sinCruce} registros de actividad; se excluyen del desglose territorial.`}
     </p>
       <button type="button" onClick={async () => { try { await navigator.clipboard.writeText(window.location.href); copiar('Enlace copiado'); }
         catch { copiar('Copia la dirección de la barra del navegador'); } }}><Link2 size={15} aria-hidden />{copia || 'Copiar enlace de esta vista'}</button>
     </div>
-    {cuenta > 0 && <p className="mesa-nota">Programa cambia todas las cifras. Estado y municipio acotan presencia; servicio y periodo, actividad de los programas presentes.</p>}
+    {cuenta > 0 && <p className="mesa-nota">Personas, donantes y edad: solo programa. Territorio, servicio y periodo: actividad y municipios. El cruce por lugar incluye solo registros identificados con municipio verificable.</p>}
   </div>;
 }

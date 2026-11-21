@@ -123,6 +123,19 @@ El trabajo que encola el frontend lleva además el campo `estado_clave` (2 dígi
 "Mismo contenido" no usa clave propia: se deduce de que todas las filas del
 archivo ya estaban en `eira:huellas:fila` y pertenecen a una misma fuente.
 
+### Programas, tipos de registro y métricas (adición del procesamiento, 21 nov 13:30)
+
+No rompe compatibilidad: solo agrega claves y precisa dos valores.
+
+- **`<programa>` en las claves es el `id` de `catalogos/iniciativas.json`** (`tamizaje-rosa`, `melenas-en-movimiento`), no el nombre. El frontend traduce a nombre con el catálogo. Si el trabajo llega con el nombre, Python lo traduce al id; si el programa no está en el catálogo, el trabajo termina en `error`.
+- **`unidad` del trabajo y `<tipo>` de `eira:cnt:<tipo>` son claves de `tipos_de_registro` del catálogo**, no solo las cuatro de arriba: `atencion`, `estudio`, `participacion`, `entrega_insumo`, `donacion`, `producto_entregado`. Un programa solo admite los tipos que el catálogo le asigna; si no, `error`. Un archivo puede traer una columna "Tipo de registro" que manda sobre la `unidad` del trabajo (caso Melenas: donaciones y pelucas en el mismo Excel). Los tipos con `se_cuenta = objetos` suman `cantidad`; los demás cuentan 1 por fila.
+- **Solo cuentan como persona impactada** (`eira:per:*`, `eira:nac`) los roles con `cuenta_como_impactada = true`. Donantes y voluntarias van a `eira:don:programa:<id>` y `eira:don:todas` (Set).
+
+| Clave | Tipo | Contenido |
+|---|---|---|
+| `eira:met:<alcance>` | Hash | Métricas precalculadas. `<alcance>` es el id de un programa o `global`. Campos de un programa: `nombre`, `personas`, `donantes`, `sin_identificar`, `inasistencias`, `municipios`, `fuentes`, `estrellas_min`, `fecha_corte`, `edad_promedio` (vacío si no hay), `edad_n`, `unidades` (JSON tipo → cantidad) y `cnt_<tipo>` |
+| `eira:met:global` | Hash | `personas` = **suma** de las de cada programa (quien está en dos cuenta dos veces, decisión de Ian 13:10); `personas_unicas_en_total`; `personas_en_mas_de_un_programa`; `donantes`; `programas` (JSON, lista de ids); `edad_promedio` sobre cada pareja persona-programa; más los mismos campos que un programa |
+
 ### Aviso en vivo
 
 `PUBLISH eira:eventos <json>` con `{ "tipo": "trabajo" | "fuente" | "persona", "id": "…" }` cada vez que cambie algo que el tablero deba refrescar.

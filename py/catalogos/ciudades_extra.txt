@@ -1,0 +1,6 @@
+# Una ciudad, municipio o localidad por línea. Se suman a los 125 municipios de Jalisco (INEGI).
+# EIRA también opera en Veracruz: agregar aquí sus localidades cuando las confirmen.
+# Ejemplos de la página de EIRA (sin validar):
+Tolapa
+Ticoma
+Aguacatla

@@ -15,13 +15,16 @@
   --rubor:        #FFEBEE;
   --rosa:         #FFA9B8;
   --pizarra:      #7E8BA3;
-  --aviso:        #8F4A4C;
+  --aviso:        #B0595A;
+  --aviso-texto:  #8F4A4C;
   --error:        #843F3F;
 
   /* Neutros derivados de la paleta (declarados aquí: los únicos fuera de ella) */
   --papel-2:       #F5EFED;
   --linea-fuerte:  #D9CBC7;
   --tinta-tenue:   #7C6F6D;
+  --bento-lienzo:  #F4F3F1;
+  --bento-borde:   #918783;
 
   /* Tipografía: Rosarivo para títulos y cifras, Montserrat para la interfaz,
      IBM Plex Mono para identificadores. */

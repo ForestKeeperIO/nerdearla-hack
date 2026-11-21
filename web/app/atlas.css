@@ -1,0 +1,166 @@
+/* Hallmark · shape: app screen · theme: Bento de impacto EIRA · nav: top tabs · signature: municipal atlas · v2.0.0 */
+body:has(.atlas) footer .etiqueta { color:var(--tinta-suave); font:12px var(--bento-fuente) }
+.atlas-acciones,.atlas-titulo time,.atlas-resumen,.atlas-hoja header,.atlas-calidad,.atlas-calidad a,.bento-avanzado { display:flex; align-items:center }
+.atlas-acciones { margin-left:auto; gap:8px; font-size:12px; color:var(--tinta-suave) }
+.atlas-acciones button,.atlas-hoja header button,.bento-salto { display:grid; place-items:center; border-radius:50%; width:40px; height:40px; min-height:40px; cursor:pointer }
+.atlas-titulo time,.atlas-resumen,.atlas-mapa footer,.atlas-panel header > span { color:var(--tinta-suave); font-size:13px }
+.atlas-titulo time { margin-top:8px; gap:8px }
+.atlas-campos { display:grid; grid-template-columns:1fr 1.15fr 1.35fr 1.35fr 1.05fr; gap:12px }
+.atlas-campos > * { min-width:0; position:relative }
+.atlas-campos .selector label,.atlas-periodo summary > span { display:block; margin:0 0 4px 12px; font:600 12px/1.5 var(--bento-fuente); color:var(--tinta-suave) }
+.atlas-campos .selector-campo input,.atlas-periodo summary b { display:block; width:100%; height:44px; min-height:44px; padding:0 36px 0 16px; border:1px solid var(--bento-borde); border-radius:var(--r-pill); background:var(--superficie); font:600 14px/42px var(--bento-fuente); color:var(--tinta); cursor:pointer; text-overflow:ellipsis; white-space:nowrap; overflow:hidden }
+.atlas-campos .selector-campo input[aria-expanded=true] { cursor:text; border-color:var(--vino) }
+.atlas-campos .selector-lista { margin-top:4px; border-radius:16px; min-width:min(280px,80vw); max-width:min(360px,90vw); padding:8px }
+.atlas-campos .selector-cuenta { font-family:inherit }
+.atlas-periodo summary { list-style:none; cursor:pointer }
+.atlas-periodo summary::-webkit-details-marker { display:none }
+.atlas-periodo summary svg { position:absolute; right:16px; bottom:14px; color:var(--vino) }
+.atlas-periodo-panel { position:absolute; z-index:12; right:0; top:calc(100% + 4px); padding:20px; width:300px; border-radius:16px; background:var(--superficie); box-shadow:var(--shadow-modal) }
+.atlas-atajos,.atlas-periodo-panel form { display:grid; grid-template-columns:repeat(2,minmax(0,1fr)); gap:8px }
+.atlas-atajos button,.atlas-periodo-panel input { width:100%; min-height:44px; padding:8px; border:1px solid var(--bento-borde); border-radius:12px; font-size:13px; cursor:pointer }
+.atlas-atajos button:hover { background:var(--papel-2) }
+.atlas-periodo-panel form { margin-top:16px }
+.atlas-periodo-panel label { font-size:12px; min-width:0 }
+.atlas-periodo-panel .btn { grid-column:1/-1; margin-top:4px }
+.atlas-resumen { min-height:44px; gap:12px }
+.atlas-resumen button { min-height:44px; padding-inline:4px; color:var(--vino); text-decoration:underline; cursor:pointer }
+.atlas-abrir { display:none }
+.atlas-hoja { padding:24px; border:0; background:var(--superficie); color:var(--tinta) }
+.atlas-hoja:modal,.atlas-hoja::backdrop { overscroll-behavior:contain }
+.atlas-hoja::backdrop { overflow:hidden; background:color-mix(in srgb,var(--tinta) 40%,transparent) }
+.atlas-hoja header { justify-content:space-between; margin-bottom:16px }
+.atlas-rejilla { display:grid; grid-template-columns:repeat(12,minmax(0,1fr)); gap:var(--bento-gap) }
+.atlas-panel { border-radius:var(--bento-radio); background:var(--superficie); min-width:0 }
+@media(min-width:901px) { .atlas-kpis .respuesta:nth-last-child(3) { grid-column:span 6 } }
+.atlas-kpis small { display:inline-flex; align-items:center; gap:4px }
+.atlas-kpis > div { min-width:0 }
+.atlas-panel > header { display:flex; align-items:center; justify-content:space-between; gap:8px }
+.bento-salto { flex-shrink:0; background:var(--papel-2); color:var(--vino-oscuro) }
+.atlas-regla { position:fixed; inset:0; max-width:min(300px,90vw); width:max-content; height:max-content; margin:auto; padding:16px; background:var(--tinta); color:var(--superficie); border-radius:16px; box-shadow:var(--shadow-modal); font-size:13px }
+.atlas-regla p { margin-top:4px }
+.atlas-kpis .atlas-regla strong { font:inherit; font-weight:650 }
+@supports (position-area:bottom) { .atlas-regla { inset:auto; margin:4px; position-area:bottom span-left; position-try-fallbacks:flip-block, flip-inline } }
+.atlas-rejilla { margin-block:16px; grid-template-areas:'mapa mapa mapa mapa mapa mapa meses meses meses pares pares pares' 'ranking ranking ranking ranking servicios servicios servicios servicios cargas cargas cargas cargas' 'edades edades edades edades edades edades edades edades edades edades edades edades' }
+.atlas-panel { display:flex; flex-direction:column; padding:24px }
+.atlas-panel h2 { display:flex; align-items:center; gap:8px; font-size:19px; font-weight:650; letter-spacing:-.03em; text-wrap:balance }
+.atlas-panel h2 svg { width:18px; height:18px; stroke-width:1.6; color:var(--vino); flex-shrink:0 }
+.atlas-panel > header { margin-bottom:16px; min-height:32px }
+.atlas-panel header > span { font-size:12px }
+.atlas-mapa { grid-area:mapa }
+.atlas-ranking { grid-area:ranking }
+.bento-meses { grid-area:meses }
+.bento-pares { grid-area:pares }
+.bento-servicios { grid-area:servicios }
+.bento-cargas { grid-area:cargas }
+.atlas-distribucion { grid-area:edades }
+.atlas-lienzo { position:relative; flex:1; border-radius:var(--bento-interno); padding:8px 8% 8px 20%; background-color:var(--bento-lienzo); background-image:radial-gradient(var(--linea-fuerte) .8px,transparent .8px); background-size:8px 8px }
+.atlas-geo { width:100%; height:205px }
+.atlas-lienzo svg path { fill:var(--papel-2); stroke:var(--linea-fuerte); stroke-width:.8px; vector-effect:non-scaling-stroke; stroke-linejoin:round }
+.atlas-lienzo path.presente { fill:var(--vino); stroke:var(--superficie) }
+.atlas-lienzo a:hover path,.atlas-lienzo a:focus-visible path { fill:var(--ciruela); stroke:var(--tinta); stroke-width:2px }
+.atlas-localizador { position:absolute; top:12px; left:12px }
+.atlas-localizador > svg { width:72px; height:48px }
+.atlas-localizador p { display:flex; align-items:center; gap:4px; margin-top:4px; font-size:12px; font-weight:650 }
+.atlas-localizador a { color:var(--tinta-suave); text-decoration:underline; font-weight:400; padding-block:4px }
+.atlas-mapa footer,.atlas-ranking footer,.bento-fechas,.bento-fechas > div,.bento-leyenda,.bento-leyenda span { display:flex; align-items:center }
+.atlas-mapa footer,.atlas-ranking footer { justify-content:space-between; gap:8px; padding-top:12px; font-size:12px }
+.atlas-mapa footer small { font-size:11px }
+.atlas-mapa footer i,.bento-leyenda i { display:inline-block; width:9px; height:9px; border-radius:3px; background:var(--vino) }
+.atlas-mapa footer i { margin-right:8px }
+.bento-fechas { min-height:32px; justify-content:space-between; gap:4px; color:var(--tinta-suave); font-size:12px }
+.bento-fechas button { min-height:30px; width:30px; display:grid; place-items:center; border:var(--border); border-radius:50%; cursor:pointer }
+.bento-fechas svg { width:14px }
+.bento-columnas { display:flex; align-items:end; justify-content:space-around; gap:4px; margin: auto 0 16px; text-align:center }
+.bento-columnas > div { flex:1; min-width:0 }
+.bento-columnas > div > div { height:134px; display:flex; flex-direction:column; justify-content:end; align-items:center; gap:4px; border-bottom:var(--border) }
+.bento-columnas b,.bento-columnas time { font-size:12px }
+.bento-columnas time { display:block; color:var(--tinta-suave); padding-top:4px }
+.bento-columnas i { width:min(76%,28px); border-radius:var(--r-pill) var(--r-pill) 0 0; background:var(--vino) }
+.bento-columnas > div:nth-last-child(2) i:not(.rayado) { background:var(--ciruela) }
+.bento-leyenda { flex-wrap:wrap; gap:8px 16px; color:var(--tinta-suave); font-size:12px }
+.bento-leyenda span { gap:8px }
+.atlas .rayado { background:var(--bento-rayado) }
+.bento-medidor { position:relative; width:min(100%,216px); margin:auto auto 20px; padding-top:12px }
+.bento-medidor svg { width:100%; height:auto }
+.bento-medidor path { fill:none; stroke-width:21; stroke-linecap:round }
+.bento-medidor > div { position:absolute; inset:auto 0 0; text-align:center }
+.bento-medidor strong { display:block; font-size:36px; font-weight:650; line-height:1; letter-spacing:-.04em }
+.bento-medidor span,.bento-pares footer { font-size:12px; color:var(--tinta-suave) }
+.bento-pares footer { margin:16px 0 0; border-top:var(--border); padding-top:12px }
+.bento-salto svg { width:16px; height:16px }
+.atlas-ranking ol,.bento-cargas ul { list-style:none; margin:0; padding:0 }
+.atlas-ranking ol:has(li:nth-child(7)),.bento-unidades { max-height:300px; overflow:auto }
+.atlas-ranking li a,.bento-unidades dl > div { display:grid; grid-template-columns:1fr auto; gap:8px; align-items:baseline; padding-block:8px; text-decoration:none; font-size:14px }
+.atlas-ranking li span { display:flex; gap:4px; align-items:center }
+.atlas-ranking li svg { color:var(--tinta-tenue) }
+.atlas-ranking li a:hover span { text-decoration:underline }
+.atlas-ranking li i,.bento-unidades i { grid-column:1/-1; display:block; height:6px; background:var(--vino); border-radius:var(--r-pill) }
+.atlas-ranking footer { margin-top:auto; border-top:var(--border); color:var(--tinta-suave) }
+.bento-unidades h3 { font-size:13px; font-weight:650; color:var(--tinta-suave) }
+.bento-unidades dl { margin:0 0 12px }
+.bento-unidades dd { font-weight:650; margin:0 }
+.bento-unidades i { background:var(--ciruela) }
+.bento-cargas li { display:flex; align-items:center; gap:8px; padding-block:12px; border-bottom:var(--border) }
+.bento-cargas li:last-child { border:0 }
+.bento-fichero { border-radius:var(--bento-interno); background:var(--bento-lienzo); padding:8px; color:var(--vino) }
+.bento-fichero svg { width:18px; height:18px; stroke-width:1.5 }
+.bento-cargas li > div { min-width:0 }
+.bento-cargas li strong { display:block; font-size:13px; font-weight:650; overflow:hidden; text-overflow:ellipsis; white-space:nowrap }
+.bento-cargas small { color:var(--tinta-suave); font-size:11px }
+.bento-valoracion { margin-left:auto; display:grid; justify-items:end; gap:4px; flex-shrink:0 }
+.bento-valoracion > svg { width:24px; height:24px }
+.bento-valoracion [role=img] svg { width:11px; height:11px }
+.atlas-distribucion table { width:100%; border-collapse:collapse; font-size:14px }
+.atlas-distribucion :is(th,td) { padding:4px 0; text-align:left }
+.atlas-distribucion th { width:18%; font-weight:500 }
+.atlas-distribucion td:last-child { width:42px; text-align:right }
+.atlas-distribucion td i { display:block; height:6px; border-radius:var(--r-pill); background:var(--vino) }
+.atlas-vacio { padding-block:16px; color:var(--tinta-suave); font-size:14px }
+.atlas-calidad { border-block:var(--border); min-height:48px; gap:8px; font-size:13px }
+.atlas-calidad strong { margin-right:8px }
+.atlas-calidad a,.bento-avanzado { gap:4px; margin-left:auto; min-height:44px; color:var(--vino) }
+.bento-avanzado { width:fit-content; font-size:13px }
+.bento-aviso-vivo { position:fixed; z-index:10; bottom:20px; left:50%; transform:translateX(-50%); max-width:90vw; min-width:max-content; padding:12px 20px; background:var(--tinta); color:var(--superficie); border-radius:var(--r-pill); font-size:13px }
+@media(prefers-reduced-motion:reduce) {
+  .archivo-eira.atlas,.atlas * { transition:none; animation:none }
+}
+@media(max-width:1120px) {
+  .atlas-rejilla { grid-template-areas:'mapa mapa mapa mapa mapa mapa meses meses meses meses meses meses' 'mapa mapa mapa mapa mapa mapa pares pares pares pares pares pares' 'ranking ranking ranking ranking ranking ranking servicios servicios servicios servicios servicios servicios' 'cargas cargas cargas cargas cargas cargas edades edades edades edades edades edades' }
+  .atlas-geo { height:100%; min-height:260px }
+  .atlas-panel { padding:20px }
+  .atlas-acciones > span { display:none }
+  .bento-medidor { max-width:148px }
+}
+@media(max-width:800px) {
+  .atlas-escritorio { display:none }
+  .atlas-abrir { display:inline-flex; align-items:center; gap:8px; min-height:44px; padding:0 16px; border:1px solid var(--bento-borde); border-radius:var(--r-pill); background:var(--superficie); font-size:14px; font-weight:650 }
+  .atlas-hoja[open] { inset:auto 0 0; margin:auto; width:min(100%,520px); max-width:100%; max-height:94dvh; border-radius:24px 24px 0 0; padding-bottom:max(20px,env(safe-area-inset-bottom)) }
+  .atlas-hoja .atlas-campos { grid-template-columns:1fr; gap:12px }
+  .atlas-hoja .selector-lista,.atlas-hoja .atlas-periodo-panel { position:static; width:100%; max-width:100%; margin:4px 0; box-shadow:none; max-height:32dvh; overflow:auto }
+  .atlas-hoja > form button { width:100%; margin-top:16px }
+}
+@media(max-width:640px) {
+  .atlas-acciones { margin-left:0; gap:8px }
+  .atlas-titulo time,.atlas-resumen { font-size:12px }
+  .atlas-resumen { min-height:48px; gap:4px }
+  .atlas-resumen button { margin-left:auto }
+  .atlas-rejilla { gap:12px }
+  .atlas-rejilla { grid-template-areas:'mapa mapa mapa mapa mapa mapa mapa mapa mapa mapa mapa mapa' 'meses meses meses meses meses meses pares pares pares pares pares pares' 'ranking ranking ranking ranking ranking ranking ranking ranking ranking ranking ranking ranking' 'servicios servicios servicios servicios servicios servicios servicios servicios servicios servicios servicios servicios' 'cargas cargas cargas cargas cargas cargas cargas cargas cargas cargas cargas cargas' 'edades edades edades edades edades edades edades edades edades edades edades edades'; margin-block:12px }
+  .atlas-panel { padding:16px }
+  .atlas-panel > header { margin-bottom:8px; min-height:28px }
+  .atlas-panel h2 { font-size:16px; gap:4px }
+  .bento-meses,.bento-pares { padding:12px }
+  .bento-pares .bento-salto { width:24px; height:24px; min-height:24px }
+  .bento-pares h2 svg,.bento-meses h2 svg { display:none }
+  .bento-fechas { align-items:start; flex-wrap:wrap; gap:0 }
+  .bento-fechas button { min-height:28px; width:28px }
+  .bento-medidor strong { font-size:26px }
+  .bento-columnas { gap:2px }
+  .bento-columnas b,.bento-columnas time { font-size:10px }
+  .atlas-lienzo { padding-left:16% }
+  .atlas-geo { height:180px; min-height:0 }
+  .atlas-localizador > svg { width:60px; height:40px }
+  .atlas-mapa footer { flex-wrap:wrap }
+  .atlas-calidad { flex-wrap:wrap; gap:4px; padding-block:4px }
+  .atlas-calidad p { flex:1; font-size:12px }
+}

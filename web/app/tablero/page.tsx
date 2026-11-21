@@ -1,99 +1,69 @@
 import Link from 'next/link';
-import { Download, ExternalLink, Info } from 'lucide-react';
-import { Actualizar } from '@/components/actualizar';
-import { FiltrosBarra } from '@/components/filtros-barra';
-import { ParesMasa } from '@/components/pares-masa';
-import { nombrePrograma } from '@/lib/catalogo';
-import { leerActividad } from '@/lib/actividad';
-import { consultar } from '@/lib/facetas';
-import { fechaEs, personasTxt } from '@/lib/comun';
-import { edadPromedioIds, listarFuentes, rolesDe, sinIdentificar } from '@/lib/datos';
-import { etiquetaPeriodo, filtrosDeQuery } from '@/lib/filtros-comun';
-import { fechaCorteDe, paresDe } from '@/lib/informe';
+import { ArrowDown, ArrowRight, ArrowUp, ArrowUpRight, CalendarDays, CircleHelp, HeartPulse, MapPin, UsersRound } from 'lucide-react';
+import { AccionesTablero } from '@/components/acciones-tablero';
+import { FiltrosAtlas } from '@/components/filtros-atlas';
+import { AtlasTerritorial } from '@/components/atlas-territorial';
+import { Distribucion } from '@/components/desgloses-atlas';
+import { CargasBento, ParesBento, ServiciosBento } from '@/components/bento-calidad';
+import { MesesBento } from '@/components/bento-meses';
+import { TableroVivo } from '@/components/tablero-vivo';
+import { fechaEs } from '@/lib/comun';
+import { periodoTexto, seleccionDe } from '@/lib/seleccion-tablero';
 import { impactoPublico } from '@/lib/metabase';
+import { leerTablero } from '@/lib/tablero-impacto';
 
 export const dynamic = 'force-dynamic';
+export const metadata = { title: 'Tablero de impacto · EIRA' };
 
-function Indicador({ nombre, valor, unidad, regla, origen }: {
-  nombre: string; valor: string; unidad: string; regla: string; origen: string;
+function Cifra({ titulo, valor, unidad, corte, regla, id, previo, referencia }: {
+  titulo: string; valor: number | null; unidad: string; corte: string; regla: string; id: string;
+  previo: number | null | undefined; referencia: string;
 }) {
-  return <div className="mesa-dato">
-    <h2>{nombre}</h2>
-    <p className="mesa-numero">{valor}</p>
-    <p className="mesa-unidad">{unidad}</p>
-    <details><summary>Cómo se calculó</summary><p>{regla}</p><p>{origen}</p></details>
+  const delta = previo == null || valor == null ? null : Math.round((valor-previo)*10)/10;
+  const Cambio = delta===0 ? ArrowRight : delta!==null && delta<0 ? ArrowDown : ArrowUp;
+  const Icono = id==='personas' ? UsersRound : id==='edad' ? CalendarDays : id==='municipios' ? MapPin : HeartPulse;
+  return <div className={id==='personas' ? 'respuesta' : 'dato-bento'}><span><Icono aria-hidden/>{titulo}
+    <button type="button" popoverTarget={`regla-${id}`} aria-label={`Cómo se calculó: ${titulo}`} title="Cómo se calculó"><ArrowUpRight aria-hidden /></button></span>
+    <strong data-kpi={id}>{valor == null ? '—' : valor.toLocaleString('es-MX')}</strong>
+    <p>{unidad} · {corte ? `Corte ${fechaEs(corte)}` : 'Sin corte'}</p>
+    <small>{delta===null ? 'Sin periodo previo' :
+      <><Cambio aria-hidden/>{delta>0 ? '+' : ''}{delta.toLocaleString('es-MX')} vs. anterior</>}</small>
+    <div className="atlas-regla" id={`regla-${id}`} popover="auto"><strong>Cómo se calculó</strong><p>{regla}</p>
+      {delta!==null && <p>Periodo anterior: {referencia} ({previo}).</p>}</div>
   </div>;
 }
 
-export default async function Tablero({ searchParams }: { searchParams: Promise<Record<string, string | string[] | undefined>> }) {
-  const f = filtrosDeQuery(await searchParams);
-  const [corte, roles, fuentes, pares, sinId, base] = await Promise.all([
-    fechaCorteDe('global'), rolesDe(f.programa), listarFuentes(), paresDe('global'), sinIdentificar({}),
-    leerActividad(),
-  ]);
-  const edad = await edadPromedioIds(roles.idsUnicos, corte);
-  const { municipios, unidades, filtros } = consultar(base,f);
-  const pendientes = pares.valor.filter((p) => p.estado === 'pendiente');
-  const fuentePorId = Object.fromEntries(fuentes.valor.map((x) => [x.id, x.nombre]));
-  const alcance = f.programa.length === 1 ? nombrePrograma(f.programa[0]) : 'Suma por programa';
-  const archivos = fuentes.valor.filter((x) => !f.programa.length || f.programa.includes(x.programa));
-  const origen = `Corte: ${fechaEs(corte)}. Fuente: ${archivos.map((x) => x.nombre).join(', ') || 'sin archivos'}.`;
-  const ciudades = f.municipio.map(v => filtros.municipio.find(o => o.valor === v)?.texto).filter((s): s is string => !!s);
-  const metabase = impactoPublico({ programa: f.programa, mes: f.periodo, servicio: f.servicio, municipio: ciudades });
-  const aplicados = [
-    f.programa.length === 1 && nombrePrograma(f.programa[0]), f.periodo.length === 1 && etiquetaPeriodo(f.periodo[0]),
-    f.servicio.length === 1 && f.servicio[0], ciudades.length === 1 && ciudades[0],
-  ].filter(Boolean);
-  const exportar = f.programa.length === 1 && roles.porPrograma.length ? f.programa[0] : 'global';
-
-  return <div className="mesa">
-    <header className="mesa-cabecera">
-      <div><h1>Tablero de impacto</h1>
-        <p>Corte al <time dateTime={corte}>{fechaEs(corte)}</time> · {archivos.length} archivos de coordinación</p>
-      </div>
-      <div className="mesa-acciones"><Actualizar consulta={Date.now()} />
-        <Link href={`/informe/${encodeURIComponent(exportar)}/exportar`} className="mesa-boton"><Download size={16} aria-hidden />Exportar informe</Link>
-      </div>
-    </header>
-
-    <section aria-label="Filtros" className="mesa-filtros">
-      <FiltrosBarra base={base} activos={f} corte={corte} />
-    </section>
-    <section aria-label="Indicadores" className="mesa-indicadores">
-      <Indicador nombre="Personas impactadas" valor={roles.totalImpactadas ? personasTxt(roles.totalImpactadas) : '0'} unidad={alcance}
-        regla="Cada persona identificada cuenta una vez por programa donde recibió atención o participó." origen={origen} />
-      <Indicador nombre="Edad promedio" valor={edad.valor.promedio?.toLocaleString('es-MX', { maximumFractionDigits: 1 }) ?? '—'} unidad={`Años · ${edad.valor.n} con fecha de nacimiento`}
-        regla="Se promedian las edades al corte de las personas impactadas con fecha de nacimiento válida, sin repetirlas." origen={origen} />
-      <Indicador nombre="Presencia territorial" valor={String(municipios.length)} unidad="Municipios con actividad"
-        regla="Se cuenta cada clave oficial de municipio una sola vez entre los registros con lugar reconocido." origen={origen} />
-      <Indicador nombre="Donantes" valor={roles.totalDonantes ? personasTxt(roles.totalDonantes) : '0'} unidad="Personas que donaron"
-        regla="Cada donante identificada cuenta una vez; donar no equivale a recibir atención." origen={origen} />
-    </section>
-
-    {metabase && archivos.length > 0 && <section className="mesa-graficas" aria-label="Gráficas y presencia por estado">
-      <div className="mesa-seccion"><h2>Actividad y presencia por estado</h2>
-        <a href={metabase} target="_blank" rel="noreferrer">Abrir tablero completo <ExternalLink size={15} aria-hidden /></a></div>
-      <p className="mesa-nota">Las gráficas muestran: {aplicados.join(', ') || 'todos los datos'}. {aplicados.length > 0 && 'El mes y el servicio solo acotan actividad; el municipio, presencia. La edad incrustada es global.'}
-        {(f.estado.length > 0 || Object.values(f).some(v => v.length > 1)) && ' Metabase no aplica estado ni selecciones múltiples.'}</p>
-      <iframe title="Tablero público de impacto en Metabase" src={metabase} className="mesa-marco" />
-    </section>}
-    {(pendientes.length > 0 || sinId.valor > 0) && <aside className="aviso-banda">
-      <Info aria-hidden size={16} /><span>{pendientes.length} pares por revisar · {sinId.valor} registros sin identificar</span>
-      <a className="aviso-banda__accion" href="#pares">Revisar pares</a>
-    </aside>}
-    <section className="mesa-columna"><h2>Servicios por unidad</h2>
-      <p className="mesa-nota">Cada unidad se informa por separado.</p>
-      <dl>{unidades.filter((u) => u.cantidad > 0).map((u) => <div key={u.nombre}><dt>{u.nombre}</dt><dd>{u.cantidad.toLocaleString('es-MX')}</dd></div>)}</dl>
-      {!unidades.some((u) => u.cantidad > 0) && <p>No hay servicios en esta selección.</p>}
-    </section>
-    <section className="mesa-columna"><h2>Municipios con actividad</h2><p className="mesa-nota">Registros por municipio oficial.</p>
-      <dl>{municipios.sort((a, b) => (b.cuenta ?? 0) - (a.cuenta ?? 0)).map(m => <div key={m.valor}>
-        <dt>{m.texto}, {m.grupo}</dt><dd>{m.cuenta?.toLocaleString('es-MX')}</dd></div>)}</dl>
-      {!municipios.length && <p>No hay municipios reconocidos.</p>}
-    </section>
-    <section id="pares" className="mesa-pares" aria-label="Posibles duplicados"><h2>Pares por decidir</h2>
-      <p className="mesa-nota">Selecciona los pares que recibirán la misma decisión. La revisión incluye todos los programas.</p>
-      <ParesMasa alcance="global" pares={pendientes} nombreFuente={fuentePorId} />
-    </section>
+export default async function Tablero({ searchParams }: PageProps<'/tablero'>) {
+  const q = await searchParams, f = seleccionDe(q), d = await leerTablero(f);
+  const corte = d.corte || '';
+  const referencia = d.anterior ? periodoTexto(d.anterior) : '';
+  const avanzado = impactoPublico();
+  return <div className="archivo-eira atlas">
+    <header className="apertura atlas-titulo"><div><h1>Tablero de impacto</h1>
+      {corte && <time dateTime={corte}><CalendarDays size={16} aria-hidden />Corte al {new Intl.DateTimeFormat('es-MX',
+        { day:'numeric',month:'long',year:'numeric',timeZone:'UTC' }).format(new Date(corte+'T12:00:00Z'))}</time>}</div><AccionesTablero /></header>
+    <FiltrosAtlas seleccion={f} opciones={d.opciones} personas={d.personas} corte={corte || new Date().toISOString().slice(0,10)} />
+    <section className="hoja" aria-label="Indicadores"><div className="resumen-bento atlas-kpis">
+      <Cifra titulo="Personas impactadas" id="personas" valor={d.personas} unidad={f.programa.length===1 ? 'personas' : 'por programa'} corte={corte} previo={d.comparacion?.personas} referencia={referencia}
+        regla="En la selección, cada beneficiaria o participante identificada cuenta una vez por programa, aunque tenga varios registros." />
+      <Cifra titulo="Edad promedio" id="edad" valor={d.edad} unidad="años" corte={corte} previo={d.comparacion?.edad} referencia={referencia}
+        regla="Se promedia la edad al corte de las personas impactadas de la selección con nacimiento conocido, sin repetir personas entre programas." />
+      <Cifra titulo="Municipios" id="municipios" valor={d.municipios} unidad="con actividad" corte={corte} previo={d.comparacion?.municipios} referencia={referencia}
+        regla="Se cuenta una sola vez cada municipio con clave oficial y al menos un registro en la selección." />
+      {d.conDonantes && <Cifra titulo="Donantes de cabello" id="donantes" valor={d.donantes} unidad="personas" corte={corte} previo={d.comparacion?.donantes} referencia={referencia}
+        regla="Se cuenta una vez por programa a cada persona identificada con una donación en la selección." />}
+    </div></section>
+    <div className="atlas-rejilla">
+      <AtlasTerritorial lugares={d.lugares} f={f} nacional={q.mapa === 'mx'} />
+      <MesesBento key={`${f.desde}:${f.hasta}`} serie={d.meses} desde={f.desde} hasta={f.hasta} />
+      <ParesBento decididos={d.decididos} pendientes={d.pares} />
+      <ServiciosBento servicios={d.unidades}/>
+      <CargasBento cargas={d.cargas}/>
+      <Distribucion titulo="Grupos de edad" unidad="Personas" serie={d.edades} />
+    </div>
+    <aside className="atlas-calidad"><CircleHelp size={17} aria-hidden /><p><strong>Calidad</strong> {d.pares} pares pendientes · {d.sinId} filas sin identificar</p>
+      <Link href="/informe/global/calidad">Revisar calidad <ArrowUpRight size={15} aria-hidden /></Link></aside>
+    {avanzado && <a className="bento-avanzado" href={avanzado} target="_blank" rel="noreferrer" aria-label="Análisis avanzado: abrir el tablero global en Metabase">Análisis avanzado <ArrowUpRight size={15} aria-hidden /></a>}
+    <TableroVivo revision={d.revision}/>
   </div>;
 }
