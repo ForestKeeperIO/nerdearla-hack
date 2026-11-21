@@ -36,7 +36,7 @@ export function AtlasTerritorial({ lugares, f, nacional }: { lugares: Lugar[]; f
           {Object.entries(mapa.trazos).map(([id,d]) => {
             const dato = grupos.get(id);
             return dato ? <a key={id} href={href(state ? {...f,estado:[state],municipio:[id]} : {...f,estado:[id],municipio:f.municipio.filter(m => m.startsWith(id))})}
-              aria-label={`Filtrar ${dato.nombre}: ${dato.n} registros`}><title>{dato.nombre}: {dato.n} registros</title><path className="presente" d={d}/></a> :
+              aria-label={`Filtrar ${dato.nombre}: ${dato.n} registros`}><title>{`${dato.nombre}: ${dato.n} registros`}</title><path className="presente" d={d}/></a> :
               <path key={id} aria-hidden d={d}/>;
           })}
         </svg>
@@ -47,6 +47,7 @@ export function AtlasTerritorial({ lugares, f, nacional }: { lugares: Lugar[]; f
       {lugares.length ? <ol>{lugares.map(l => <li key={l.clave}><Link scroll={false} href={href({...f,estado:[l.estado],municipio:[l.clave]})}>
         <span>{l.nombre}<MoveUpRight size={13} aria-hidden /></span><b>{l.n}</b>
         <i aria-hidden style={{width:`${100*l.n/max}%`}}/></Link></li>)}</ol> : <p className="atlas-vacio">Sin municipios con actividad en esta selección.</p>}
+      {lugares.length > 0 && <footer>Total con municipio <b>{lugares.reduce((n,l) => n+l.n,0)}</b></footer>}
     </section>
   </>;
 }
