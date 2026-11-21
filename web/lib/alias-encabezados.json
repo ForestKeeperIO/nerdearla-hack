@@ -1,0 +1,19 @@
+{
+  "fuente": "py/procesador/mapeo.py",
+  "fecha": "2026-11-21",
+  "umbral": 0.75,
+  "sinonimos": {
+    "id_eira": ["id eira", "id", "id de eira", "clave eira", "id paciente", "id usuaria", "id usuario", "clave", "identificador", "id beneficiaria", "id unico"],
+    "folio": ["folio", "folio nfc", "folio tarjeta", "folio de tarjeta", "tarjeta"],
+    "nombre": ["nombre", "nombre completo", "paciente", "beneficiaria", "participante", "usuaria", "nombre de la paciente", "nombre y apellidos", "nombre de la participante"],
+    "fecha_nacimiento": ["fecha de nacimiento", "fecha nacimiento", "fecha de nac", "fecha nac", "nacimiento", "fnac", "f nacimiento"],
+    "edad": ["edad", "edad anos", "edad en anos", "anos cumplidos"],
+    "ciudad": ["ciudad", "municipio", "localidad", "comunidad", "lugar", "municipio de residencia"],
+    "servicio": ["tipo de servicio", "servicio", "tipo servicio", "tipo de atencion", "atencion", "actividad", "taller", "servicio recibido"],
+    "estudio": ["estudio", "tipo de estudio", "estudio realizado"],
+    "fecha": ["fecha", "fecha de servicio", "fecha servicio", "fecha de atencion", "fecha de la jornada", "fecha de actividad", "fecha de asistencia", "fecha del evento", "dia"],
+    "asistencia": ["asistencia", "asistio", "asistio si no", "presente", "asistencia si no"],
+    "tipo_registro": ["tipo de registro", "tipo registro", "movimiento", "tipo de movimiento", "concepto"],
+    "cantidad": ["cantidad", "piezas", "insumos entregados", "numero de piezas", "cantidad entregada", "total entregado", "unidades", "trenzas", "numero de trenzas", "trenzas donadas"]
+  }
+}

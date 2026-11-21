@@ -9,6 +9,8 @@ import { AtlasReporte } from '@/components/atlas-reporte';
 import { audiencias, historialReportes, revisionFuentes, rutaEdicion, titulos } from '@/lib/archivo-reportes';
 import { generarReporte } from '@/lib/generar-reporte';
 import { BotonGenerar } from '@/components/boton-generar';
+import { AvisoReporteTablero } from '@/components/aviso-reporte-tablero';
+import { filtrosActivos } from '@/lib/seleccion-tablero';
 
 export const dynamic = 'force-dynamic';
 const avisos:Record<string,string>={
@@ -25,8 +27,10 @@ function hace(iso:string) {
 
 export default async function Indice({searchParams}:{searchParams:Promise<QueryReporte>}) {
   // Sin filtros, "Sacar reporte" del Tablero representa todos los programas.
-  const q:QueryReporte={origen:'tablero',...await searchParams};
+  const entrada=await searchParams;
+  const q:QueryReporte={origen:'tablero',...entrada};
   const {params,f,periodo}=contextoReporte(q);
+  const desdeTablero=entrada.origen==='tablero'||filtrosActivos(f)>0;
   const pagina=Math.max(0,Math.min(99999,Number.parseInt(String(q.pagina),10)||0));
   // Las ediciones ya publicadas se pueden consultar aunque el motor esté escribiendo.
   const [{items,mas},revision,r]=await Promise.all([historialReportes(pagina),revisionFuentes(),informeSeleccion(q).catch(()=>null)]);
@@ -37,6 +41,7 @@ export default async function Indice({searchParams}:{searchParams:Promise<QueryR
     <div className="apertura"><h1>Reportes generados</h1><p>Cada edición conserva las cifras y los archivos del día en que se generó.</p></div>
     {q.aviso && <p role="alert" className="sin-dato">{avisos[String(q.aviso)]||'Revisa la selección.'}</p>}
     {q.generado && items.some(p=>p.id===q.generado) && <p role="status" className="aviso-edicion">Reporte guardado. El PDF y el CSV están listos.</p>}
+    {desdeTablero && !q.generado && <AvisoReporteTablero seleccion={f} consulta={params.toString()}/>}
     <section aria-label="Historial de reportes" className="historial-reportes">
       {items.length===0 && <div className="archivo-vacio"><Archive aria-hidden/><div><h2>{pagina?'No hay más ediciones':'Todavía no hay reportes guardados'}</h2><p>Elige una plantilla en «Generar nuevo» para guardar el primer corte.</p></div></div>}
       {items.map(p=>{

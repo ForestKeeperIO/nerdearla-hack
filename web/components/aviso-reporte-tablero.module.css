@@ -1,0 +1,24 @@
+.aviso {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: start;
+  justify-content: space-between;
+  gap: var(--bento-gap);
+  padding: clamp(1rem, 3vw, 1.75rem);
+  margin-block-end: var(--bento-gap);
+  border-radius: var(--bento-radio);
+  background: var(--superficie);
+}
+.aviso > div { flex: 1 1 22rem; min-width: 0; }
+.aviso h2 { margin: 0; font-size: 1.5rem; }
+.chips, .formulario fieldset { display: flex; flex-wrap: wrap; gap: .5rem; padding: 0; }
+.chips { list-style: none; margin-block: .8rem .25rem; }
+.chips li { background: var(--papel-2); border-radius: var(--r-pill); padding: .3rem .8rem; overflow-wrap: anywhere; }
+.cambiar { display: inline-flex; align-items: center; gap: .5rem; min-height: 3rem; color: var(--vino-oscuro); text-underline-offset: .2em; }
+.formulario { display: grid; justify-items: start; gap: .8rem; }
+.formulario fieldset { min-width: 0; border: 0; margin: 0; }
+.formulario legend { margin-bottom: .5rem; font-weight: 600; }
+.formulario label { display: inline-flex; align-items: center; gap: .45rem; padding: .5rem .85rem; min-height: 3rem; border: 1px solid var(--linea-fuerte); border-radius: var(--r-pill); cursor: pointer; }
+.formulario label:has(:checked) { background: var(--rubor); border-color: var(--vino); }
+.formulario input { accent-color: var(--vino-oscuro); }
+.formulario button { min-height: 3rem; }

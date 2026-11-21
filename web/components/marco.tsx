@@ -21,11 +21,14 @@ export function MarcoInforme({
 }) {
   return (
     <div className="archivo-eira expediente-carga">
-      <Link href="/subir" className="regreso no-imprimir">
+      {paso !== 'subir' && <Link href="/subir" className="regreso no-imprimir">
         <ArrowLeft className="size-3.5" aria-hidden="true" /> Cambiar programa
-      </Link>
+      </Link>}
       <div className="cab-carga">
-        <p>{tituloInforme(estado.alcance)}</p>
+        <div className="flex flex-wrap items-center gap-3">
+          <p>{tituloInforme(estado.alcance)}</p>
+          {paso === 'subir' && <Link href="/subir" className="btn btn--secundario btn--sm">Cambiar</Link>}
+        </div>
         <div className="no-imprimir">
           <IndicadorPasos estado={estado} actual={paso} />
         </div>

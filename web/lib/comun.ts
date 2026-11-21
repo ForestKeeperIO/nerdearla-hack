@@ -45,7 +45,7 @@ export type Trabajo = {
   filas_nuevas: number;
   filas_omitidas: number;
   filas_repetidas: number;
-  mapeo?: { encabezado: string; campo: string }[];
+  mapeo?: { encabezado: string; campo: string; probabilidad?: number }[];
   estado_clave?: string;
 };
 

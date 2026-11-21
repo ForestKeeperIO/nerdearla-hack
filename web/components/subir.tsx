@@ -4,10 +4,13 @@ import { useCallback, useRef, useState } from 'react';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import { useDropzone, type FileRejection } from 'react-dropzone';
-import { ArrowUpRight, Check, FileSpreadsheet, Trash2, UploadCloud, XCircle } from 'lucide-react';
+import { FileSpreadsheet, Trash2, UploadCloud, XCircle } from 'lucide-react';
 import { toast } from 'sonner';
 import { Selector } from './selector';
+import { RevisionEncabezados } from './tabla-encabezados';
+import { revisarArchivo, type Revision } from '@/lib/encabezados';
 import { resolverNombre, SIN_ALTA } from '@/lib/programa-libre';
+import { explicarErrorCarga } from '@/lib/error-carga';
 
 const MAX_BYTES = 10 * 1024 * 1024;
 
@@ -22,10 +25,13 @@ type ArchivoLocal = {
   envio: 'sin_enviar' | 'enviando' | 'error';
   progreso?: number;
   error?: string;
+  revision?: Revision;
+  errorRevision?: string;
 };
 
 function textoError(r: FileRejection): string {
   const codigo = r.errors[0]?.code;
+  if (r.file.name.toLowerCase().endsWith('.xlsm')) return 'No se aceptan macros.';
   if (codigo === 'file-too-large') return `Pesa más de 10 MB (${Math.round(r.file.size / 1048576)} MB).`;
   if (codigo === 'file-invalid-type') return 'Solo se aceptan .xlsx o .csv.';
   return 'No se acepta este archivo. Elige un Excel (.xlsx) o un CSV.';
@@ -52,6 +58,7 @@ export function SubirArchivos({
   estados,
   programas,
   lectura=false,
+  revisarEncabezados,
 }: {
   alcance: string;
   tipos: TipoOpcion[];
@@ -59,14 +66,17 @@ export function SubirArchivos({
   estados: EstadoOpcion[];
   programas: {id:string; nombre:string; tipos_de_registro:string[]}[];
   lectura?: boolean;
+  revisarEncabezados: boolean;
 }) {
   const router=useRouter();
   const [archivos, setArchivos] = useState<ArchivoLocal[]>([]);
   const [enviando, setEnviando] = useState(false);
   const siguiente = useRef(1);
+  const reemplazar = useRef<number | null>(null);
   const [nombreLibre, setNombreLibre] = useState('');
   const [unidadLibre, setUnidadLibre] = useState('');
   const [corteLibre, setCorteLibre] = useState(fechaCorte);
+  const [confirmado, setConfirmado] = useState(false);
   const libre = alcance === 'otro';
   const elegido = libre ? resolverNombre(nombreLibre, programas) : programas.find(p => p.id === alcance);
   const libreValido = elegido?.tipos_de_registro.includes(unidadLibre) && !!corteLibre;
@@ -89,12 +99,21 @@ export function SubirArchivos({
         error: textoError(r),
       });
     }
-    if (nuevos.length) setArchivos((a) => [...a, ...nuevos]);
-  }, [tipos]);
+    if (nuevos.length) {
+      const id = reemplazar.current;
+      reemplazar.current = null;
+      setArchivos((a) => [...a.filter(x => x.id !== id), ...nuevos]);
+    }
+    if (revisarEncabezados) for (const a of nuevos.filter(a => a.envio === 'sin_enviar')) {
+      revisarArchivo(a.file).then(revision => cambiar(a.id, { revision })).catch(() =>
+        cambiar(a.id, { errorRevision: 'No se pudo leer la primera fila. Guarda una copia como .xlsx sin contraseña o CSV y vuelve a elegirla.' }));
+    }
+  }, [tipos, revisarEncabezados]);
 
   const { getRootProps, getInputProps, isDragActive, open } = useDropzone({
     onDrop: agregar,
-    disabled: lectura,
+    onFileDialogCancel: () => { reemplazar.current = null; },
+    disabled: lectura || (libre && !confirmado),
     accept: {
       'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet': ['.xlsx'],
       'text/csv': ['.csv'],
@@ -110,7 +129,7 @@ export function SubirArchivos({
 
   async function enviar() {
     const pendientes = archivos.filter((a) => a.envio === 'sin_enviar' && a.unidad);
-    if (!pendientes.length || enviando || lectura || (libre && !libreValido)) return;
+    if (!pendientes.length || bloqueadoPorEncabezados || enviando || lectura || (libre && !libreValido)) return;
     setEnviando(true);
     let bien = 0;
     let mal = 0;
@@ -141,17 +160,15 @@ export function SubirArchivos({
   }
 
   const enviables = archivos.filter((a) => a.envio === 'sin_enviar' && a.unidad).length;
+  const bloqueadoPorEncabezados = revisarEncabezados && archivos.some(a => a.envio === 'sin_enviar' && a.revision?.faltan !== 0);
 
   return (
     <section aria-label="Subir archivos">
-      {archivos.length === 0 && <nav aria-label="Elegir programa de la carga" className="programas-carga">
-        {[...programas, {id:'otro',nombre:'Otro programa'}].map(p => <Link key={p.id}
-          href={p.id === 'otro' ? '/subir?otro=1' : `/informe/${p.id}/subir`}
-          aria-current={p.id === alcance ? 'page' : undefined}>
-          {p.nombre}{p.id === alcance ? <Check aria-hidden/> : <ArrowUpRight aria-hidden/>}
-        </Link>)}
-      </nav>}
-      {libre && <fieldset className="datos-programa-libre" disabled={enviando || lectura}>
+      {libre && <header className="cab-carga">
+        <p>{confirmado ? elegido?.nombre : '¿De qué programa es este archivo?'}</p>
+        <Link href="/subir" className="btn btn--secundario btn--sm">Cambiar</Link>
+      </header>}
+      {libre && !confirmado && <fieldset className="datos-programa-libre" disabled={enviando || lectura}>
         <legend>Datos del programa</legend>
         <label>Nombre del programa<input maxLength={100} value={nombreLibre} onChange={e=>setNombreLibre(e.target.value)} /></label>
         <label>Unidad<select value={unidadLibre} onChange={e=>setUnidadLibre(e.target.value)}>
@@ -162,8 +179,9 @@ export function SubirArchivos({
           : !elegido ? SIN_ALTA : unidadLibre && !elegido.tipos_de_registro.includes(unidadLibre)
           ? 'La unidad elegida no está habilitada para este programa.'
           : `Se procesará como ${elegido.nombre}.`}</p>
+        <button type="button" className="btn btn--primario" disabled={!libreValido} onClick={() => setConfirmado(true)}>Usar este programa</button>
       </fieldset>}
-      <div
+      {(!libre || confirmado) && <div
         {...getRootProps({className:'zona-carga'})}
         data-arrastrando={isDragActive} aria-disabled={lectura}
       >
@@ -172,22 +190,23 @@ export function SubirArchivos({
         <p aria-live="polite">
           {isDragActive ? 'Suelta los archivos aquí' : `Arrastra aquí los Excel o CSV de ${elegido?.nombre || 'tu programa'}`}
         </p>
-        <button type="button" onClick={open} disabled={lectura} className="elegir-archivo">Elegir archivo</button>
+        <button id="elegir-archivo-carga" type="button" onClick={open} disabled={lectura} className="elegir-archivo">Elegir archivo</button>
         <small>{lectura?'Modo de consulta: no se reciben archivos.':'Excel (.xlsx) o CSV · Hasta 10 MB por archivo'}</small>
-      </div>
+      </div>}
 
       {archivos.length > 0 && (
         <ul className="mt-4" style={{ listStyle: 'none', padding: 0 }}>
           {archivos.map((a) => (
-            <li key={a.id} className="fila" style={{ gap: 'var(--sp-4)' }}>
+            <li key={a.id}>
+              <div className="fila" style={{ gap: 'var(--sp-4)' }}>
               <FileSpreadsheet className="size-5" style={{ color: 'var(--tinta-tenue)', flexShrink: 0 }} aria-hidden="true" />
               <span className="fila__cuerpo" style={{ display: 'flex', flexWrap: 'wrap', alignItems: 'center', gap: 'var(--sp-4)' }}>
                 <span style={{ minWidth: 0, flex: 1 }}>
                   <span style={{ display: 'block', fontWeight: 500, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{a.file.name}</span>
                   <span className="etiqueta mono">{(a.file.size / 1024).toFixed(0)} KB</span>
                   {a.error && (
-                    <span style={{ display: 'flex', alignItems: 'center', gap: 'var(--sp-2)', color: 'var(--error)', fontSize: 'var(--fs-small)', marginTop: 2 }}>
-                      <XCircle className="size-3.5" aria-hidden="true" /> {a.error}
+                    <span role="alert" style={{ display: 'flex', alignItems: 'center', gap: 'var(--sp-2)', color: 'var(--error)', fontSize: 'var(--fs-small)', marginTop: 2 }}>
+                      <XCircle className="size-3.5" aria-hidden="true" /> {explicarErrorCarga(a.error)}
                     </span>
                   )}
                 </span>
@@ -202,12 +221,17 @@ export function SubirArchivos({
                 {a.envio === 'enviando' && <span className="transferencia" role="status">Subiendo{a.progreso===undefined?'…':` · ${a.progreso} %`}
                   <progress aria-label={`Progreso de ${a.file.name}`} max={100} value={a.progreso}/></span>}
                 {a.envio === 'error' && <span className="estado estado--error">No se subió</span>}
+                {a.envio === 'error' && !lectura && <button type="button" className="btn btn--secundario btn--sm"
+                  onClick={() => { reemplazar.current = a.id; open(); }}>Volver a subir</button>}
                 {(a.envio === 'sin_enviar' || a.envio === 'error') && (
                   <button type="button" className="btn btn--quieto btn--sm" onClick={() => setArchivos((x) => x.filter((y) => y.id !== a.id))}>
                     <Trash2 className="size-4" aria-hidden="true" /> Quitar
                   </button>
                 )}
               </span>
+              </div>
+              {revisarEncabezados && a.envio === 'sin_enviar' && <RevisionEncabezados
+                revision={a.revision} error={a.errorRevision} nombre={a.file.name} />}
             </li>
           ))}
         </ul>
@@ -215,7 +239,7 @@ export function SubirArchivos({
 
       {archivos.some((a) => a.envio === 'sin_enviar') && (
         <div className="mt-4">
-          <button type="button" className="btn btn--primario" onClick={enviar} disabled={lectura || enviando || enviables === 0 || (libre && !libreValido)}>
+          <button type="button" className="btn btn--primario" onClick={enviar} disabled={bloqueadoPorEncabezados || lectura || enviando || enviables === 0 || (libre && !libreValido)}>
             {enviando ? 'Enviando…' : `Subir ${enviables} archivo${enviables > 1 ? 's' : ''}`}
           </button>
         </div>
