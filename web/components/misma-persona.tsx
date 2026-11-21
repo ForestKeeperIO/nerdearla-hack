@@ -1,7 +1,8 @@
 'use client';
 
 // "¿Es la misma persona?": un caso a la vez, dos registros lado a lado, dos botones.
-import { useTransition } from 'react';
+import { useEffect, useState, useTransition } from 'react';
+import { useRouter } from 'next/navigation';
 import type { Par } from '@/lib/comun';
 import { decidirPar } from '@/lib/acciones';
 
@@ -12,11 +13,16 @@ function FilaCampo({ campo, a, b }: { campo: string; a: string; b: string }) {
   const resaltado = difiere ? { background: 'var(--rubor)' } : {};
   return (
     <tr>
-      <th scope="row" className="etiqueta" style={{ ...celda, textAlign: 'left', fontWeight: 500, width: '7rem' }}>{campo}</th>
+      <th scope="row" className="etiqueta" style={{ ...celda, textAlign: 'left', fontWeight: 500 }}>{campo}{difiere && <small style={{display:'block'}}>Difiere</small>}</th>
       <td style={{ ...celda, ...resaltado }}>{a}</td>
       <td style={{ ...celda, ...resaltado }}>{b}</td>
     </tr>
   );
+}
+
+function separar(etiqueta: string) {
+  const [iniciales, ...resto] = etiqueta.split(/\s*·\s*/);
+  return [iniciales, resto.find(s => !/años$/i.test(s)) || 'Sin dato', resto.find(s => /años$/i.test(s)) || 'Sin dato'];
 }
 
 export function MismaPersona({
@@ -33,16 +39,28 @@ export function MismaPersona({
   alDecidir: (id: string) => void;
 }) {
   const [cargando, start] = useTransition();
+  const [espera, setEspera] = useState('');
+  const [error, setError] = useState('');
+  const router = useRouter();
 
   const pendientes = pares.filter((p) => !decididos.has(p.id));
   const actual = pendientes[0];
+  const sinConfirmar = !!actual && espera === actual.id;
+  useEffect(() => {
+    if (!sinConfirmar) return;
+    const t = setInterval(() => router.refresh(), 3000);
+    return () => clearInterval(t);
+  }, [sinConfirmar, router]);
 
   function decidir(decision: 'misma' | 'distinta') {
     if (!actual) return;
     const id = actual.id;
     start(async () => {
-      await decidirPar(alcance, id, decision);
-      alDecidir(id);
+      try {
+        const aplicado = await decidirPar(alcance, id, decision);
+        if (aplicado) alDecidir(id); else setEspera(id);
+        setError(''); router.refresh();
+      } catch { setError('No se confirmó el envío. Actualiza para revisar el estado.'); }
     });
   }
 
@@ -70,19 +88,20 @@ export function MismaPersona({
           </tr>
         </thead>
         <tbody>
-          <FilaCampo campo="Identificación" a={actual.a.etiqueta} b={actual.b.etiqueta} />
+          {['Iniciales','Ciudad','Edad'].map((campo,i) => <FilaCampo key={campo} campo={campo} a={separar(actual.a.etiqueta)[i]} b={separar(actual.b.etiqueta)[i]} />)}
           <FilaCampo campo="Archivo" a={nombreFuente[actual.a.fuente] ?? actual.a.fuente} b={nombreFuente[actual.b.fuente] ?? actual.b.fuente} />
           <FilaCampo campo="Fila" a={String(actual.a.fila)} b={String(actual.b.fila)} />
         </tbody>
       </table>
       <p className="etiqueta" style={{ marginTop: 'var(--sp-2)' }}>
-        Las celdas sombreadas son las que difieren entre los dos registros.
+        Si las iniciales y los datos coinciden, consulta las filas de origen antes de decidir.
       </p>
+      <p role="status">{cargando ? 'Aplicando la decisión…' : sinConfirmar ? 'Enviada. Esperando confirmación…' : error}</p>
       <div className="mt-4 flex flex-wrap gap-3">
-        <button type="button" className="btn btn--primario" disabled={cargando} onClick={() => decidir('misma')}>
+        <button type="button" className="btn btn--primario" disabled={cargando || sinConfirmar} onClick={() => decidir('misma')}>
           Es la misma persona
         </button>
-        <button type="button" className="btn btn--secundario" disabled={cargando} onClick={() => decidir('distinta')}>
+        <button type="button" className="btn btn--secundario" disabled={cargando || sinConfirmar} onClick={() => decidir('distinta')}>
           Son dos personas
         </button>
       </div>

@@ -3,7 +3,8 @@
 // Tabla de pares posiblemente duplicados con selección múltiple y decisiones
 // en masa. Cada decisión escribe al Stream eira:decisiones por la misma acción
 // que la decisión individual (decidirPares → XADD tipo persona).
-import { useState, useTransition } from 'react';
+import { useEffect, useState, useTransition } from 'react';
+import { useRouter } from 'next/navigation';
 import type { Par } from '@/lib/comun';
 import { decidirPares } from '@/lib/acciones';
 
@@ -17,10 +18,18 @@ export function ParesMasa({
   nombreFuente: Record<string, string>;
 }) {
   const [elegidos, setElegidos] = useState<Set<string>>(new Set());
-  const [decididos, setDecididos] = useState<Set<string>>(new Set());
+  const [esperando, setEsperando] = useState<string[]>([]);
+  const [mensaje, setMensaje] = useState('');
+  const router = useRouter();
   const [cargando, start] = useTransition();
 
-  const pendientes = pares.filter((p) => !decididos.has(p.id));
+  const pendientes = pares.filter((p) => p.estado === 'pendiente');
+  const sinConfirmar = pendientes.some(p => esperando.includes(p.id));
+  useEffect(() => {
+    if (!sinConfirmar) return;
+    const timer = setInterval(() => router.refresh(), 3000);
+    return () => clearInterval(timer);
+  }, [sinConfirmar, router]);
   const alguno = elegidos.size > 0;
 
   function alterna(id: string, marcado: boolean) {
@@ -36,9 +45,13 @@ export function ParesMasa({
     const ids = [...elegidos];
     if (ids.length === 0) return;
     start(async () => {
-      await decidirPares(alcance, ids, decision);
-      setDecididos((s) => new Set([...s, ...ids]));
-      setElegidos(new Set());
+      try {
+        const aplicado = await decidirPares(alcance, ids, decision);
+        setEsperando(aplicado ? [] : ids);
+        setMensaje(aplicado ? 'Decisión aplicada.' : '');
+        setElegidos(new Set());
+        router.refresh();
+      } catch { setMensaje('No se confirmó el envío. Actualiza antes de intentarlo otra vez.'); }
     });
   }
 
@@ -48,6 +61,7 @@ export function ParesMasa({
 
   return (
     <div aria-busy={cargando}>
+      <p role="status">{cargando ? 'Aplicando la decisión…' : sinConfirmar ? 'Decisión enviada. Esperando confirmación…' : mensaje}</p>
       {alguno && (
         <div
           role="toolbar"
@@ -56,10 +70,10 @@ export function ParesMasa({
           style={{ display: 'flex', flexWrap: 'wrap', alignItems: 'center', gap: 'var(--sp-3)', padding: 'var(--sp-2) var(--sp-4)', marginBottom: 'var(--sp-3)' }}
         >
           <span>{elegidos.size} {elegidos.size === 1 ? 'par elegido' : 'pares elegidos'}</span>
-          <button type="button" className="btn btn--primario btn--sm" disabled={cargando} onClick={() => decidir('misma')}>
+          <button type="button" className="btn btn--primario btn--sm" disabled={cargando || sinConfirmar} onClick={() => decidir('misma')}>
             Son la misma persona
           </button>
-          <button type="button" className="btn btn--secundario btn--sm" disabled={cargando} onClick={() => decidir('distinta')}>
+          <button type="button" className="btn btn--secundario btn--sm" disabled={cargando || sinConfirmar} onClick={() => decidir('distinta')}>
             Son personas distintas
           </button>
         </div>
