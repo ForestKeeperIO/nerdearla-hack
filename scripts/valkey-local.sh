@@ -13,9 +13,15 @@ if [ ! -x "$DIR/$NAME/bin/valkey-server" ]; then
   [ "$(sha256sum "$DIR/v.tgz" | cut -d' ' -f1)" = "$(cut -d' ' -f1 "$DIR/v.sha")" ] || { echo "suma de verificación incorrecta" >&2; exit 1; }
   tar xzf "$DIR/v.tgz" -C "$DIR"
 fi
-if "$DIR/$NAME/bin/valkey-cli" -p "$PORT" ping >/dev/null 2>&1; then
+CLI=("$DIR/$NAME/bin/valkey-cli" -p "$PORT")
+ARGS=(--port "$PORT" --bind 127.0.0.1 --appendonly yes --dir "$DIR/data" --daemonize yes --logfile "$DIR/valkey.log")
+if [ -n "${VALKEY_PASSWORD:-}" ]; then
+  ARGS+=(--requirepass "$VALKEY_PASSWORD")
+  CLI+=(-a "$VALKEY_PASSWORD" --no-auth-warning)
+fi
+if "${CLI[@]}" ping >/dev/null 2>&1; then
   echo "Valkey ya está corriendo en el puerto $PORT"; exit 0
 fi
-"$DIR/$NAME/bin/valkey-server" --port "$PORT" --bind 127.0.0.1 --appendonly yes --dir "$DIR/data" --daemonize yes --logfile "$DIR/valkey.log"
+"$DIR/$NAME/bin/valkey-server" "${ARGS[@]}"
 sleep 1
-"$DIR/$NAME/bin/valkey-cli" -p "$PORT" ping
+"${CLI[@]}" ping
