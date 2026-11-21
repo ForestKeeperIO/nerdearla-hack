@@ -49,7 +49,7 @@ Leyenda de verificación: **[medido]** = HTML/CSS del sitio de origen inspeccion
 **1. OhMD — Stats + Card** · [medido]
 - details.so: https://www.details.so/inspo/ohmd-caa5e6 · Categoría: Stats, Card · Industria: Health, SaaS
 - Origen: https://www.ohmd.com/product/patient-communication
-- Captura: `capturas-details/ohmd-caa5e6.jpg`
+- Captura: `capturas-details/ohmd-caa5e6.jpg` · origen: `capturas-details/origen-ohmd-home.png`
 - Medido en ohmd.com (Framer): tinta `#061B12` (101 usos, verde-tinta casi negro), fondo roto `#F7F5F2`, borde `#E6E4E2`, gris `#7A7A7A`. Fuentes: Geist e Inter (sans) + Fragment Mono; pesos 300 (dominante en titulares), 400, 500. Cuerpo 14–16 px, interlineado 1.2–1.4 em. Radios: tarjetas 16–32 px, píldoras 100 px/1000 px.
 - Patrón: bloque de stat con número grande en peso ligero sobre tinta profunda + etiqueta en mono/versalitas. La jerarquía la da el contraste tinta/papel y el peso 300, no el tamaño excesivo. Transferible 1:1 a "personas / atenciones / edad promedio".
 
@@ -109,7 +109,7 @@ Leyenda de verificación: **[medido]** = HTML/CSS del sitio de origen inspeccion
 **10. Revelatio — Rows** · [medido]
 - details.so: https://www.details.so/inspo/revelatio-1e8867 · Categoría: Rows · Estilo: Minimal, Editorial
 - Origen: https://revelatio.studio/approach
-- Captura: `capturas-details/revelatio-1e8867.webp`
+- Captura: `capturas-details/revelatio-1e8867.webp` · origen: `capturas-details/origen-revelatio-approach.png`
 - Medido en su CSS (Webflow): escala en `em` (.75, .875, 1.125, 1.5, 1.75, 2.25, 3), casi todo `#000`/`#FFF` con bordes `#E2E2E2`, radios pequeños .125–.33 em, interlineado 1.1–1.3.
 - Patrón: fila editorial estricta — índice a la izquierda, título, dato a la derecha, separador hairline. Referencia principal para la lista de informes y la tabla de problemas.
 
@@ -146,7 +146,7 @@ Leyenda de verificación: **[medido]** = HTML/CSS del sitio de origen inspeccion
 **15. Viru Group — Button** · [medido]
 - details.so: https://www.details.so/inspo/virugroup-a04a87 · Industria: Food, Health
 - Origen: https://www.virugroup.com/en/
-- Captura: `capturas-details/virugroup-a04a87.webp`
+- Captura: `capturas-details/virugroup-a04a87.webp` · origen: `capturas-details/origen-virugroup-home.png`
 - Medido: verde bosque `#194122` (11 usos), tinte pálido `#E0E9DD`, papel `#F4F4F4`, gris `#595959`; radios 0–64 px (píldora 32/64), pesos 700 en botón/titular.
 - Evidencia clave del acento recomendado: una organización de salud/alimentación usa verde bosque como único acento sobre neutros cálidos.
 
