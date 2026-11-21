@@ -5,7 +5,7 @@ export type Med<T> = { valor: T; comando: string; ms: number };
 
 /** Toda cifra de personas menor a 5 se muestra como "<5". */
 export function personasTxt(n: number): string {
-  return n < 5 ? '<5' : n.toLocaleString('es-MX');
+  return n > 0 && n < 5 ? '<5' : n.toLocaleString('es-MX');
 }
 
 /** Fecha ISO → dd/mm/aaaa (la usuaria espera el orden latinoamericano). */
@@ -46,6 +46,7 @@ export type Trabajo = {
   filas_omitidas: number;
   filas_repetidas: number;
   mapeo?: { encabezado: string; campo: string }[];
+  estado_clave?: string;
 };
 
 export type Fuente = {

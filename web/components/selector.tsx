@@ -28,7 +28,7 @@ export function Selector({ label, opciones, elegidos, cambiar, unico = false, at
     ? [...lista].filter(o => (o.cuenta ?? 0) > 0).sort((a,b) => (b.cuenta ?? 0) - (a.cuenta ?? 0) || alf(a,b)).slice(0,5) : [];
   const resto = lista.filter(o => !top.includes(o)).sort((a,b) => (a.grupo ?? '').localeCompare(b.grupo ?? '', 'es') || alf(a,b));
   const filas = [
-    ...(!q ? atajos.map((a,i) => ({ o: { texto: a.texto, valor: `atajo-${i}` } as Opcion, grupo: 'Periodos rápidos', atajo: a })) : []),
+    ...(!q ? atajos.map((a,i) => ({ o: { texto: a.texto, valor: `atajo-${i}`, cuenta: i > 0 && !a.valores.length ? 0 : undefined } as Opcion, grupo: 'Periodos rápidos al corte', atajo: a })) : []),
     ...top.map(o => ({ o, grupo: 'Más frecuentes', atajo: null })),
     ...resto.map(o => ({ o, grupo: o.grupo || (top.length ? 'Más opciones' : ''), atajo: null })),
   ];

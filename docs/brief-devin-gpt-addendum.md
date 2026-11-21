@@ -1,0 +1,9 @@
+# Addendum for the Devin (GPT) frontend pass · 14:25 CDMX
+
+From the second independent review (`docs/reviews/2026-11-21-ui-fe-2.md`) and from an engine test run by the supervisor. Do these before the polish items of the main brief.
+
+1. **Bulk decisions: show only pending pairs and re-read after acting.** The engine DOES consume `eira:decisiones` (verified on the hosted instance: one `XADD` with `tipo=persona, par=<id>, decision=distinta` took the pending count from 5 to 4 in four seconds). It keeps a decided pair in the `eira:pares` hash with `estado` `misma` or `distinta`; it does not delete it. So every list, band and counter of "por decidir" must filter `estado === 'pendiente'`, and after a single or bulk action the page must re-read (revalidate / `router.refresh()`), with an optimistic "aplicando…" state for the two or three seconds the engine takes.
+2. **Metabase embed and multi-select.** Today the iframe gets only Programa and only its first value. Either pass every selected value of every filter the dashboard accepts (`programa`, `mes`, `municipio`, `servicio`; repeat the parameter per value), or, if that cannot be verified today, say it plainly above the embed: "Las gráficas muestran: <lo que de verdad se aplicó>". Never let the charts silently disagree with the filter bar.
+3. **Exportar needs one primary action.** "Descargar informe (PDF)" as the single primary button (print stylesheet / save as PDF), CSV as secondary.
+4. **"¿Es la misma persona?" must show what differs.** The two records currently show identical identification. Show the fields that differ highlighted (city, file, row, age), and the reason in one sentence.
+5. **One number for people** (already item 1 of the main brief): app, Metabase and report must agree. Engine truth right now on the hosted data: 108 impacted (sum across programmes), 19 in more than one programme, 51 donors. Metabase already shows 108 and 51.

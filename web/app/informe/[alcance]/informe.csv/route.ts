@@ -43,7 +43,7 @@ export async function GET(_req: Request, { params }: { params: Promise<{ alcance
 
   const filas: (string | number)[][] = [
     ['indicador', 'valor', 'unidad', 'definicion', 'fecha_corte', 'fuentes', 'advertencias'],
-    ['donantes', totalDonantes > 0 && totalDonantes < 5 ? '<5' : totalDonantes, 'persona', 'Personas identificadas que donaron, contadas una sola vez', corte, nombres, advert],
+    ['donantes', totalDonantes, 'persona', 'Personas identificadas que donaron, contadas una sola vez', corte, nombres, advert],
     [
       'personas_impactadas', totalImpactadas, 'persona',
       esGlobal
@@ -88,7 +88,7 @@ export async function GET(_req: Request, { params }: { params: Promise<{ alcance
       ]);
       if (r.personas !== null) {
         filas.push([
-          `personas_${r.tipo}_${p.id}`, r.personas < 5 ? '<5' : r.personas, 'persona',
+          `personas_${r.tipo}_${p.id}`, r.personas, 'persona',
           `Personas únicas con registros de tipo «${pluralTipo(r.tipo)}» en ${p.nombre}${r.cuenta ? '' : ' (no cuentan como impactadas)'}`,
           corte, nombres, advert,
         ]);
@@ -96,7 +96,7 @@ export async function GET(_req: Request, { params }: { params: Promise<{ alcance
     }
     if (p.donantes.length > 0) {
       filas.push([
-        `donantes_${p.id}`, p.donantes.length < 5 ? '<5' : p.donantes.length, 'persona',
+        `donantes_${p.id}`, p.donantes.length, 'persona',
         `Personas que donaron en ${p.nombre}`,
         corte, nombres, advert,
       ]);
@@ -120,7 +120,9 @@ export async function GET(_req: Request, { params }: { params: Promise<{ alcance
     }
   }
 
-  const csv = '﻿' + filas.map((r) => r.map(celda).join(',')).join('\r\n') + '\r\n';
+  const csv = '﻿' + filas.map(([indicador, valor, unidad, ...resto]) => [
+    indicador, unidad === 'persona' && typeof valor === 'number' && valor > 0 && valor < 5 ? '<5' : valor, unidad, ...resto,
+  ].map(celda).join(',')).join('\r\n') + '\r\n';
   return new Response(csv, {
     headers: {
       'content-type': 'text/csv; charset=utf-8',

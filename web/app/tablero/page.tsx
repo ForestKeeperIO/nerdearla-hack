@@ -9,7 +9,7 @@ import { consultar } from '@/lib/facetas';
 import { fechaEs, personasTxt } from '@/lib/comun';
 import { edadPromedioIds, listarFuentes, rolesDe, sinIdentificar } from '@/lib/datos';
 import { etiquetaPeriodo, filtrosDeQuery } from '@/lib/filtros-comun';
-import { fechaCorteDe, paresDe } from '@/lib/informe';
+import { esAlcance, fechaCorteDe, paresDe } from '@/lib/informe';
 import { impactoPublico } from '@/lib/metabase';
 
 export const dynamic = 'force-dynamic';
@@ -44,7 +44,8 @@ export default async function Tablero({ searchParams }: { searchParams: Promise<
     f.programa.length === 1 && nombrePrograma(f.programa[0]), f.periodo.length === 1 && etiquetaPeriodo(f.periodo[0]),
     f.servicio.length === 1 && f.servicio[0], ciudades.length === 1 && ciudades[0],
   ].filter(Boolean);
-  const exportar = f.programa.length === 1 && roles.porPrograma.length ? f.programa[0] : 'global';
+  const exportar = f.programa.length === 1 && esAlcance(f.programa[0]) ? f.programa[0] : 'global';
+  const seleccionParcial = f.programa.length > 1 || [...f.estado,...f.municipio,...f.servicio,...f.periodo].length > 0;
 
   return <div className="mesa">
     <header className="mesa-cabecera">
@@ -52,13 +53,19 @@ export default async function Tablero({ searchParams }: { searchParams: Promise<
         <p>Corte al <time dateTime={corte}>{fechaEs(corte)}</time> · {archivos.length} archivos de coordinación</p>
       </div>
       <div className="mesa-acciones"><Actualizar consulta={Date.now()} />
-        <Link href={`/informe/${encodeURIComponent(exportar)}/exportar`} className="mesa-boton"><Download size={16} aria-hidden />Exportar informe</Link>
+        <Link href={`/informe/${encodeURIComponent(exportar)}/exportar`} className="mesa-boton"><Download size={16} aria-hidden />
+          {seleccionParcial && exportar === 'global' ? 'Exportar Global' : 'Exportar informe'}</Link>
       </div>
     </header>
 
     <section aria-label="Filtros" className="mesa-filtros">
       <FiltrosBarra base={base} activos={f} corte={corte} />
+      {seleccionParcial && <p className="mesa-nota">La exportación contiene el informe completo {exportar === 'global' ? 'Global' : `de ${nombrePrograma(exportar)}`}, sin filtros de territorio, servicio ni periodo.</p>}
     </section>
+    {(pendientes.length > 0 || sinId.valor > 0) && <aside className="aviso-banda">
+      <Info aria-hidden size={16} /><span>{pendientes.length} pares por revisar · {sinId.valor} sin identificar</span>
+      <a className="aviso-banda__accion" href="#pares">Revisar pares</a>
+    </aside>}
     <section aria-label="Indicadores" className="mesa-indicadores">
       <Indicador nombre="Personas impactadas" valor={roles.totalImpactadas ? personasTxt(roles.totalImpactadas) : '0'} unidad={alcance}
         regla="Cada persona identificada cuenta una vez por programa donde recibió atención o participó." origen={origen} />
@@ -73,14 +80,10 @@ export default async function Tablero({ searchParams }: { searchParams: Promise<
     {metabase && archivos.length > 0 && <section className="mesa-graficas" aria-label="Gráficas y presencia por estado">
       <div className="mesa-seccion"><h2>Actividad y presencia por estado</h2>
         <a href={metabase} target="_blank" rel="noreferrer">Abrir tablero completo <ExternalLink size={15} aria-hidden /></a></div>
-      <p className="mesa-nota">Las gráficas muestran: {aplicados.join(', ') || 'todos los datos'}. {aplicados.length > 0 && 'El mes y el servicio solo acotan actividad; el municipio, presencia. La edad incrustada es global.'}
+      <p className="mesa-nota">Las gráficas muestran: {aplicados.join(', ') || 'todos los datos'}. Metabase usa su propio corte. {aplicados.length > 0 && 'El mes y el servicio solo acotan actividad; el municipio, presencia. La edad incrustada es global.'}
         {(f.estado.length > 0 || Object.values(f).some(v => v.length > 1)) && ' Metabase no aplica estado ni selecciones múltiples.'}</p>
       <iframe title="Tablero público de impacto en Metabase" src={metabase} className="mesa-marco" />
     </section>}
-    {(pendientes.length > 0 || sinId.valor > 0) && <aside className="aviso-banda">
-      <Info aria-hidden size={16} /><span>{pendientes.length} pares por revisar · {sinId.valor} registros sin identificar</span>
-      <a className="aviso-banda__accion" href="#pares">Revisar pares</a>
-    </aside>}
     <section className="mesa-columna"><h2>Servicios por unidad</h2>
       <p className="mesa-nota">Cada unidad se informa por separado.</p>
       <dl>{unidades.filter((u) => u.cantidad > 0).map((u) => <div key={u.nombre}><dt>{u.nombre}</dt><dd>{u.cantidad.toLocaleString('es-MX')}</dd></div>)}</dl>
