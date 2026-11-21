@@ -8,13 +8,16 @@
       "repetidas_dentro": 4,
       "anomalias": 20
     },
-    "salud-que-florece.xlsx": {
-      "filas": 84,
+    "melenas-en-movimiento.xlsx": {
+      "filas": 80,
       "asistencias": 80,
-      "inasistencias": 4,
+      "inasistencias": 0,
       "sin_id": 12,
       "repetidas_dentro": 0,
-      "anomalias": 14
+      "anomalias": 14,
+      "fechas_futuras": 2,
+      "donaciones": 60,
+      "entregas": 20
     },
     "nutricion.xlsx": {
       "filas": 40,
@@ -61,16 +64,26 @@
   "globales": {
     "personas_identificadas": 163,
     "registros_sin_identificar": 0,
-    "cruce_tamizaje_florece": 15,
+    "cruce_tamizaje_melenas": 15,
     "pares_mismo_id": 2,
     "variantes_de_nombre": 3,
     "filas_compartidas_nutricion": 30,
     "edad_promedio": 45.9,
+    "impactadas": {
+      "tamizaje-rosa": 98,
+      "melenas-en-movimiento": 20
+    },
+    "donantes": {
+      "melenas-en-movimiento": 60
+    },
     "totales_finales": {
-      "atenciones": 138,
-      "participaciones": 80,
-      "personas": 181,
-      "pares_pendientes": 5
+      "atenciones": 128,
+      "donaciones": 60,
+      "pelucas": 20,
+      "personas": 171,
+      "pares_pendientes": 5,
+      "personas_impactadas_global": 126,
+      "personas_en_mas_de_un_programa": 15
     }
   }
 }

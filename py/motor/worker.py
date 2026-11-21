@@ -21,6 +21,7 @@ from datetime import date
 import pandas as pd
 import valkey
 
+from db import catalogo
 from db.crear import crear
 from . import escribir, huellas, leer, personas
 
@@ -29,7 +30,8 @@ CONSUMIDOR = f"py-{os.getpid()}"
 
 PESOS_ANOMALIA = {"faltante": 2, "fecha_invalida": 3, "fecha_futura": 3,
                   "ciudad_desconocida": 3, "id_invalido": 3, "edad_inconsistente": 2,
-                  "fila_repetida": 1, "fila_ya_cargada": 1, "posible_correccion": 1}
+                  "fila_repetida": 1, "fila_ya_cargada": 1, "posible_correccion": 1,
+                  "tipo_desconocido": 2}
 
 
 def conectar(texto: bool = True) -> valkey.Valkey:
@@ -50,16 +52,17 @@ def asegurar_grupos(v) -> None:
 
 
 def encolar(v, contenido: bytes, nombre: str, programa: str, unidad: str,
-            fecha_corte: str, por: str = "local") -> str:
+            fecha_corte: str, por: str = "local", estado_clave: str = "14") -> str:
     """Encola un archivo igual que lo hace el frontend. Devuelve el trabajo_id."""
     trabajo_id = "tr-" + uuid.uuid4().hex[:10]
     v.set(f"eira:archivo:{trabajo_id}", contenido, ex=3600)
     v.hset(f"eira:trabajo:{trabajo_id}", mapping={
         "estado": "pendiente", "nombre": nombre, "programa": programa,
         "unidad": unidad, "fecha_corte": fecha_corte, "por": por,
-        "creado_en": escribir.ahora()})
+        "estado_clave": estado_clave, "creado_en": escribir.ahora()})
     v.xadd("eira:trabajos", {"id": trabajo_id, "nombre": nombre, "programa": programa,
-                            "unidad": unidad, "fecha_corte": fecha_corte, "por": por})
+                            "unidad": unidad, "fecha_corte": fecha_corte, "por": por,
+                            "estado_clave": estado_clave})
     return trabajo_id
 
 
@@ -106,10 +109,33 @@ def procesar_trabajo(v, db: sqlite3.Connection, trabajo_id: str,
         if contenido is None:
             raise RuntimeError("No encontré el archivo: expiró o no se subió.")
 
-        df, anomalias = leer.leer_reporte(contenido, nombre)
+        ini = catalogo.iniciativa(campos.get("programa", ""))
+        if ini is None:
+            raise RuntimeError(
+                f"No reconozco el programa '{campos.get('programa', '')}': "
+                "no está en el catálogo de iniciativas.")
+
+        df, anomalias = leer.leer_reporte(
+            contenido, nombre, estado_clave=campos.get("estado_clave") or "14")
         df = df.astype("object").where(pd.notna(df), None)  # NaN -> None
         sin_personas = bool(df.attrs.get("sin_personas"))
         fecha_corte = campos.get("fecha_corte", "")
+
+        # Tipo de registro y rol por fila: la columna Tipo decide cuando el
+        # trabajo viene "segun_fila"; si no, manda la unidad del trabajo.
+        unidad_trabajo = campos.get("unidad", "") or ""
+        tipos, roles = [], []
+        for r in df.itertuples(index=False):
+            tipo, seguro = catalogo.resolver_tipo(ini, r.tipo_texto or "",
+                                                  unidad_trabajo)
+            if not seguro:
+                anomalias.append({"fila": int(r.fila), "regla": "tipo_desconocido",
+                                  "campo": "tipo",
+                                  "detalle": "No reconocí el tipo de registro de la fila"})
+            tipos.append(tipo)
+            roles.append(catalogo.rol_de(ini, tipo))
+        df["tipo_registro"] = tipos
+        df["rol_persona"] = roles
 
         clave = huellas.clave_hmac()
         df["huella_fila"] = [huellas.huella_fila(r, clave)
@@ -208,14 +234,13 @@ def procesar_trabajo(v, db: sqlite3.Connection, trabajo_id: str,
         estrellas, puntaje, motivos = _calidad(anomalias, filas, filas_omitidas,
                                                inasistencias, sin_id)
 
-        fuente = {"id": fid, "nombre": nombre, "programa": campos.get("programa", ""),
-                  "unidad": campos.get("unidad", "atencion"),
+        fuente = {"id": fid, "nombre": nombre, "iniciativa_id": ini["id"],
+                  "unidad": unidad_trabajo,
                   "fecha_corte": fecha_corte, "por": campos.get("por", ""),
                   "filas": filas, "filas_nuevas": filas_nuevas,
                   "filas_omitidas": filas_omitidas, "inasistencias": inasistencias,
                   "estrellas": estrellas, "puntaje": puntaje, "motivos": motivos,
-                  "huella_bytes": hb,
-                  "huella_contenido": veredicto["huella_contenido"]}
+                  "huella_bytes": hb}
 
         previa = db.execute("SELECT id FROM fuentes WHERE huella_bytes=?",
                             (hb,)).fetchone()
@@ -290,8 +315,12 @@ def _decidir_par(v, db, par: str, decision: str, por: str) -> None:
     if decision == "misma":
         # Mover membresias de b a a segun sus registros contados.
         filas = db.execute(
-            "SELECT DISTINCT programa, ciudad, periodo, servicio FROM registros"
+            "SELECT DISTINCT iniciativa_id, ciudad, periodo, servicio FROM registros"
             " WHERE persona_id=? AND contado=1 AND cantidad>0", (a,)).fetchall()
+        pares_rol = db.execute(
+            "SELECT DISTINCT iniciativa_id, rol_persona FROM registros"
+            " WHERE persona_id=? AND contado=1 AND cantidad>0", (a,)).fetchall()
+        impactados = catalogo.roles_impactados()
         pipe = v.pipeline()
         pipe.srem("eira:per:todas", b)
         for prog, ciu, per, ser in filas:
@@ -299,6 +328,12 @@ def _decidir_par(v, db, par: str, decision: str, por: str) -> None:
                           f"eira:per:ciudad:{ciu}" if ciu else None,
                           f"eira:per:periodo:{per}" if per else None,
                           f"eira:per:servicio:{ser}" if ser else None):
+                if clave:
+                    pipe.srem(clave, b)
+                    pipe.sadd(clave, a)
+        for prog, rol in pares_rol:
+            for clave in (f"eira:per:impactadas:{prog}" if rol in impactados else None,
+                          f"eira:per:donantes:{prog}" if rol == "donante" else None):
                 if clave:
                     pipe.srem(clave, b)
                     pipe.sadd(clave, a)
@@ -334,12 +369,17 @@ def _restituir_fila(v, db, fuente_id: str, num_fila: int, por: str) -> None:
     for item in v.lrange(f"eira:omitidas:{fuente_id}", 0, -1):
         if json.loads(item).get("fila") == num_fila:
             v.lrem(f"eira:omitidas:{fuente_id}", 1, item)
-    campo = escribir.campo_conteo(r["programa"], r["ciudad"] or "",
+    ini = r["iniciativa_id"]
+    campo = escribir.campo_conteo(ini, r["ciudad"] or "",
                                   r["periodo"] or "", r["servicio"] or "")
     pipe = v.pipeline()
     if r["persona_id"]:
-        pipe.hincrby(f"eira:cnt:{r['unidad']}", campo, 1)
-        for clave in (f"eira:per:programa:{r['programa']}",
+        pipe.hincrby(f"eira:cnt:{r['tipo_registro']}", campo, 1)
+        rol = r["rol_persona"] or ""
+        impactados = catalogo.roles_impactados()
+        for clave in (f"eira:per:programa:{ini}",
+                      f"eira:per:impactadas:{ini}" if rol in impactados else None,
+                      f"eira:per:donantes:{ini}" if rol == "donante" else None,
                       f"eira:per:ciudad:{r['ciudad']}" if r["ciudad"] else None,
                       f"eira:per:periodo:{r['periodo']}" if r["periodo"] else None,
                       f"eira:per:servicio:{r['servicio']}" if r["servicio"] else None):
@@ -348,6 +388,9 @@ def _restituir_fila(v, db, fuente_id: str, num_fila: int, por: str) -> None:
         pipe.sadd("eira:per:todas", r["persona_id"])
     else:
         pipe.hincrby("eira:sinid", campo, 1)
+    if r["municipio_clave"]:
+        pipe.hincrby(f"eira:presencia:{ini}", r["municipio_clave"], 1)
+        pipe.hincrby("eira:presencia:global", r["municipio_clave"], 1)
     pipe.xadd("eira:bitacora", {"en": en, "por": por or "presidencia",
                               "tipo": "restituir_fila",
                               "detalle": f"Fila {num_fila} de '{fuente_id}' restituida."})
