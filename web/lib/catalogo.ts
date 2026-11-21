@@ -52,13 +52,14 @@ export function entorno(): string {
 }
 
 /**
- * Informes que salen en la portada: los marcados en_demo más los del entorno
- * en marcha (solo_entorno = 'real' aparece solo cuando ENTORNO=real).
+ * Iniciativas confirmadas de la guía, más las fuentes exclusivas del entorno.
+ * en_demo selecciona los archivos del ensayo, no los permisos de carga.
  * Nada de ids fijos: agregar un informe es agregar una entrada al catálogo.
  */
 export function informesActivos(): Iniciativa[] {
   const env = entorno();
-  return catalogo().iniciativas.filter((i) => i.en_demo || i.solo_entorno === env);
+  return catalogo().iniciativas.filter((i) => i.solo_entorno ? i.solo_entorno === env :
+    i.estado === 'confirmado' && (i.clase === 'programa' || i.clase === 'iniciativa'));
 }
 
 /** Programas del demo (en_demo): son los que abren al Global. */

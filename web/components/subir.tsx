@@ -1,12 +1,13 @@
 'use client';
 
 import { useCallback, useRef, useState } from 'react';
+import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import { useDropzone, type FileRejection } from 'react-dropzone';
-import { FileSpreadsheet, Trash2, UploadCloud, XCircle } from 'lucide-react';
+import { ArrowUpRight, Check, FileSpreadsheet, Trash2, UploadCloud, XCircle } from 'lucide-react';
 import { toast } from 'sonner';
 import { Selector } from './selector';
-import type { Opcion } from '@/lib/filtros-comun';
+import { resolverNombre, SIN_ALTA } from '@/lib/programa-libre';
 
 const MAX_BYTES = 10 * 1024 * 1024;
 
@@ -67,13 +68,19 @@ export function SubirArchivos({
   tipos: TipoOpcion[];
   fechaCorte: string;
   estados: EstadoOpcion[];
-  programas: Opcion[];
+  programas: {id:string; nombre:string; tipos_de_registro:string[]}[];
   lectura?: boolean;
 }) {
   const router=useRouter();
   const [archivos, setArchivos] = useState<ArchivoLocal[]>([]);
   const [enviando, setEnviando] = useState(false);
   const siguiente = useRef(1);
+  const [nombreLibre, setNombreLibre] = useState('');
+  const [unidadLibre, setUnidadLibre] = useState('');
+  const [corteLibre, setCorteLibre] = useState(fechaCorte);
+  const libre = alcance === 'otro';
+  const elegido = libre ? resolverNombre(nombreLibre, programas) : programas.find(p => p.id === alcance);
+  const libreValido = elegido?.tipos_de_registro.includes(unidadLibre) && !!corteLibre;
 
   const agregar = useCallback((aceptados: File[], rechazados: FileRejection[]) => {
     const nuevos: ArchivoLocal[] = aceptados.map((f) => ({
@@ -114,7 +121,7 @@ export function SubirArchivos({
 
   async function enviar() {
     const pendientes = archivos.filter((a) => a.envio === 'sin_enviar' && a.unidad);
-    if (!pendientes.length || enviando || lectura) return;
+    if (!pendientes.length || enviando || lectura || (libre && !libreValido)) return;
     setEnviando(true);
     let bien = 0;
     let mal = 0;
@@ -123,9 +130,10 @@ export function SubirArchivos({
       const fd = new FormData();
       fd.set('archivo', a.file);
       fd.set('programa', alcance);
-      fd.set('unidad', a.unidad);
+      if (libre) fd.set('nombre_programa', nombreLibre.trim());
+      fd.set('unidad', libre ? unidadLibre : a.unidad);
       fd.set('estado_clave', a.estado);
-      fd.set('fecha_corte', fechaCorte);
+      fd.set('fecha_corte', libre ? corteLibre : fechaCorte);
       fd.set('por', 'Presidencia');
       try {
         await transferir(fd,progreso=>cambiar(a.id,{progreso}));
@@ -138,6 +146,7 @@ export function SubirArchivos({
       }
     }
     setEnviando(false);
+    if (libre && bien && !mal && elegido) router.push(`/informe/${elegido.id}/subir`);
     if (bien) toast.success(`${bien} archivo${bien > 1 ? 's' : ''} recibido${bien > 1 ? 's' : ''}`, { description: 'Se están leyendo; en unos segundos ves el resultado aquí.' });
     if (mal) toast.error(`${mal} archivo${mal > 1 ? 's' : ''} no se pudo${mal > 1 ? 'n' : ''} subir`);
   }
@@ -146,6 +155,25 @@ export function SubirArchivos({
 
   return (
     <section aria-label="Subir archivos">
+      {archivos.length === 0 && <nav aria-label="Elegir programa de la carga" className="programas-carga">
+        {[...programas, {id:'otro',nombre:'Otro programa'}].map(p => <Link key={p.id}
+          href={p.id === 'otro' ? '/subir?otro=1' : `/informe/${p.id}/subir`}
+          aria-current={p.id === alcance ? 'page' : undefined}>
+          {p.nombre}{p.id === alcance ? <Check aria-hidden/> : <ArrowUpRight aria-hidden/>}
+        </Link>)}
+      </nav>}
+      {libre && <fieldset className="datos-programa-libre" disabled={enviando || lectura}>
+        <legend>Datos del programa</legend>
+        <label>Nombre del programa<input maxLength={100} value={nombreLibre} onChange={e=>setNombreLibre(e.target.value)} /></label>
+        <label>Unidad<select value={unidadLibre} onChange={e=>setUnidadLibre(e.target.value)}>
+          <option value="">Elige la unidad</option>{tipos.map(t=><option key={t.clave} value={t.clave}>{t.etiqueta}</option>)}
+        </select></label>
+        <label>Fecha de corte<input type="date" value={corteLibre} onChange={e=>setCorteLibre(e.target.value)}/></label>
+        <p role="status">{!nombreLibre.trim() ? 'Solo se pueden procesar programas dados de alta en el catálogo de EIRA.'
+          : !elegido ? SIN_ALTA : unidadLibre && !elegido.tipos_de_registro.includes(unidadLibre)
+          ? 'La unidad elegida no está habilitada para este programa.'
+          : `Se procesará como ${elegido.nombre}.`}</p>
+      </fieldset>}
       <div
         {...getRootProps({className:'zona-carga'})}
         data-arrastrando={isDragActive} aria-disabled={lectura}
@@ -153,16 +181,11 @@ export function SubirArchivos({
         <input {...getInputProps({'aria-label':'Archivo Excel o CSV'})} disabled={lectura} />
         <UploadCloud aria-hidden="true" />
         <p aria-live="polite">
-          {isDragActive ? 'Suelta los archivos aquí' : 'Arrastra aquí los Excel o CSV de este programa'}
+          {isDragActive ? 'Suelta los archivos aquí' : `Arrastra aquí los Excel o CSV de ${elegido?.nombre || 'tu programa'}`}
         </p>
         <button type="button" onClick={open} disabled={lectura} className="elegir-archivo">Elegir archivo</button>
         <small>{lectura?'Modo de consulta: no se reciben archivos.':'Excel (.xlsx) o CSV · Hasta 10 MB por archivo'}</small>
       </div>
-      <div className="programa-subida">{archivos.length || enviando
-        ? <p>Programa de esta carga: <strong>{programas.find(p=>p.valor===alcance)?.texto}</strong></p>
-        : <Selector unico label="Programa" opciones={programas} elegidos={[alcance]} cambiar={([id])=>{
-            if(id && id!==alcance) router.push(`/informe/${encodeURIComponent(id)}/subir`);
-          }}/>}</div>
 
       {archivos.length > 0 && (
         <ul className="mt-4" style={{ listStyle: 'none', padding: 0 }}>
@@ -182,8 +205,8 @@ export function SubirArchivos({
                 {a.envio === 'sin_enviar' && <span className="archivo-selectores">
                   <Selector unico label="Estado de las ciudades" elegidos={[a.estado]} cambiar={([estado]) => cambiar(a.id,{estado})}
                     opciones={estados.map(s => ({valor:s.clave,texto:s.nombre}))} />
-                  <Selector unico label="Tipo de registro" elegidos={[a.unidad]} cambiar={([unidad]) => cambiar(a.id,{unidad})}
-                    opciones={tipos.map(t => ({valor:t.clave,texto:t.etiqueta}))} />
+                  {!libre && <Selector unico label="Tipo de registro" elegidos={[a.unidad]} cambiar={([unidad]) => cambiar(a.id,{unidad})}
+                    opciones={tipos.map(t => ({valor:t.clave,texto:t.etiqueta}))} />}
                 </span>}
               </span>
               <span className="fila__dato" style={{ display: 'flex', alignItems: 'center', gap: 'var(--sp-3)' }}>
@@ -203,7 +226,7 @@ export function SubirArchivos({
 
       {archivos.some((a) => a.envio === 'sin_enviar') && (
         <div className="mt-4">
-          <button type="button" className="btn btn--primario" onClick={enviar} disabled={enviando || enviables === 0}>
+          <button type="button" className="btn btn--primario" onClick={enviar} disabled={lectura || enviando || enviables === 0 || (libre && !libreValido)}>
             {enviando ? 'Enviando…' : `Subir ${enviables} archivo${enviables > 1 ? 's' : ''}`}
           </button>
         </div>

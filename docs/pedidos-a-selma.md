@@ -1,5 +1,13 @@
 # Pedidos al procesador (sin cambios en su rama)
 
+## Alta de «Otro programa»
+
+Los cinco programas de la sección 3 de la guía ya existen en el catálogo de `a74bb6c`. **No requieren cambios en Python.** Para Selma, la carga debe enviar el ID y una unidad concreta de `tipos_de_registro`, no `segun_fila`.
+
+Falta el alta de un nombre libre: `Catalogo.programa()` solo resuelve IDs o nombres existentes y `Procesador.procesar_trabajo()` rechaza un programa desconocido. No existe un ID genérico `otro`. La web reconoce un nombre ya dado de alta; para un nombre nuevo avisa antes del envío y la API devuelve 422 sin guardar bytes ni crear un trabajo.
+
+**Pedido:** acordar cómo registrar un nombre con un ID estable y la unidad `atencion`, `participacion`, `entrega_insumo` o `donacion`. Conservar el nombre de presentación y proyectar por ID en Valkey y el Atlas. No agrupar programas distintos bajo «Otro» ni contar a donantes como personas impactadas. Criterio de aceptación: subir dos CSV con nombres de programa distintos; ambos aparecen por separado en los filtros y en el CSV del reporte.
+
 Reproducción en staging con `13a806d`, archivos ficticios. Los números de línea son de `py/procesador/` en ese commit.
 
 Actualización: para la demo la integración ya publica presencia usando la ficha del trabajo y elimina bytes terminales por evento. Son recomendaciones para una futura solución nativa, no bloqueos del corte con los archivos de `datos_demo`. No activar dos escritores de presencia.
