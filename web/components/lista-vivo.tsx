@@ -6,7 +6,7 @@ import { FileSpreadsheet } from 'lucide-react';
 import type { Fuente, Trabajo } from '@/lib/comun';
 import { StarRating } from '@/components/ui/star-rating';
 
-type Datos = { trabajos: Trabajo[]; fuentes: Fuente[] };
+type Datos = { trabajos: Trabajo[]; fuentes: Fuente[]; paresPorFuente?:Record<string,number> };
 
 function estadoTrabajo(t: Trabajo): { texto: string; clase: string } {
   if (t.estado === 'pendiente') return { texto: 'En espera', clase: 'estado--info' };
@@ -38,7 +38,7 @@ export function ListaVivo({ alcance, inicial }: { alcance: string; inicial: Dato
         const r = await fetch(`/api/trabajos?alcance=${encodeURIComponent(alcance)}`, { cache: 'no-store' });
         const j = (await r.json()) as { ok: boolean } & Datos;
         if (j.ok) {
-          setDatos({ trabajos: j.trabajos, fuentes: j.fuentes });
+          setDatos({ trabajos: j.trabajos, fuentes: j.fuentes, paresPorFuente:j.paresPorFuente });
           const nueva = firma(j);
           if (version.current !== nueva) {
             version.current = nueva;
@@ -89,7 +89,7 @@ export function ListaVivo({ alcance, inicial }: { alcance: string; inicial: Dato
               <span className="fila__cuerpo">
                 <span style={{ display: 'block', fontWeight: 500 }}>{f.nombre}</span>
                 <span className="etiqueta" style={{ display: 'block' }}>
-                  {f.filas_nuevas} filas contadas{f.filas_omitidas > 0 ? `, ${f.filas_omitidas} ya estaban` : ''}
+                  {f.filas_nuevas} filas nuevas, {f.filas_omitidas} omitidas{datos.paresPorFuente!==undefined && `, ${datos.paresPorFuente[f.id]||0} pares detectados con esta carga`}.
                 </span>
               </span>
               <span className="fila__dato"><StarRating valor={f.estrellas} etiqueta={`${f.estrellas} / 5`} /></span>

@@ -7,6 +7,13 @@ import { useEffect, useState, useTransition } from 'react';
 import { useRouter } from 'next/navigation';
 import type { Par } from '@/lib/comun';
 import { decidirPares } from '@/lib/acciones';
+import { opcionesPar, type IntencionPar } from '@/lib/decision-par';
+import './pares.css';
+
+function leerEtiqueta(s: string) {
+  const [iniciales,...partes] = s.split(/\s*·\s*/);
+  return { iniciales, edad: partes.find(x=>/años/i.test(x)), municipio: partes.find(x=>!(/años/i.test(x))) };
+}
 
 export function ParesMasa({
   alcance,
@@ -41,14 +48,13 @@ export function ParesMasa({
     });
   }
 
-  function decidir(decision: 'misma' | 'distinta') {
-    const ids = [...elegidos];
+  function decidir(decision: IntencionPar, ids = [...elegidos]) {
     if (ids.length === 0) return;
     start(async () => {
       try {
         const aplicado = await decidirPares(alcance, ids, decision);
         setEsperando(aplicado ? [] : ids);
-        setMensaje(aplicado ? 'Decisión aplicada.' : '');
+        setMensaje(aplicado ? (decision === 'mismo_evento' ? 'Identidad confirmada. El motor aún no descuenta el evento duplicado.' : 'Decisión aplicada.') : '');
         setElegidos(new Set());
         router.refresh();
       } catch { setMensaje('No se confirmó el envío. Actualiza antes de intentarlo otra vez.'); }
@@ -56,12 +62,15 @@ export function ParesMasa({
   }
 
   if (pendientes.length === 0) {
-    return <p className="etiqueta" style={{ margin: 0 }}>No hay pares por decidir: los posibles duplicados ya están resueltos.</p>;
+    return <p role="status">{mensaje} No quedan pares por decidir.</p>;
   }
 
   return (
     <div aria-busy={cargando}>
       <p role="status">{cargando ? 'Aplicando la decisión…' : sinConfirmar ? 'Decisión enviada. Esperando confirmación…' : mensaje}</p>
+      <p className="par-aviso">El motor puede unir personas y conservar ambos eventos. Si marcas el mismo evento, guarda esa intención pero todavía no descuenta la fila.</p>
+      <label className="par-elegir"><input type="checkbox" checked={pendientes.every(p => elegidos.has(p.id))}
+        onChange={e => setElegidos(e.target.checked ? new Set(pendientes.map(p => p.id)) : new Set())} /> Elegir todos los pares</label>
       {alguno && (
         <div
           role="toolbar"
@@ -70,54 +79,33 @@ export function ParesMasa({
           style={{ display: 'flex', flexWrap: 'wrap', alignItems: 'center', gap: 'var(--sp-3)', padding: 'var(--sp-2) var(--sp-4)', marginBottom: 'var(--sp-3)' }}
         >
           <span>{elegidos.size} {elegidos.size === 1 ? 'par elegido' : 'pares elegidos'}</span>
-          <button type="button" className="btn btn--primario btn--sm" disabled={cargando || sinConfirmar} onClick={() => decidir('misma')}>
-            Son la misma persona
-          </button>
-          <button type="button" className="btn btn--secundario btn--sm" disabled={cargando || sinConfirmar} onClick={() => decidir('distinta')}>
-            Son personas distintas
-          </button>
+          {(Object.keys(opcionesPar) as IntencionPar[]).map(k => <button key={k} className="par-boton" disabled={cargando || sinConfirmar} onClick={() => decidir(k)}>{opcionesPar[k]}</button>)}
         </div>
       )}
-      <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: 'var(--fs-small)' }}>
-        <thead>
-          <tr style={{ textAlign: 'left' }}>
-            <th scope="col" className="etiqueta" style={{ padding: 'var(--sp-2)', width: '2.5rem' }}>
-              <input
-                type="checkbox"
-                aria-label="Elegir todos los pares"
-                checked={pendientes.length > 0 && pendientes.every((p) => elegidos.has(p.id))}
-                onChange={(e) => setElegidos(e.target.checked ? new Set(pendientes.map((p) => p.id)) : new Set())}
-              />
-            </th>
-            <th scope="col" className="etiqueta" style={{ padding: 'var(--sp-2)' }}>Registro A</th>
-            <th scope="col" className="etiqueta" style={{ padding: 'var(--sp-2)' }}>Registro B</th>
-            <th scope="col" className="etiqueta" style={{ padding: 'var(--sp-2)' }}>Motivo</th>
-          </tr>
-        </thead>
-        <tbody>
-          {pendientes.map((p) => (
-            <tr key={p.id} style={{ borderTop: 'var(--border)', minHeight: 44 }}>
-              <td style={{ padding: 'var(--sp-2)' }}>
-                <input
-                  type="checkbox"
-                  aria-label={`Elegir par ${p.a.etiqueta} / ${p.b.etiqueta}`}
-                  checked={elegidos.has(p.id)}
-                  onChange={(e) => alterna(p.id, e.target.checked)}
-                />
-              </td>
-              <td style={{ padding: 'var(--sp-2)' }}>
-                {p.a.etiqueta}
-                <span className="etiqueta" style={{ display: 'block' }}>{nombreFuente[p.a.fuente] ?? p.a.fuente}, fila {p.a.fila}</span>
-              </td>
-              <td style={{ padding: 'var(--sp-2)' }}>
-                {p.b.etiqueta}
-                <span className="etiqueta" style={{ display: 'block' }}>{nombreFuente[p.b.fuente] ?? p.b.fuente}, fila {p.b.fila}</span>
-              </td>
-              <td className="etiqueta" style={{ padding: 'var(--sp-2)' }}>{p.motivo}</td>
-            </tr>
-          ))}
-        </tbody>
-      </table>
+      {pendientes.map((p, i) => (
+        <article className="par-caso" key={p.id}>
+          <label className="par-elegir"><input type="checkbox" checked={elegidos.has(p.id)} onChange={e => alterna(p.id, e.target.checked)} />Elegir par {i + 1}</label>
+          <div className="par-ids">{[p.a,p.b].map((l,j)=><div key={j}><span>Registro {j?'B':'A'}</span><code>{l.fuente}:{l.fila}</code></div>)}</div>
+          <div className="par-acciones" role="group" aria-label={`Decidir par ${i+1}`}>{(Object.keys(opcionesPar) as IntencionPar[]).map(k => <button key={k} className="par-boton" disabled={cargando || sinConfirmar} onClick={() => decidir(k,[p.id])}>{opcionesPar[k]}</button>)}</div>
+          <details open={i === 0}><summary>Comparar registros</summary>
+            <p>{p.motivo}</p>
+            <table className="par-tabla"><thead><tr><th scope="col">Campo</th><th scope="col">Registro A</th><th scope="col">Registro B</th></tr></thead><tbody>
+              {([
+                ['ID de registro (huella)', p.a.huellaFila, p.b.huellaFila],
+                ['Folio de persona', undefined, undefined],
+                ['Iniciales', leerEtiqueta(p.a.etiqueta).iniciales, leerEtiqueta(p.b.etiqueta).iniciales],
+                ['Edad', leerEtiqueta(p.a.etiqueta).edad, leerEtiqueta(p.b.etiqueta).edad],
+                ['Municipio registrado', leerEtiqueta(p.a.etiqueta).municipio, leerEtiqueta(p.b.etiqueta).municipio],
+                ['Fecha del evento', p.a.fecha, p.b.fecha], ['Servicio', p.a.servicio, p.b.servicio],
+                ['Programa', p.a.programa, p.b.programa],
+                ['Archivo', nombreFuente[p.a.fuente] || p.a.fuente, nombreFuente[p.b.fuente] || p.b.fuente],
+                ['Fila', p.a.fila, p.b.fila],
+              ] as const).map(([campo,a,b]) => <tr key={campo} data-difiere={a !== b}><th scope="row">{campo}{a !== b && <small>Difiere</small>}</th><td>{a || 'No disponible'}</td><td>{b || 'No disponible'}</td></tr>)}
+            </tbody></table>
+            <p className="etiqueta">Si falta la fecha o el servicio, consulta las filas de origen antes de decidir.</p>
+          </details>
+        </article>
+      ))}
       <p className="etiqueta" style={{ marginTop: 'var(--sp-2)' }}>
         Mientras no se decida, cada par cuenta como una sola persona.
       </p>
