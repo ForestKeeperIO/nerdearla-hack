@@ -22,7 +22,7 @@ CREATE TABLE IF NOT EXISTS fuentes(
 CREATE TABLE IF NOT EXISTS filas(
   rid INTEGER PRIMARY KEY AUTOINCREMENT, fuente TEXT, fila INTEGER, id_h TEXT, nombre_h TEXT,
   nombre_norm TEXT, etiqueta TEXT, ciudad TEXT, servicio TEXT, periodo TEXT, fecha TEXT,
-  asistencia INTEGER, cantidad INTEGER, nac TEXT, edad INTEGER, folio INTEGER, huella TEXT,
+  tipo TEXT, asistencia INTEGER, cantidad INTEGER, nac TEXT, edad INTEGER, folio INTEGER, huella TEXT,
   estado TEXT, ya_en_fuente TEXT, ya_en_fila INTEGER
 );
 CREATE INDEX IF NOT EXISTS i_filas_huella ON filas(huella, estado);

@@ -40,6 +40,7 @@ class Fila:
     periodo: str = ""
     asistencia: int = 1
     cantidad: int = 1
+    tipo: str = ""            # tipo de registro de la fila (catálogo)
     nac: str = ""
     edad: int | None = None
     folio: int = 0
@@ -62,7 +63,8 @@ class Analisis:
 
 
 def analizar(contenido: bytes, fecha_corte: str, llave: bytes, ciudades: Catalogo,
-             servicios: Catalogo, hoy: dt.date | None = None) -> Analisis:
+             servicios: Catalogo, hoy: dt.date | None = None, tipo_defecto: str = "atencion",
+             iniciativas=None, programa_id: str = "") -> Analisis:
     hoy = hoy or dt.date.today()
     corte = parse_fecha(fecha_corte) or hoy
     tabla: Tabla = leer_tabla(contenido)
@@ -182,6 +184,16 @@ def analizar(contenido: bytes, fecha_corte: str, llave: bytes, ciudades: Catalog
                 else:
                     f.servicio = str(crudo_serv).strip()[:1].upper() + str(crudo_serv).strip()[1:]
 
+        # --- Tipo de registro: el del archivo, o el de la fila si trae la columna ---
+        f.tipo = tipo_defecto
+        if "tipo_registro" in col and not es_vacio(v("tipo_registro")) and iniciativas is not None:
+            t = iniciativas.tipo(v("tipo_registro"))
+            if t and t in iniciativas.iniciativas[programa_id].tipos:
+                f.tipo = t
+            else:
+                anom(num, "faltante", "tipo_registro",
+                     "Tipo de registro no reconocido para este programa: se usó el del archivo")
+
         # --- Asistencia y cantidad ---
         if "asistencia" in col:
             t = norm(v("asistencia"))
@@ -217,7 +229,7 @@ def analizar(contenido: bytes, fecha_corte: str, llave: bytes, ciudades: Catalog
             iniciales(nombre), f.ciudad, f"{edad} años" if edad is not None else "") if x)
 
         # --- Huellas (no dependen del archivo, del orden de columnas ni del formato) ---
-        partes = (canon_id, f.nombre_norm, ciudad_clave, norm(f.servicio), f.fecha,
+        partes = (f.tipo, canon_id, f.nombre_norm, ciudad_clave, norm(f.servicio), f.fecha,
                   str(f.asistencia), str(f.cantidad))
         completa = h_completo(llave, "fila", *partes)
         f.huella = completa if (canon_id or f.nombre_norm) else ""

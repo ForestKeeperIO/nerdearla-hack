@@ -180,10 +180,10 @@ def importar(con, a: Analisis, job: dict, llave: bytes, ahora: dt.datetime | Non
             yf, yfila = dueno.get(f.fila, (None, None))
             con.execute(
                 "INSERT INTO filas(fuente,fila,id_h,nombre_h,nombre_norm,etiqueta,ciudad,servicio,periodo,fecha,"
-                "asistencia,cantidad,nac,edad,folio,huella,estado,ya_en_fuente,ya_en_fila) "
-                "VALUES(?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)",
+                "tipo,asistencia,cantidad,nac,edad,folio,huella,estado,ya_en_fuente,ya_en_fila) "
+                "VALUES(?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)",
                 (fid, f.fila, f.id_h, f.nombre_h, f.nombre_norm, f.etiqueta, f.ciudad, f.servicio, f.periodo,
-                 f.fecha, f.asistencia, f.cantidad, f.nac, f.edad, f.folio, f.huella, s,
+                 f.fecha, f.tipo, f.asistencia, f.cantidad, f.nac, f.edad, f.folio, f.huella, s,
                  yf or fid if s != "contada" else None, yfila))
         for x in anoms:
             con.execute("INSERT INTO anomalias VALUES(?,?,?,?,?)",

@@ -18,3 +18,4 @@ py/.estado/
 __pycache__/
 .pytest_cache/
 >>>>>>> Procesamiento en Python: leer, deduplicar y escribir en Valkey
+py/.estado/

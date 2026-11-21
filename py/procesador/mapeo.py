@@ -23,8 +23,9 @@ SINONIMOS: dict[str, list[str]] = {
     "fecha": ["fecha", "fecha de servicio", "fecha servicio", "fecha de atencion", "fecha de la jornada",
               "fecha de actividad", "fecha de asistencia", "fecha del evento", "dia"],
     "asistencia": ["asistencia", "asistio", "asistio si no", "presente", "asistencia si no"],
+    "tipo_registro": ["tipo de registro", "tipo registro", "movimiento", "tipo de movimiento", "concepto"],
     "cantidad": ["cantidad", "piezas", "insumos entregados", "numero de piezas", "cantidad entregada",
-                 "total entregado", "unidades"],
+                 "total entregado", "unidades", "trenzas", "numero de trenzas", "trenzas donadas"],
 }
 UMBRAL = 0.75
 

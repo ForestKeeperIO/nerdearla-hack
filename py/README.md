@@ -4,6 +4,10 @@ Lee los Excel/CSV que sube el frontend, los lleva a un modelo común, omite dupl
 resultado en Valkey. La fuente de verdad de la integración es [`docs/contrato-valkey.md`](../docs/contrato-valkey.md);
 este proceso no llama al frontend ni al revés.
 
+## Datos de demostración (ficticios)
+
+`python datos_demo/generar.py` crea en `datos_demo/archivos/`: `tamizaje-rosa.xlsx` (con problemas sembrados), su copia, su re-guardado, otro orden de columnas, CSV y versión nueva; `nutricion.xlsx` (comparte 30 filas, también de Tamizaje Rosa) y `melenas-en-movimiento.xlsx` (40 donaciones y 20 pelucas entregadas; 20 beneficiarias también están en Tamizaje Rosa). Subir Melenas con tipo de registro `donacion`.
+
 ## Cómo correrlo
 
 ```bash
@@ -27,7 +31,10 @@ python -m procesador.worker                    # toma trabajos de eira:trabajos 
    - Mismos bytes → `identico`. Mismo contenido (re-guardado, otro orden de columnas, CSV) → `mismo_contenido`. No se importa.
    - Misma fila: huella HMAC de `ID | nombre | municipio | servicio | fecha | asistencia | cantidad`. Traslape ≥ 90 % → `version_nueva`; 30 a 89 % → `traslape_parcial`; menos → `distinto`. Las filas ya cargadas se omiten y quedan en `eira:omitidas:<fuente>`; `restituir_fila` las vuelve a contar.
    - Misma persona: mismo ID y mismo nombre → misma persona. Mismo ID con nombre distinto → par en `eira:pares`, cuenta como una hasta que alguien decida (`misma` / `distinta` por `eira:decisiones`).
-5. **Escribe** las claves del contrato como una *proyección* de su base local, en una sola transacción. Cada persona tiene un solo identificador: `p` + 15 hex de `HMAC-SHA256(llave, "id|" + ID canónico)`.
+5. **Programas y tipos de registro** salen de `catalogos/iniciativas.json`; nada va fijo en el código. El trabajo puede traer el id o el nombre del programa (`Tamizaje Rosa` → `tamizaje-rosa`); si no está en el catálogo, o el programa no admite ese tipo de registro, el trabajo termina en `error` con un mensaje claro. Un archivo puede traer una columna "Tipo de registro" que manda sobre la unidad del trabajo (Melenas: donaciones y pelucas en el mismo Excel). Los tipos "de objetos" (trenzas, insumos) suman la cantidad.
+6. **Roles**: solo beneficiarias y participantes son personas impactadas (`eira:per:*`). Donantes y voluntarias van aparte, en `eira:don:*`.
+7. **Informes**: `eira:met:<programa>` y `eira:met:global` con las métricas precalculadas. El Global suma las personas de cada programa (quien está en dos cuenta dos veces) y avisa cuántas están en más de uno.
+8. **Escribe** las claves del contrato como una *proyección* de su base local, en una sola transacción. Cada persona tiene un solo identificador: `p` + 15 hex de `HMAC-SHA256(llave, "id|" + ID canónico)`.
 
 ## Decisiones y supuestos (confirmar con EIRA)
 
@@ -40,6 +47,8 @@ python -m procesador.worker                    # toma trabajos de eira:trabajos 
 - `servicio` del contrato = columna de servicio, o la de estudio si no hay. Municipios: los 125 de Jalisco (INEGI) más `catalogos/ciudades_extra.txt`; los demás quedan como `ciudad_desconocida` y se escriben vacíos.
 - `unidad` la define quien sube el archivo; `cantidad` solo se suma en `entrega_insumo`.
 - Se deduplica entre programas y dentro del mismo programa por igual (pendiente de confirmar).
+- La edad promedio se calcula a la fecha de corte más reciente del programa, solo con personas que tienen fecha de nacimiento (`edad_n` dice cuántas). En el Global promedia cada pareja persona-programa, coherente con que el total sume.
+- `eira:archivo:<id>` (el archivo crudo, con nombres) lo escribe el frontend y caduca en 1 h. Para reducir exposición se podría borrar al terminar el trabajo; hoy no lo hago porque el contrato no lo pide.
 
 ## Límites y diferencias con el contrato
 
@@ -52,4 +61,4 @@ python -m procesador.worker                    # toma trabajos de eira:trabajos 
 
 | Implementado | Simulado o pendiente |
 |---|---|
-| Lectura, mapeo, calidad, duplicados, pares, restituir fila, proyección a Valkey, pruebas con datos ficticios | Encabezados reales de EIRA; cifrado en reposo; respaldo; mapeo confirmado por la usuaria en pantalla; reemplazo de una versión por otra |
+| Lectura, mapeo, calidad, duplicados, pares, restituir fila, catálogo de programas, roles, métricas por informe y Global, proyección a Valkey, pruebas con datos ficticios | Encabezados reales de EIRA; cifrado en reposo; respaldo; mapeo confirmado por la usuaria en pantalla; reemplazo de una versión por otra |

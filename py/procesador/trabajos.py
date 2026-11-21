@@ -9,11 +9,11 @@ import traceback
 from .analizar import analizar
 from .catalogos import cargar_ciudades, cargar_servicios
 from .importar import importar
+from .iniciativas import Catalogo
 from .leer import ErrorArchivo
 from .proyeccion import proyectar
 
 log = logging.getLogger("eira.procesador")
-UNIDADES = {"atencion", "estudio", "participacion", "entrega_insumo"}
 
 
 def _ahora() -> str:
@@ -46,6 +46,7 @@ class Procesador:
     def __init__(self, v, con, llave: bytes):
         self.v, self.con, self.llave = v, con, llave
         self.ciudades, self.servicios = cargar_ciudades(), cargar_servicios()
+        self.catalogo = Catalogo()
 
     # --- Archivos subidos ---
     def procesar_trabajo(self, job: dict) -> None:
@@ -53,19 +54,24 @@ class Procesador:
         v.hset(f"eira:trabajo:{t}", mapping={"estado": "procesando"})
         avisar(v, "trabajo", t)
         try:
-            if job.get("unidad") not in UNIDADES:
-                return _terminar(v, t, "error", "La unidad del archivo no es válida. Elige atención, "
-                                 "estudio, participación o entrega de insumos.")
+            ini = self.catalogo.programa(job.get("programa", ""))
+            if ini is None:
+                return _terminar(v, t, "error", f"El programa '{job.get('programa', '')}' no está en el catálogo de EIRA.")
+            if job.get("unidad") not in ini.tipos:
+                etiquetas = ", ".join(self.catalogo.tipos[x]["plural"] for x in ini.tipos)
+                return _terminar(v, t, "error", f"{ini.nombre} no admite ese tipo de registro. Admite: {etiquetas}.")
+            job = {**job, "programa": ini.id}
             ya = self.con.execute("SELECT id FROM fuentes WHERE trabajo=?", (t,)).fetchone()
             if ya:  # mensaje reentregado: ya se importó
                 return _terminar(v, t, "listo", "Este trabajo ya se había procesado.", fuente=ya["id"])
             contenido = v.get(f"eira:archivo:{t}")
             if contenido is None:
                 return _terminar(v, t, "error", "El archivo ya no está disponible (caducó). Vuelve a subirlo.")
-            a = analizar(contenido, job.get("fecha_corte", ""), self.llave, self.ciudades, self.servicios)
+            a = analizar(contenido, job.get("fecha_corte", ""), self.llave, self.ciudades, self.servicios,
+                         tipo_defecto=job["unidad"], iniciativas=self.catalogo, programa_id=ini.id)
             r = importar(self.con, a, job, self.llave)
             if r.estado == "listo":
-                proyectar(v, self.con, self.llave)
+                proyectar(v, self.con, self.llave, self.catalogo)
                 avisar(v, "fuente", r.fuente)
                 avisar(v, "persona", "todas")
                 for p in r.pares_nuevos:
@@ -104,7 +110,7 @@ class Procesador:
             with con:
                 con.execute("UPDATE pares SET estado=? WHERE id=?", (dec, par))
             bitacora(v, por, "decision_persona", f"Se decidió que el par {par} es {'la misma persona' if dec == 'misma' else 'personas distintas'}.")
-            proyectar(v, con, self.llave)
+            proyectar(v, con, self.llave, self.catalogo)
             avisar(v, "persona", par)
         elif d.get("tipo") == "restituir_fila":
             fuente, fila = d.get("fuente", ""), d.get("fila", "")
@@ -115,7 +121,7 @@ class Procesador:
             with con:
                 con.execute("UPDATE filas SET estado='contada', ya_en_fuente=NULL, ya_en_fila=NULL WHERE rid=?", (r["rid"],))
             bitacora(v, por, "restituir_fila", f"Se contó de todos modos la fila {fila} de {fuente}.")
-            proyectar(v, con, self.llave)
+            proyectar(v, con, self.llave, self.catalogo)
             avisar(v, "fuente", fuente)
             avisar(v, "persona", "todas")
         else:

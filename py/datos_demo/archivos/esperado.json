@@ -1,8 +1,9 @@
 {
   "tamizaje_filas": 122,
-  "salud_filas": 80,
+  "melenas_filas": 60,
   "nutricion_filas": 70,
   "personas_tamizaje": 90,
-  "personas_salud": 71,
-  "cruce_tamizaje_salud": 14
+  "donantes_melenas": 40,
+  "beneficiarias_melenas": 20,
+  "en_mas_de_un_programa": 20
 }

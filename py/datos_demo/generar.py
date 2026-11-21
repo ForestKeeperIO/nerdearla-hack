@@ -125,20 +125,26 @@ def generar() -> dict:
     nuevas8 = [fila(P[90 + k], "Papanicolaou", dt.date(2026, 9, 1 + k)) for k in range(8)]
     escribir_xlsx(SALIDA / "tamizaje-rosa-v2.xlsx", ENCAB_T, [fila_t(r) for r in tamizaje + nuevas8])
 
-    # --- Salud que Florece: 80 participaciones, personas 75..149 (cruce 75..89) ---
-    salud = []
-    for r in range(80):
-        p = P[75 + (r % 75)]
-        salud.append(fila(p, "Taller de salud", fecha_rnd(), asiste=(r % 20 != 7)))
-    # Los mismos ID de P0 y P1 aparecen con nombre distinto / variante
-    salud[10] = fila({**P0, "nombre": "María Elena Landa Mora"}, "Taller de salud", dt.date(2026, 4, 2))
-    salud[11] = fila({**P1, "nombre": P1["nombre"][:-1] + "o"}, "Taller de salud", dt.date(2026, 4, 9))  # variante
-    enc_s = ["Participante", "Clave", "Municipio", "Taller", "Fecha", "Asistencia (Sí/No)", "Fecha de nac."]
-    filas_s = []
-    for k, r in enumerate(salud):
-        fecha = r["fecha"].strftime("%d/%m/%Y") if k % 3 == 0 else r["fecha"]   # fechas de dos tipos
-        filas_s.append([r["nombre"], r["id"], r["ciudad"], r["servicio"], fecha, r["asiste"], r["nac"]])
-    escribir_xlsx(SALIDA / "salud-que-florece.xlsx", enc_s, filas_s)
+    # --- Melenas en Movimiento: 40 donaciones de cabello (donantes 100..139) y 20 pelucas entregadas
+    #     (beneficiarias 0..19, que también aparecen en Tamizaje Rosa: sirve para el informe Global) ---
+    enc_m = ["Nombre", "ID", "Municipio", "Movimiento", "Fecha", "Trenzas"]
+    filas_m, mel = [], []
+    for k in range(40):
+        p = P[100 + k]
+        fecha = fecha_rnd()
+        filas_m.append([p["nombre"], p["id"], p["ciudad"], "Donación de cabello",
+                        fecha.strftime("%d/%m/%Y") if k % 3 == 0 else fecha, 1 + k % 2])
+        mel.append((p["id"], "donacion"))
+    for k in range(20):
+        p = P[k]
+        nombre = p["nombre"]
+        if k == 0:
+            nombre = "María Elena Landa Mora"          # mismo ID que P0, otro nombre → par a decidir
+        if k == 1:
+            nombre = p["nombre"][:-1] + "o"            # variante de escritura
+        filas_m.append([nombre, p["id"], p["ciudad"], "Peluca entregada", fecha_rnd(), 1])
+        mel.append((p["id"], "producto_entregado"))
+    escribir_xlsx(SALIDA / "melenas-en-movimiento.xlsx", enc_m, filas_m, titulo="Melenas en Movimiento (FICTICIO)")
 
     # --- Nutrición: 40 nuevas + 30 filas que ya estaban en tamizaje ---
     comparte = [dict(r) for r in tamizaje[40:70]]
@@ -147,11 +153,13 @@ def generar() -> dict:
     escribir_xlsx(SALIDA / "nutricion.xlsx", enc_n,
                   [[r["nombre"], r["id"], r["ciudad"], r["servicio"], r["fecha"], r["asiste"]] for r in comparte + nuevas40])
 
+    benef_m = {i for i, t in mel if t == "producto_entregado"}
     esperado = {
-        "tamizaje_filas": len(tamizaje), "salud_filas": len(salud), "nutricion_filas": 70,
+        "tamizaje_filas": len(tamizaje), "melenas_filas": len(filas_m), "nutricion_filas": 70,
         "personas_tamizaje": len(total_ids_t),
-        "personas_salud": len({r["id"] for r in salud if r["asiste"] == "Sí"}),
-        "cruce_tamizaje_salud": len(total_ids_t & {r["id"] for r in salud if r["asiste"] == "Sí"}),
+        "donantes_melenas": len({i for i, t in mel if t == "donacion"}),
+        "beneficiarias_melenas": len(benef_m),
+        "en_mas_de_un_programa": len(total_ids_t & benef_m),
     }
     (SALIDA / "esperado.json").write_text(json.dumps(esperado, indent=2, ensure_ascii=False), encoding="utf-8")
     return esperado
