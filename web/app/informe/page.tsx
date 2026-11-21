@@ -54,8 +54,10 @@ export default async function PaginaInforme() {
           <p className="solo-imprimir etiqueta">EIRA Movimiento Rosa A.C. · Datos ficticios de demostración</p>
           <h2 className="max-w-none">Informe de impacto</h2>
           <p className="etiqueta mt-1">
-            Generado el {new Date().toLocaleDateString('es-MX', { day: 'numeric', month: 'long', year: 'numeric' })} ·
-            datos al corte del {corte} · fuentes: {nombresFuentes || 'ninguna todavía'}
+            Generado el {new Date().toLocaleDateString('es-MX', { day: 'numeric', month: 'long', year: 'numeric' })}
+          </p>
+          <p className="etiqueta">
+            Datos al corte del {corte}, a partir de: {nombresFuentes || 'ninguna fuente todavía'}
           </p>
         </header>
 
@@ -75,7 +77,7 @@ export default async function PaginaInforme() {
             <li className="flex justify-between gap-3 border-t border-[var(--color-rule)] pt-2">
               <span>Edad promedio</span>
               <strong className="mono">
-                {edad.valor.promedio === null ? '—' : `${edad.valor.promedio.toLocaleString('es-MX')} años`}
+                {edad.valor.promedio === null ? 'sin datos' : `${edad.valor.promedio.toLocaleString('es-MX')} años`}
                 <sup aria-label="nota 3"> 3</sup>
               </strong>
             </li>

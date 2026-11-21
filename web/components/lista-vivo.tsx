@@ -75,13 +75,13 @@ export function ListaVivo({ inicial }: { inicial: Datos }) {
                     <span className={`estado ${e.clase}`}>{e.texto}</span>
                   </div>
                   <p className="etiqueta mt-1">
-                    {t.programa} · {NOMBRE_UNIDAD[t.unidad as Unidad] ?? t.unidad} · corte {t.fecha_corte} · {t.por}
+                    {t.programa}, {NOMBRE_UNIDAD[t.unidad as Unidad] ?? t.unidad}, corte {t.fecha_corte}, {t.por}
                   </p>
                   {t.mensaje && <p className="mt-2">{t.mensaje}</p>}
                   {t.estado === 'listo' && t.filas > 0 && (
                     <p className="etiqueta mt-1 mono">
-                      {t.filas} filas · {t.filas_nuevas} nuevas · {t.filas_omitidas} omitidas
-                      {t.filas_repetidas > 0 ? ` · ${t.filas_repetidas} repetidas dentro` : ''}
+                      {t.filas} filas, {t.filas_nuevas} nuevas, {t.filas_omitidas} omitidas
+                      {t.filas_repetidas > 0 ? `, ${t.filas_repetidas} repetidas dentro` : ''}
                     </p>
                   )}
                 </li>
@@ -107,7 +107,7 @@ export function ListaVivo({ inicial }: { inicial: Datos }) {
                   <Estrellas n={f.estrellas} />
                 </div>
                 <p className="etiqueta mt-1">
-                  {f.programa} · {NOMBRE_UNIDAD[f.unidad as Unidad] ?? f.unidad} · corte {f.fecha_corte} · {f.filas_nuevas} filas nuevas
+                  {f.programa}, {NOMBRE_UNIDAD[f.unidad as Unidad] ?? f.unidad}, corte {f.fecha_corte}, {f.filas_nuevas} filas nuevas
                 </p>
                 {f.motivos.length > 0 && (
                   <div className="mt-2">

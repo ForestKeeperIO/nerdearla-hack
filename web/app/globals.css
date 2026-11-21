@@ -1,7 +1,7 @@
 /* Hallmark · shape: app screen · genre: modern-minimal · theme: Coral (deal 2/3, seed herramienta-interna-para-ong-6f3a·c50cad20·2026-11-21·r0)
  * nav: barra superior con los cuatro pasos de EIRA · signature: la lista viva de trabajos con su estado y "cómo se calculó" en cada cifra · states: pendiente, procesando, listo, duplicado, version_nueva, traslape_parcial, error
  * axes: light/grotesk-sans/warm · posture: restrained · contrast: pass · v2.0.0 */
-/* Hallmark · pre-emit critique: P_ H_ E_ S_ R_ V_ · weakest: _, pendiente de la auditoría */
+/* Hallmark · pre-emit critique: P5 H4 E5 S4 R4 V5 · weakest: H, pantallas de trabajo con jerarquía plana; se compensó con peso, color y figuras mono ya que el texto queda en 16px o más */
 @import url("./tokens.css");
 @import url("./base.css");
 @import "tailwindcss";
@@ -91,12 +91,19 @@
   --estado-error-fondo: oklch(94% 0.045 25);
   --estado-info: oklch(50% 0.09 45);
   --estado-info-fondo: var(--color-paper-2);
+
+  /* Impresión. */
+  --print-paper: #fff;
+  --print-rule: #999;
 }
 
 @layer base {
   /* Objetivos táctiles de 44 px en todo lo interactivo. */
   button, [role="button"], select, input[type="checkbox"], input[type="radio"] { min-height: 44px; }
   input:not([type="checkbox"]):not([type="radio"]), select { min-height: 44px; }
+  /* Estados de control: active hunde 1 px, disabled se ve y se explica. */
+  button:not(:disabled):active, [role="button"]:active { transform: translateY(1px); }
+  button:disabled, [aria-disabled="true"] { opacity: 0.55; cursor: not-allowed; }
   /* Transición de estado, nunca decorativa. */
   button, a, [role="button"] { transition: background-color var(--dur-short) var(--ease-out), border-color var(--dur-short) var(--ease-out), transform var(--dur-micro) var(--ease-out); }
 }
@@ -126,9 +133,9 @@ details.calculo .calculo__cuerpo { font-family: var(--font-outlier); color: var(
 @media print {
   .no-imprimir { display: none !important; }
   .solo-imprimir { display: block; }
-  body { background: #fff; font-size: 12pt; }
+  body { background: var(--print-paper); font-size: 12pt; }
   main.container { max-width: none; padding: 0; }
-  .tarjeta { box-shadow: none !important; border: 1px solid #999 !important; break-inside: avoid; }
+  .tarjeta { box-shadow: none !important; border: 1px solid var(--print-rule) !important; break-inside: avoid; }
   a[href]::after { content: ""; }
   @page { margin: 18mm; }
 }

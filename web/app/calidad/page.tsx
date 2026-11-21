@@ -67,7 +67,7 @@ export default async function PaginaCalidad() {
             <article key={f.id} className="tarjeta">
               <div className="flex flex-wrap items-baseline justify-between gap-2">
                 <h3 className="max-w-none">{f.nombre}</h3>
-                <span className="etiqueta">{f.programa} · corte {f.fecha_corte}</span>
+                <span className="etiqueta">{f.programa}, corte {f.fecha_corte}</span>
               </div>
 
               {sinProblemas && <p className="mt-2">Sin problemas detectados: todas las filas entraron.</p>}
@@ -83,7 +83,7 @@ export default async function PaginaCalidad() {
                         {lista.map((a, i) => (
                           <li key={i} className="text-[var(--color-ink-2)]">
                             <span className="mono">fila {a.fila}</span>
-                            {a.campo ? ` · ${a.campo}` : ''} — {a.detalle}
+                            {a.campo ? `, ${a.campo}` : ''}: {a.detalle}
                           </li>
                         ))}
                       </ul>
@@ -103,7 +103,7 @@ export default async function PaginaCalidad() {
                     {omitidas.valor.map((o, i) => (
                       <li key={i} className="flex flex-wrap items-center justify-between gap-2 border-t border-[var(--color-rule)] pt-2">
                         <span className="text-[var(--color-ink-2)]">
-                          <span className="mono">fila {o.fila}</span> — ya estaba en «
+                          <span className="mono">fila {o.fila}</span>: ya estaba en «
                           {nombreFuente.get(o.ya_en_fuente) ?? o.ya_en_fuente}», fila {o.ya_en_fila}
                         </span>
                         {esPresidencia && (
@@ -149,7 +149,7 @@ export default async function PaginaCalidad() {
                   <div key={i} className="rounded-lg border border-[var(--color-rule)] bg-[var(--color-paper)] p-4">
                     <p className="font-medium">{lado.etiqueta}</p>
                     <p className="etiqueta mt-1">
-                      {nombreFuente.get(lado.fuente) ?? lado.fuente} · fila {lado.fila}
+                      {nombreFuente.get(lado.fuente) ?? lado.fuente}, fila {lado.fila}
                     </p>
                   </div>
                 ))}

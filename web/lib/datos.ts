@@ -3,7 +3,7 @@
 // produjo y cuánto tardó, para el desplegable "Cómo se calculó".
 import { valkey } from './valkey';
 import {
-  anom, bitacora, cnt, den, fuente, fuentes, nac, omitidas, pares,
+  anom, bitacora, cnt, decisiones, den, fuente, fuentes, nac, omitidas, pares,
   perCerteza, perCiudad, perPeriodo, perPrograma, perServicio, perTodas,
   sinid, trabajo, trabajos, valores,
 } from './claves';
@@ -364,6 +364,13 @@ export async function leerBitacora(limite = 50): Promise<Med<EntradaBitacora[]>>
     }
     return lista;
   });
+}
+
+/** XADD eira:decisiones según el contrato (decisiones humanas). */
+export async function emitirDecision(campos: Record<string, string>): Promise<string | null> {
+  const paresPlano: string[] = [];
+  for (const [k, val] of Object.entries(campos)) paresPlano.push(k, val);
+  return valkey().xadd(decisiones(), '*', ...paresPlano);
 }
 
 /** Valores vistos de una dimensión (programa, ciudad, periodo, servicio). */

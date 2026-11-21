@@ -110,7 +110,7 @@ export default async function PaginaTablero({ searchParams }: PageProps<'/tabler
 
             <Tarjeta titulo="Edad promedio" med={edad}>
               {edad.valor.promedio === null ? (
-                <p className="cifra">—</p>
+                <p className="cifra">sin datos</p>
               ) : (
                 <p className="cifra">{edad.valor.promedio.toLocaleString('es-MX')} años</p>
               )}
