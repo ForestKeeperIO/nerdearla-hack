@@ -1,18 +1,28 @@
 // Parte de los filtros segura para el navegador: tipos, dimensiones y
 // (de)serialización de la URL. NO importa nada de servidor ni de Valkey.
-export const DIMENSIONES = ['programa', 'ciudad', 'periodo', 'servicio'] as const;
+export const DIMENSIONES = ['estado', 'municipio', 'programa', 'servicio', 'periodo'] as const;
 export type Dimension = (typeof DIMENSIONES)[number];
 
 export const ETIQUETA_DIM: Record<Dimension, string> = {
   programa: 'Programa',
-  ciudad: 'Municipio',
+  estado: 'Estado',
+  municipio: 'Municipio',
   periodo: 'Periodo',
   servicio: 'Tipo de servicio',
 };
 
 export type FiltrosMulti = Record<Dimension, string[]>;
 
-export const FILTROS_VACIOS: FiltrosMulti = { programa: [], ciudad: [], periodo: [], servicio: [] };
+export const FILTROS_VACIOS: FiltrosMulti = { estado: [], municipio: [], programa: [], periodo: [], servicio: [] };
+
+export type Opcion = {
+  valor: string; texto: string; cuenta?: number; unidad?: string; grupo?: string; alias?: string[];
+};
+export type Opciones = Record<Dimension, Opcion[]>;
+
+export function normaliza(s: string) {
+  return s.normalize('NFD').replace(/\p{M}/gu, '').toLocaleLowerCase('es');
+}
 
 export function filtrosDeQuery(sp: Record<string, string | string[] | undefined>): FiltrosMulti {
   const f: FiltrosMulti = { ...FILTROS_VACIOS };

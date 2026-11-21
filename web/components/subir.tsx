@@ -4,6 +4,7 @@ import { useCallback, useRef, useState } from 'react';
 import { useDropzone, type FileRejection } from 'react-dropzone';
 import { FileSpreadsheet, Trash2, UploadCloud, XCircle } from 'lucide-react';
 import { toast } from 'sonner';
+import { Selector } from './selector';
 
 const MAX_BYTES = 10 * 1024 * 1024;
 
@@ -166,34 +167,12 @@ export function SubirArchivos({
                     </span>
                   )}
                 </span>
-                {a.envio === 'sin_enviar' && (
-                  <>
-                    <label style={{ display: 'flex', flexDirection: 'column', gap: 2 }}>
-                      <span className="etiqueta">Tipo de registro</span>
-                      <select
-                        value={a.unidad}
-                        onChange={(e) => cambiar(a.id, { unidad: e.target.value })}
-                        style={{ border: '1px solid var(--linea-fuerte)', borderRadius: 'var(--r-sm)', background: 'var(--superficie)', padding: '0 var(--sp-3)', fontSize: 'var(--fs-small)' }}
-                      >
-                        {tipos.map((t) => (
-                          <option key={t.clave} value={t.clave}>{t.etiqueta}</option>
-                        ))}
-                      </select>
-                    </label>
-                    <label style={{ display: 'flex', flexDirection: 'column', gap: 2 }}>
-                      <span className="etiqueta">Estado de las ciudades</span>
-                      <select
-                        value={a.estado}
-                        onChange={(e) => cambiar(a.id, { estado: e.target.value })}
-                        style={{ border: '1px solid var(--linea-fuerte)', borderRadius: 'var(--r-sm)', background: 'var(--superficie)', padding: '0 var(--sp-3)', fontSize: 'var(--fs-small)' }}
-                      >
-                        {estados.map((s) => (
-                          <option key={s.clave} value={s.clave}>{s.nombre}</option>
-                        ))}
-                      </select>
-                    </label>
-                  </>
-                )}
+                {a.envio === 'sin_enviar' && <span className="archivo-selectores">
+                  <Selector unico label="Estado de las ciudades" elegidos={[a.estado]} cambiar={([estado]) => cambiar(a.id,{estado})}
+                    opciones={estados.map(s => ({valor:s.clave,texto:s.nombre}))} />
+                  <Selector unico label="Tipo de registro" elegidos={[a.unidad]} cambiar={([unidad]) => cambiar(a.id,{unidad})}
+                    opciones={tipos.map(t => ({valor:t.clave,texto:t.etiqueta}))} />
+                </span>}
               </span>
               <span className="fila__dato" style={{ display: 'flex', alignItems: 'center', gap: 'var(--sp-3)' }}>
                 {a.envio === 'enviado' && <span className="estado estado--listo">Recibido</span>}

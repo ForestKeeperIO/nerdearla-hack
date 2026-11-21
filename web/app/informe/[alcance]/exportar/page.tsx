@@ -2,7 +2,7 @@ import { exigirPaso } from '@/lib/guardia';
 import { fechaCorteDe, fuentesDe, tituloInforme } from '@/lib/informe';
 import {
   edadPromedioIds, filtrosDe, rolesDe,
-  personasEnMasDeUnPrograma, personasPorCiudadIds, personasTxt, resumenTiposDe,
+  personasEnMasDeUnPrograma, personasTxt, resumenTiposDe,
   sinIdentificar, type ResumenTipo,
 } from '@/lib/datos';
 import { nombrePrograma, pluralRol, pluralTipo, rolDe } from '@/lib/catalogo';
@@ -30,13 +30,12 @@ export default async function PaginaExportar({ params }: { params: Promise<{ alc
   })));
 
   const f = await filtrosDe(alcance);
-  const [sinId, edad, porCiudad] = await Promise.all([
+  const [sinId, edad, presencia] = await Promise.all([
     sinIdentificar(f),
     edadPromedioIds(idsUnicos, corte),
-    personasPorCiudadIds(idsUnicos),
+    presenciaDe(alcance),
   ]);
   const enAmbos = esGlobal ? (await personasEnMasDeUnPrograma(programaIds)).valor : 0;
-  const presencia = await presenciaDe(alcance);
 
   const hoy = new Date().toLocaleDateString('es-MX', { day: 'numeric', month: 'long', year: 'numeric' });
   const notas: string[] = [
@@ -68,14 +67,14 @@ export default async function PaginaExportar({ params }: { params: Promise<{ alc
       estado={estado}
       paso="exportar"
       titulo="Exportar informe"
-      bajada="El informe tal como se va a entregar, con notas al pie. Descarga el CSV o imprime para guardar en PDF."
+      bajada="Para descargar el PDF, elige «Guardar como PDF» en la ventana de impresión. El CSV contiene las cifras y sus fuentes."
     >
       <div className="no-imprimir mb-6 flex flex-wrap gap-3">
-        <a href={`/informe/${alcance}/informe.csv`} download className="btn btn--secundario">Descargar CSV</a>
         <BotonImprimir />
+        <a href={`/informe/${alcance}/informe.csv`} download className="btn btn--secundario">Descargar CSV</a>
       </div>
 
-      <article className="tarjeta" style={{ maxWidth: '44rem' }}>
+      <article className="tarjeta informe-imprimible">
         <header style={{ borderBottom: 'var(--border)', paddingBottom: 'var(--sp-4)' }}>
           <p className="solo-imprimir etiqueta">EIRA Movimiento Rosa A.C. · Datos ficticios de demostración</p>
           <h2 style={{ fontSize: 'var(--fs-h2)' }}>Informe de impacto · {tituloInforme(alcance)}</h2>
@@ -86,10 +85,9 @@ export default async function PaginaExportar({ params }: { params: Promise<{ alc
         <section style={{ marginTop: 'var(--sp-6)' }} aria-labelledby="i-personas">
           <h3 id="i-personas">Personas impactadas{esGlobal ? ' (suma de los programas)' : ''}</h3>
           <p className="cifra cifra--sm" style={{ marginTop: 'var(--sp-2)' }}>
-            {sinId.valor > 0
-              ? <>entre {personasTxt(totalImpactadas)} y {personasTxt(totalImpactadas + sinId.valor)}<sup aria-label="notas 1 y 2"> 1, 2</sup></>
-              : <>{personasTxt(totalImpactadas)}<sup aria-label="nota 1"> 1</sup></>}
+            {personasTxt(totalImpactadas)}<sup aria-label="nota 1"> 1</sup>
           </p>
+          {sinId.valor > 0 && <p>Rango posible: entre {personasTxt(totalImpactadas)} y {personasTxt(totalImpactadas + sinId.valor)}. El máximo incluye registros sin identificar; no es una cifra confirmada.</p>}
           <ul style={{ listStyle: 'none', padding: 0, margin: 'var(--sp-3) 0 0' }}>
             <li className="fila" style={{ paddingBlock: 'var(--sp-2)' }}>
               <span className="fila__cuerpo">Edad promedio</span>
@@ -125,18 +123,6 @@ export default async function PaginaExportar({ params }: { params: Promise<{ alc
             {p.resumen.length === 0 && <p className="etiqueta" style={{ marginTop: 'var(--sp-2)' }}>Sin registros.</p>}
           </section>
         ))}
-
-        <section style={{ marginTop: 'var(--sp-6)' }} aria-labelledby="i-ciudades">
-          <h3 id="i-ciudades">Desglose por ciudad</h3>
-          <ul style={{ listStyle: 'none', padding: 0, margin: 'var(--sp-2) 0 0' }}>
-            {porCiudad.valor.filter((c) => c.personas > 0).map((c) => (
-              <li key={c.ciudad} className="fila" style={{ paddingBlock: 'var(--sp-2)' }}>
-                <span className="fila__cuerpo">{c.ciudad}</span>
-                <span className="fila__dato mono"><strong>{personasTxt(c.personas)}</strong></span>
-              </li>
-            ))}
-          </ul>
-        </section>
 
         {presencia && (
           <section style={{ marginTop: 'var(--sp-6)' }}>
