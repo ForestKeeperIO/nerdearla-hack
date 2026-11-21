@@ -40,23 +40,30 @@ Reglas del recorrido:
 
 ## Un informe por programa, y uno global
 
-Decisión de Ian (13:00): el informe va **separado por programa**, igual que la carga, y existe además un informe **Global** con todos los programas. Para el demo se usan **dos programas más el Global**: Tamizaje Rosa y Salud que Florece (propuesta; son los del caso de la guía).
+Decisión de Ian (13:00): el informe va **separado por programa**, igual que la carga, y existe además un informe **Global** con todos los programas. Para el demo se usan **dos programas más el Global**: **Tamizaje Rosa y Melenas en Movimiento** (decisión de Ian, 13:10). Son deliberadamente distintos: uno registra atenciones a pacientes y el otro donaciones de cabello y pelucas entregadas. El punto del demo es que la misma base sirve para programas de naturaleza distinta. En la versión con fuentes reales se agrega un tercer informe, "Datos públicos de salud (Jalisco)".
 
 | Informe | Qué archivos recibe | Qué cifras muestra | Recorrido |
 |---|---|---|---|
 | **Tamizaje Rosa** | Solo los de ese programa | Solo las de ese programa | Subir → Calidad → Vista previa → Exportar |
-| **Salud que Florece** | Solo los de ese programa | Solo las de ese programa | Subir → Calidad → Vista previa → Exportar |
-| **Global** | Ninguno: usa lo que ya subió cada programa | Las de todos, con cada programa por separado y las personas contadas una sola vez aunque estén en varios | Calidad → Vista previa → Exportar |
+| **Melenas en Movimiento** | Solo los de ese programa | Trenzas donadas y donantes; pelucas entregadas y beneficiarias, por separado | Subir → Calidad → Vista previa → Exportar |
+| **Global** | Ninguno: usa lo que ya subió cada programa | Cada programa por separado y el total de personas como **suma** de los programas | Calidad → Vista previa → Exportar |
 
 Reglas:
 
 - La pantalla de inicio muestra los tres informes como tres entradas, cada una con su avance ("Paso 2 de 4: Calidad", "Sin empezar", "Listo para exportar"). Se entra a uno y el recorrido guiado es el de ese informe.
 - Dentro de un informe de programa no se pregunta el programa por archivo: ya se sabe. Solo se elige el tipo de registro, entre los que admite ese programa.
-- El Global está bloqueado hasta que los dos programas tengan al menos un archivo importado, y lo dice ("Falta subir archivos de Salud que Florece").
-- En el Global, Calidad muestra lo que solo se ve al juntar programas: personas que aparecen en los dos y filas que dos coordinaciones registraron igual. Vista previa muestra personas impactadas en total (sin contar dos veces a quien está en ambos), cuántas están en los dos programas, y luego cada programa con sus cifras.
+- El Global está bloqueado hasta que los dos programas tengan al menos un archivo importado, y lo dice ("Falta subir archivos de Melenas en Movimiento").
+- En el Global, Calidad muestra lo que solo se ve al juntar programas: personas que aparecen en los dos y filas que dos coordinaciones registraron igual. Vista previa muestra el total de personas como la suma de las de cada programa: **quien está en dos programas cuenta dos veces** (decisión de Ian, 13:10). Debajo, como dato informativo y sin restarlo, cuántas aparecen en más de un programa, y luego cada programa con sus cifras.
 - Subir un archivo a un programa vuelve a abrir para revisión los pasos posteriores de ese programa **y** los del Global.
-- Cada informe guarda su estado por separado: `eira:informe:<alcance>`, con `<alcance>` igual a `tamizaje-rosa`, `salud-que-florece` o `global`.
+- Cada informe guarda su estado por separado: `eira:informe:<alcance>`, con `<alcance>` igual al id del programa (`tamizaje-rosa`, `melenas-en-movimiento`) o `global`.
 - "Paso 0, Nuevo informe" desaparece: los tres informes ya existen; la fecha de corte se pide al entrar por primera vez a cada uno.
+
+### Personas, roles y programas distintos
+
+- **Tamizaje Rosa:** cada fila es una atención a una paciente. Rol: beneficiaria. Cifras: personas atendidas, atenciones, edad promedio, por ciudad.
+- **Melenas en Movimiento:** un archivo trae dos cosas distintas. "Donación de trenza": la persona es **donante** y no cuenta como persona impactada; se reporta cuántas trenzas y cuántas donantes. "Entrega de peluca": la persona es **beneficiaria** y sí cuenta. La Vista previa de este programa muestra las dos por separado y nunca las suma.
+- **Global:** personas impactadas = beneficiarias de Tamizaje Rosa + beneficiarias de Melenas en Movimiento. Las donantes aparecen aparte.
+- Los programas que se muestran salen de `catalogos/iniciativas.json` (`en_demo: true`, más los que tengan `solo_entorno` igual al entorno en marcha). Nada de nombres de programa fijos en el código: agregar un programa es agregar una entrada al catálogo.
 
 ## Lo que debe tener cada pantalla
 
@@ -105,4 +112,4 @@ Cuentas y contraseñas; varios informes a la vez; registro con tarjeta NFC; edic
 
 ## Lo que cambia en el contrato de Valkey
 
-Una clave por informe, que escribe y lee solo el frontend: `eira:informe:<alcance>` (Hash) con `fecha_corte`, `creado_en`, `calidad_resuelta` (0 o 1) y `cifras_aprobadas` (0 o 1); `<alcance>` es `tamizaje-rosa`, `salud-que-florece` o `global`. Los programas activos del demo están en `catalogos/iniciativas.json` (campo `en_demo`). El resto del contrato no cambia.
+Una clave por informe, que escribe y lee solo el frontend: `eira:informe:<alcance>` (Hash) con `fecha_corte`, `creado_en`, `calidad_resuelta` (0 o 1) y `cifras_aprobadas` (0 o 1); `<alcance>` es el id de un programa del catálogo o `global`. Los programas activos del demo están en `catalogos/iniciativas.json` (campo `en_demo`). El resto del contrato no cambia.
