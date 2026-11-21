@@ -22,6 +22,10 @@
 - Licencias: nuestro código es MIT. Metabase es AGPL: se ejecuta como servicio aparte y no se copia código suyo al repositorio. Splink, pandas, DuckDB y Valkey son MIT o BSD.
 - Aspecto del frontend: referencias de details.so, reproduciendo el patrón con código propio (sin copiar su código, tipografías de pago ni imágenes). Nada visual se aplica a todas las pantallas sin aprobación de Ian sobre una pantalla de muestra.
 - Texto visible en español. Se dice "Valkey", nunca "Redis"; "seudonimizado", nunca "anónimo".
+- Protocolo de confirmación (de la auditoría de Devin, `docs/contexto/auditoria-sesion.md`): antes de toda acción con efectos (commit, push, despliegue, lanzar un agente o un trabajador) el agente escribe dos líneas, `Entendí: <acción> en <lugar> con <herramienta>.` y `No haré: <alcance excluido>. ¿Confirmas?`, y espera la respuesta. Sin preguntar solo puede leer, buscar, continuar lo ya aprobado en el mismo turno, o revertir algo que hizo sin permiso.
+- Skills: si se invocan dos en un mensaje, se anuncia el orden y se ejecutan una tras otra, reportando tras cada una. Si una skill completa no cabe en el tiempo, se dice antes y se acuerda la versión acotada; no se sustituye por otra cosa.
+- La ejecución de este plan se hace con trabajadores de Orca (skill de orquestación), uno por tarea, cada uno en su propio espacio de trabajo; no con procesos lanzados a mano.
+- Alcance congelado al aprobar G0: Reto 3; motor en Python con pandas y Splink; Valkey con el contrato v1; SQLite como base de reporte; Metabase para tableros; Next.js para el frontend; referencias visuales de details.so. Nada entra después sin una nueva aprobación explícita.
 
 ## Puertas de control
 
