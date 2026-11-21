@@ -32,25 +32,34 @@ que no se puede saltar:
    produjeron y con qué fecha de corte.
 4. **Exportar** el informe en CSV o impreso.
 
+El demo usa dos programas deliberadamente distintos —Tamizaje Rosa (atenciones)
+y Melenas en Movimiento (donaciones de cabello y pelucas entregadas)— más el
+Global, porque la misma base sirve a programas de naturaleza distinta. En el
+Global el total de personas es la suma de las de cada programa, y debajo se
+muestra aparte cuántas aparecen en más de uno. Quien dona una trenza es donante
+y no infla la cifra de personas impactadas.
+
 Debajo, tres capas de deduplicación: el mismo archivo se reconoce aunque cambie
 de nombre, se vuelva a guardar o se exporte a CSV; la misma fila en dos
-coordinaciones se cuenta una vez; y la misma persona en dos programas cuenta una
-sola vez en el Global. Nada de conteos aproximados: la guía de EIRA prohíbe
-presentar una deduplicación estimada como cifra oficial.
+coordinaciones se cuenta una vez; y la misma persona se resuelve con un
+identificador opaco compartido entre programas. Nada de conteos aproximados: la
+guía de EIRA prohíbe presentar una deduplicación estimada como cifra oficial.
 
 ## Cómo lo construimos
 
 Frontend en Next.js que solo habla con **Valkey**: encola cada archivo en un
-Stream, guarda el estado de cada trabajo y lee conjuntos de personas con
-`SCARD`/`SINTERCARD` para contar únicas y hacer cruces entre programas. El motor
-en Python (pandas para leer, huellas para omitir duplicados, Splink para proponer
-vínculos de persona) toma los trabajos de la cola y escribe el resultado
-unificado en una base **SQLite** que alimenta los tableros de **Metabase**.
-Frontend y motor nunca se llaman: se comunican por el contrato de claves
-`eira:*`, que documentamos antes de escribir código. Los datos personales se
-seudonimizan: en las bases no hay nombres ni el ID de EIRA en claro. La
-interfaz reproduce con código propio patrones auditados de referencias de
-diseño, con una tabla de licencias de cada componente.
+Stream, guarda el estado de cada trabajo y del recorrido de cada informe, y lee
+conjuntos de personas con `SCARD`/`SINTERCARD` para contar únicas y hacer
+cruces entre programas. El motor en Python (lee Excel/CSV, dos huellas
+guardadas —archivo y fila— para omitir duplicados, y reglas exactas más
+rapidfuzz para la identidad de personas) toma los trabajos de la cola y escribe
+el resultado unificado en una base **SQLite** que alimenta los tableros de
+**Metabase**. Splink está instalado como respaldo para escalar la vinculación;
+no es la vinculación activa del prototipo. Frontend y motor nunca se llaman: se
+comunican por el contrato de claves `eira:*`, que documentamos antes de escribir
+código. Los datos personales se seudonimizan: en las bases no hay nombres ni el
+ID de EIRA en claro. La interfaz reproduce con código propio patrones auditados
+de referencias de diseño, con una tabla de licencias de cada componente.
 
 ## Retos
 
@@ -70,17 +79,21 @@ diseño, con una tabla de licencias de cada componente.
 - Un contrato de Valkey verificado con un comprobador automático
   (`npm run verificar`: 9 chequeos en verde) que garantiza conteos exactos,
   conjuntos consistentes y cero nombres en la base.
-- Detección del mismo archivo en cinco niveles (idéntico, mismo contenido,
-  versión nueva, traslape parcial, distinto) con mensajes en español para una
-  persona no técnica.
-- Un modelo de datos que distingue "persona impactada" de "donante": quien
-  dona una trenza en Melenas en Movimiento no infla la cifra de impactadas.
-- Cuatro reportes con datos públicos reales de Jalisco (INEGI y Secretaría de
-  Salud) con URL, licencia y scripts de derivación, para una segunda versión
-  con fuentes reales.
-- Siete reportes de prueba del caso de la guía (120 atenciones, 80
-  participaciones, mismos archivos con otro nombre, versiones y traslapes) con
-  un `esperado.json` que dice qué debe salir.
+- El motor ya corre: detección del mismo archivo en cinco niveles (idéntico,
+  mismo contenido, versión nueva, traslape parcial, distinto) con mensajes en
+  español para una persona no técnica, verificada sobre los siete archivos del
+  caso de la guía; 24 pruebas en verde.
+- El recorrido guiado por informe ya está construido: dos programas (Tamizaje
+  Rosa y Melenas en Movimiento) más el Global, que suma las personas de cada
+  programa y muestra aparte cuántas se repiten.
+- Un modelo de datos por catálogo —iniciativas, tipos de registro y roles— que
+  distingue "persona impactada" de "donante" y hace que agregar un programa sea
+  agregar una entrada al catálogo.
+- Trazabilidad territorial por estado y municipio con el catálogo nacional de
+  INEGI (2,478 municipios), mostrada como presencia, no como faltante.
+- Cuatro reportes con datos públicos reales de Jalisco —defunciones C50/C53 de
+  INEGI, egresos hospitalarios y catálogo CLUES de la Secretaría de Salud— con
+  URL, licencia y scripts de derivación, para la segunda versión en línea.
 - Tableros de Metabase (Impacto y Calidad) provisionados por API con enlaces
   públicos que se pueden incrustar.
 - Una tabla honesta de Implementado / Simulado / Para piloto en el README.
@@ -109,33 +122,40 @@ prevé la propia guía de EIRA.
   Verificable en `docs/contrato-valkey.md` (campo `mensaje`) y en el flujo de
   `web/` (rama `fe`).
 - **Impacto.** Ataca el trabajo manual real de Presidencia y la cifra que más
-  les piden: personas impactadas sin doble conteo, con nota de fuente y fecha
-  de corte por cifra, tal como pide la guía (trazabilidad de indicadores).
+  les piden: personas impactadas sin contar dos veces el mismo archivo ni la
+  misma fila, con nota de fuente y fecha de corte por cifra, tal como pide la
+  guía (trazabilidad de indicadores).
 - **Escalabilidad.** El contrato de claves desacopla frontend y motor; los
-  conteos son conjuntos y hashes en Valkey, no consultas costosas; Splink es la
-  pieza de vinculación pensada para decenas de miles de registros; el catálogo
-  de iniciativas admite programas nuevos sin tocar el modelo.
+  conteos son conjuntos y hashes en Valkey, no consultas costosas; el catálogo
+  de iniciativas, tipos de registro y roles admite programas nuevos sin tocar
+  el modelo ni el código —agregar un programa es agregar una entrada. La
+  vinculación activa usa reglas exactas y rapidfuzz; Splink está instalado como
+  la pieza prevista para escalar a decenas de miles de registros.
 - **Privacidad y confianza.** Seudonimización desde la entrada: ninguna base
   guarda nombres ni el ID en claro; el comprobador del contrato incluye una
   prueba que busca nombres ficticios en las claves y no encuentra ninguno. Los
   límites están declarados (sin cuentas, ID de poca entropía, sin afirmar
   cumplimiento legal).
 - **Innovación.** Deduplicación en tres capas con memoria persistente en Valkey
-  (huellas de archivo, contenido y fila) y un humano en el bucle para la
-  identidad de personas: el sistema propone pares con probabilidad, una persona
-  decide, y la bitácora conserva la trazabilidad.
+  (dos huellas guardadas —archivo y fila— más la de contenido derivada de las
+  de fila) y un humano en el bucle para la identidad de personas: el sistema
+  propone pares con probabilidad, una persona decide, y la bitácora conserva la
+  trazabilidad.
 - **Funcionamiento real del prototipo.** Implementado y verificable hoy: la
-  base Valkey con semilla y verificador (9 chequeos OK), el esquema SQLite y
-  los reportes de prueba con 11 pruebas en verde, los tableros de Metabase
-  provisionados por API con enlaces públicos, y el frontend que sube Excel a
-  Valkey y muestra calidad, tablero e informe. Lo que no está integrado
-  (motor de deduplicación, tableros incrustados) está marcado como pendiente
-  en el README, no simulado como hecho.
+  base Valkey con semilla y verificador (9 chequeos OK), el motor con 24
+  pruebas en verde y los siete archivos del caso procesados con sus mensajes
+  exactos, el esquema SQLite con catálogos y municipios INEGI, los tableros de
+  Metabase provisionados por API con enlaces públicos, y el recorrido guiado
+  por informe del frontend (dos programas + Global) ejercitado en capturas. Lo
+  que falta —correr frontend y motor juntos en los entornos en línea, la paleta
+  de EIRA aplicada, el bloque de presencia y los tableros incrustados— está
+  marcado como pendiente en el README, no simulado como hecho.
 
 ## Construido con
 
-Valkey (cola, memoria de duplicados, conjuntos de personas, estado en vivo) ·
-iovalkey · Next.js 16 + React 19 + TypeScript · Tailwind + componentes shadcn/ui
-· Python 3.12 con uv · pandas + openpyxl · Splink 4 sobre DuckDB · RapidFuzz ·
-SQLite · Metabase (AGPL, servicio aparte) · Datos abiertos INEGI, CONAPO y
-Secretaría de Salud · Devin (revisiones, auditorías y construcción por ramas).
+Valkey (cola, memoria de duplicados, conjuntos de personas, estado del
+recorrido en vivo) · iovalkey · Next.js 16 + React 19 + TypeScript · Tailwind +
+componentes shadcn/ui · Python 3.12 con uv · pandas + openpyxl · RapidFuzz ·
+Splink 4 (instalado, en respaldo) · SQLite · Metabase (AGPL, servicio aparte) ·
+Datos abiertos INEGI, CONAPO y Secretaría de Salud · Devin (revisiones,
+auditorías y construcción por ramas).
