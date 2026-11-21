@@ -13,6 +13,7 @@ import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from '@/
 import { Card, CardContent, CardHeader } from '@/components/ui/card';
 import { listarFuentes } from '@/lib/datos';
 import type { Par } from '@/lib/comun';
+import { fechaEs } from '@/lib/comun';
 
 export const dynamic = 'force-dynamic';
 
@@ -118,7 +119,7 @@ export default async function PaginaCalidad({ params }: { params: Promise<{ alca
                 <CardHeader className="flex flex-wrap items-center justify-between gap-3">
                   <div>
                     <h2 style={{ fontSize: 16 }}>{f.nombre}</h2>
-                    <p className="etiqueta" style={{ marginTop: 2 }}>{f.filas_nuevas} filas contadas · corte {f.fecha_corte}</p>
+                    <p className="etiqueta" style={{ marginTop: 2 }}>{f.filas_nuevas} filas contadas · corte {fechaEs(f.fecha_corte)}</p>
                   </div>
                   <StarRating valor={f.estrellas} etiqueta={`${f.estrellas} / 5`} />
                 </CardHeader>

@@ -1,0 +1,42 @@
+[
+ {
+  "w": 1440,
+  "paso": "llegada",
+  "url": "/",
+  "cifras": [],
+  "iframe": null,
+  "metabase": null,
+  "scrollW": 1440,
+  "alto": 900
+ },
+ {
+  "w": 1440,
+  "dims": []
+ },
+ {
+  "w": 1440,
+  "erroresConsola": [
+   "Failed to load resource: the server responded with a status of 500 (Internal Server Error)"
+  ]
+ },
+ {
+  "w": 390,
+  "paso": "llegada",
+  "url": "/",
+  "cifras": [],
+  "iframe": null,
+  "metabase": null,
+  "scrollW": 390,
+  "alto": 844
+ },
+ {
+  "w": 390,
+  "dims": []
+ },
+ {
+  "w": 390,
+  "erroresConsola": [
+   "Failed to load resource: the server responded with a status of 500 (Internal Server Error)"
+  ]
+ }
+]

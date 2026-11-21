@@ -14,7 +14,7 @@ import {
 import { valoresDe, sinIdentificar, listarFuentes } from '@/lib/datos';
 import { fechaCorteDe, paresDe } from '@/lib/informe';
 import { ParesMasa } from '@/components/pares-masa';
-import { personasTxt } from '@/lib/comun';
+import { fechaEs, personasTxt } from '@/lib/comun';
 import { entorno } from '@/lib/catalogo';
 import { readFileSync } from 'node:fs';
 import { join } from 'node:path';
@@ -77,7 +77,7 @@ export default async function Tablero({ searchParams }: { searchParams: Promise<
       <p className="etiqueta mono" style={{ letterSpacing: '0.02em' }}>Global · todos los programas</p>
       <h1 className="mt-2">Tablero de impacto</h1>
       <p className="lead mt-3" style={{ maxWidth: '58ch' }}>
-        Las cifras exactas de personas y servicios al corte del {corte}.
+        Las cifras exactas de personas y servicios al corte del {fechaEs(corte)}.
         Filtra por programa, municipio, periodo o tipo de servicio.
       </p>
 
@@ -113,7 +113,7 @@ export default async function Tablero({ searchParams }: { searchParams: Promise<
           </div>
           <div>
             <p className="cifra">{edad.valor.promedio === null ? '—' : edad.valor.promedio.toFixed(1)}</p>
-            <p className="rotulo-cifra">edad promedio{edad.valor.n > 0 ? ` (n=${edad.valor.n})` : ''} al {corte}</p>
+            <p className="rotulo-cifra">edad promedio{edad.valor.n > 0 ? ` (n=${edad.valor.n})` : ''} al {fechaEs(corte)}</p>
             <ComoSeCalculo med={edad} />
           </div>
           <div>
