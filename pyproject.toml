@@ -1,0 +1,21 @@
+[project]
+name = "eira-motor"
+version = "0.1.0"
+description = "Motor de procesamiento EIRA: Excel -> deduplicar -> SQLite + Valkey"
+requires-python = ">=3.11"
+dependencies = [
+    "pandas>=2.2",
+    "openpyxl>=3.1",
+    "valkey>=6.0",
+    "splink>=4.0",
+    "duckdb>=1.1",
+    "rapidfuzz>=3.9",
+    "pytest>=8.0",
+]
+
+[tool.uv]
+package = false
+
+[tool.pytest.ini_options]
+testpaths = ["db", "scripts", "py/tests"]
+pythonpath = ["."]
