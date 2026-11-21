@@ -13,10 +13,12 @@ const plexMono = IBM_Plex_Mono({ variable: "--font-plex-mono", subsets: ["latin"
 const rosarivo = Rosarivo({ variable: "--font-rosarivo", subsets: ["latin"], weight: "400" });
 const geist = Geist({ variable: "--font-eira-bento", subsets: ["latin"] });
 
+const LEMA = "Convierte los registros dispersos de una organización social en un informe de impacto claro, confiable y listo para compartir.";
+
 export const metadata: Metadata = {
-  title: "Impacto EIRA",
-  description:
-    "Consolida los Excel de cada coordinación de EIRA Movimiento Rosa en un informe de impacto, sin contar dos veces el mismo archivo, la misma fila ni la misma persona.",
+  title: { default: "Informes que unen", template: "%s · Informes que unen" },
+  description: LEMA,
+  openGraph: { title: "Informes que unen", description: LEMA, siteName: "Informes que unen" },
 };
 
 export default async function RootLayout({ children }: LayoutProps<"/">) {
@@ -26,7 +28,7 @@ export default async function RootLayout({ children }: LayoutProps<"/">) {
         <TooltipProvider>
           <header className="no-imprimir eira-cabecera">
             <div className="eira-mastil">
-              <Link href="/" className="eira-firma" aria-label="EIRA, inicio">EIRA <span>Movimiento Rosa A.C.</span></Link>
+              <Link href="/" className="eira-firma" aria-label="Informes que unen, inicio">Informes que unen <span>para EIRA Movimiento Rosa A.C.</span></Link>
               <NavPrincipal />
             </div>
           </header>
@@ -35,6 +37,7 @@ export default async function RootLayout({ children }: LayoutProps<"/">) {
             className="no-imprimir container"
             style={{ paddingBlock: "var(--sp-8)", borderTop: "var(--border)", marginTop: "var(--sp-12)" }}
           >
+            <p className="etiqueta"><strong>Informes que unen.</strong> {LEMA}</p>
             <p className="etiqueta">Datos ficticios de demostración — EIRA Movimiento Rosa A.C.</p>
           </footer>
         </TooltipProvider>

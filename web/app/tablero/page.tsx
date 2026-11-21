@@ -13,7 +13,7 @@ import { impactoPublico } from '@/lib/metabase';
 import { leerTablero } from '@/lib/tablero-impacto';
 
 export const dynamic = 'force-dynamic';
-export const metadata = { title: 'Tablero de impacto · EIRA' };
+export const metadata = { title: 'Tablero de impacto' };
 
 function Cifra({ titulo, valor, unidad, corte, regla, id, previo, referencia }: {
   titulo: string; valor: number | null; unidad: string; corte: string; regla: string; id: string;
@@ -40,6 +40,7 @@ export default async function Tablero({ searchParams }: PageProps<'/tablero'>) {
   const avanzado = impactoPublico();
   return <div className="archivo-eira atlas">
     <header className="apertura atlas-titulo"><div><h1>Tablero de impacto</h1>
+      <p className="lema-producto">Convierte los registros dispersos de una organización social en un informe de impacto claro, confiable y listo para compartir.</p>
       {corte && <time dateTime={corte}><CalendarDays size={16} aria-hidden />Corte al {new Intl.DateTimeFormat('es-MX',
         { day:'numeric',month:'long',year:'numeric',timeZone:'UTC' }).format(new Date(corte+'T12:00:00Z'))}</time>}</div><AccionesTablero /></header>
     <FiltrosAtlas seleccion={f} opciones={d.opciones} personas={d.personas} corte={corte || new Date().toISOString().slice(0,10)} />

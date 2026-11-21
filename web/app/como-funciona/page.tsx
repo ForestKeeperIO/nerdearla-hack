@@ -5,7 +5,7 @@ import { leerObservatorio } from '@/lib/observatorio';
 import './como.css';
 
 export const dynamic = 'force-dynamic';
-export const metadata = { title: 'Cómo funciona · Impacto EIRA' };
+export const metadata = { title: 'Cómo funciona' };
 const repo = 'https://github.com/ForestKeeperIO/nerdearla-hack/commit/';
 
 export default async function ComoFunciona() {

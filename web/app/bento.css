@@ -144,3 +144,12 @@ main.contenido:has(.archivo-eira) { max-width: 88rem; }
   .hoja .columnas { grid-template-columns: 1fr 1fr; }
   .archivo-eira.hoja :is(.evidencia,.ficha-metodo,.nota-norma),.hoja .columnas section { padding: 3mm 0; }
 }
+
+/* Nombre del producto: «Informes que unen», con EIRA como organización. */
+.eira-mastil .eira-firma { font-size: 1.3rem; white-space: nowrap; }
+.eira-mastil .eira-firma span { max-width: none; white-space: nowrap; }
+.archivo-eira .apertura .lema-producto { margin: .55rem 0 .7rem; max-width: 62ch; font-size: .98rem; color: var(--tinta-suave); }
+@media (max-width: 900px) {
+  .eira-mastil .eira-firma { flex-direction: column; align-items: flex-start; gap: .15rem; font-size: 1.2rem; }
+  .eira-mastil .eira-firma span { display: block; font-size: .72rem; }
+}
