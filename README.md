@@ -22,7 +22,9 @@ Reto 3 de la guía de EIRA para la Nerdearla Vibeathon by Devin (CDMX, 2026-11-2
 | Tableros de Metabase | `docs/capturas/metabase-impacto.png`, `docs/capturas/metabase-calidad.png` |
 
 *(Capturas del frontend tal como está construido en la rama `fe`; las de Metabase,
-de la rama `metabase`.)*
+de la rama `metabase`. La paleta de EIRA —vino y ciruela, Rosarivo y Montserrat—
+está decidida y documentada en `docs/referencias/paleta-eira.md`; estas
+capturas aún muestran el acento del rediseño anterior, que se va a sustituir.)*
 
 ## Cómo levantarlo
 
@@ -246,9 +248,11 @@ importan:
 - **Respaldo:** copiar `data/*.sqlite` y la persistencia de Valkey (AOF). El
   respaldo contiene identificadores seudonimizados: se guarda con el mismo
   cuidado que los datos.
-- **Si falla:** el recorrido vuelve a abrir los pasos por revisar; un trabajo
-  que se cae a media carga no queda marcado como cargado y se puede reintentar
-  (regla del diseño, por verificar con el motor). Los errores se ven en la
+- **Si falla:** el recorrido vuelve a abrir los pasos por revisar. En el motor,
+  las huellas se registran al final de la transacción de Valkey y
+  `fuentes.huella_bytes` es única: una caída a media carga no marca el archivo y
+  un reintento se reporta como idéntico en vez de reimportar (implementado;
+  probado en las pruebas, no en una caída real). Los errores se ven en la
   pantalla del paso correspondiente y en la bitácora `eira:bitacora`.
 
 ## Costos mensuales estimados
@@ -270,28 +274,38 @@ Nuestro código es **MIT** ([`LICENSE`](LICENSE)). Las dependencias principales:
 | Componente | Licencia | Nota |
 |---|---|---|
 | Valkey | BSD-3 | Se usa el binario oficial y el cliente `iovalkey` (MIT) |
-| Splink, pandas, RapidFuzz | MIT / BSD | Motor de procesamiento (pendiente de integrar) |
-| DuckDB | MIT | Motor interno de Splink |
+| pandas, openpyxl, RapidFuzz, valkey | BSD / MIT / Apache-2.0 | Motor de procesamiento (rama `motor`) |
+| Splink | MIT | Instalado como respaldo para escalar la vinculación; no activo en el prototipo |
+| DuckDB | MIT | Motor interno de Splink (ibidem) |
 | SQLite | Dominio público | Base de reporte |
 | Next.js, React, iovalkey, Radix, TanStack, sonner | MIT / ISC / Apache-2.0 | Detalle por paquete en `web/package.json` (rama `fe`) |
 | Metabase | **AGPL** | Se ejecuta como servicio aparte; no se copia código suyo al repositorio |
 | Componentes de interfaz | Ver tabla completa | [`web/TERCEROS.md`](web/TERCEROS.md) en la rama `fe`: qué se copió (solo MIT), qué se reimplementó y por qué |
 | Tipografías Inter e IBM Plex Mono | OFL | Servidas por `next/font` desde Google Fonts |
 
-## Datos públicos usados
+## Datos públicos usados y las dos versiones en línea
 
-Solo para denominadores y la versión "con fuentes reales"; nunca se mezclan con
-personas:
+Solo para denominadores, trazabilidad territorial y la versión "con fuentes
+reales"; nunca se mezclan con personas:
 
 - [`publicos/README.md`](publicos/README.md): INEGI Censo 2020 (mujeres de 25 a
-  64 por municipio de Jalisco), CONAPO marginación 2020, catálogo de municipios
-  INEGI, defunciones C50/C53 2024. Todos con URL oficial y fecha de descarga.
+  64 por municipio de Jalisco), CONAPO marginación 2020, el catálogo nacional
+  de municipios de INEGI (2,478; base de la trazabilidad por estado y
+  municipio), defunciones C50/C53 2024. Todos con URL oficial y fecha de
+  descarga.
 - [`reportes-reales/README.md`](reportes-reales/README.md) (rama
-  `fuentes-reales`): cuatro reportes de cáncer de mama y cervicouterino en
-  Jalisco de INEGI y Secretaría de Salud, con su URL, licencia (Términos de
-  Libre Uso INEGI / Libre Uso MX) y los scripts que los derivaron. Incluye la
-  nota honesta: son agregados o registros sin identificador; sirven para
-  unificación y calidad, **no** para deduplicación de personas.
+  `fuentes-reales`): cuatro reportes reales —defunciones de mujeres por cáncer
+  de mama y cervicouterino 2024 (INEGI EDR), egresos hospitalarios C50/C53 2024
+  (Secretaría de Salud, DGIS/SAEH) y el catálogo CLUES de unidades de salud
+  (Secretaría de Salud)— con su URL, licencia (Términos de Libre Uso INEGI /
+  Libre Uso MX) y los scripts que los derivaron.
+
+Las dos versiones en línea del prototipo:
+
+| Versión | Qué trae | Límite declarado |
+|---|---|---|
+| **En blanco** | Los tres informes "Sin empezar"; se suben los reportes de prueba con formato de EIRA | Es la única donde se ve la deduplicación de personas (los datos de prueba traen identificador ficticio) |
+| **Con fuentes reales** | Los reportes de datos abiertos ya procesados | Los datos públicos son agregados o registros sin identificador: muestran unificación de fuentes, calidad y detección del mismo archivo, **no** deduplicación de personas |
 
 ## Cómo se usó Devin
 
@@ -341,8 +355,9 @@ mandan sus palabras sobre cualquier otro documento):
 
 ## Próximos pasos para un piloto
 
-1. Integrar el motor y validar punta a punta con los Excel reales de ejemplo
-   que EIRA quedó de compartir.
+1. Integrar el motor en los entornos del demo, validar punta a punta desde el
+   navegador y después con los Excel reales de ejemplo que EIRA quedó de
+   compartir.
 2. Acordar el identificador definitivo (CURP o ID mejorado) y la política de
    resolución de pares.
 3. Cuentas, permisos por rol, respaldo automático y aviso de privacidad, con
