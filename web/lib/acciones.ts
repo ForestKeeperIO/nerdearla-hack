@@ -7,6 +7,7 @@ import { escribirInforme, esAlcance, paresDe } from './informe';
 import { pares } from './claves';
 import { valkey } from './valkey';
 import type { Alcance } from './recorrido';
+import { opcionesPar, type IntencionPar } from './decision-par';
 
 const POR = 'Presidencia';
 
@@ -21,12 +22,13 @@ export async function decidirPar(alcance: string, parId: string, decision: 'mism
 
 /** Decisión en masa sobre pares seleccionados: un XADD por par en eira:decisiones
     (mismo camino que la decisión individual — el procesador los aplica igual). */
-export async function decidirPares(alcance: string, parIds: string[], decision: 'misma' | 'distinta') {
-  if (!esAlcance(alcance) || !Array.isArray(parIds) || !['misma','distinta'].includes(decision)) return false;
+export async function decidirPares(alcance: string, parIds: string[], intencion: IntencionPar | 'misma') {
+  if (!esAlcance(alcance) || !Array.isArray(parIds) || !(intencion === 'misma' || Object.hasOwn(opcionesPar, intencion))) return false;
+  const decision = intencion === 'distinta' ? 'distinta' : 'misma';
   const pendientes = new Set((await paresDe(alcance)).valor.filter(p => p.estado === 'pendiente').map(p => p.id));
   const ids = [...new Set(parIds)].filter(id => pendientes.has(id));
   for (const parId of ids) {
-    await emitirDecision({ tipo: 'persona', par: parId, decision, por: POR });
+    await emitirDecision({ tipo: 'persona', par: parId, decision, intencion, por: POR });
   }
   // XADD confirma la recepción, no la decisión. La lista y la banda se vuelven
   // a renderizar con el hash que escribió el procesador, nunca con un total local.

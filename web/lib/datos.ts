@@ -12,7 +12,7 @@ import type {
   Anomalia, CiudadConteo, Cobertura, EntradaBitacora, Filtros, Fuente, Med,
   Omitida, Par, Trabajo, Unidad,
 } from './comun';
-import { tiposDe, valoresPrograma } from './catalogo';
+import { nombrePrograma, tiposDe, valoresPrograma } from './catalogo';
 
 export type {
   Anomalia, CiudadConteo, Cobertura, EntradaBitacora, Filtros, Fuente, Med,
@@ -353,7 +353,12 @@ export async function listarPares(): Promise<Med<Par[]>> {
         // ignora entradas mal formadas
       }
     }
-    return lista.sort((a, b) => a.id.localeCompare(b.id));
+    const pendientes = lista.filter(p => p.estado === 'pendiente');
+    if (pendientes.length) {
+      const programas = new Map((await listarFuentes()).valor.map(f => [f.id, nombrePrograma(f.programa)]));
+      for (const p of pendientes) for (const lado of [p.a, p.b]) lado.programa ??= programas.get(lado.fuente);
+    }
+    return pendientes.sort((a, b) => a.id.localeCompare(b.id));
   });
 }
 

@@ -1,0 +1,13 @@
+.par-caso { padding-block: 1rem; border-block-start: var(--border); }
+.par-elegir, .par-acciones { display: flex; align-items: center; flex-wrap: wrap; gap: .65rem; }
+.par-elegir { color: var(--tinta-suave); font-size: .875rem; }
+.par-elegir input { accent-color: var(--vino); }
+.par-aviso { color: var(--vino-oscuro); max-width: 68ch; }
+.par-caso summary { padding-block: .55rem; cursor: pointer; font-weight: 600; }
+.par-tabla { margin-block: .8rem; width: 100%; table-layout: fixed; border-collapse: collapse; text-align: left; font-size: .875rem; }
+.par-tabla td, .par-tabla th { border-block-end: var(--border); padding: .55rem; overflow-wrap: anywhere; vertical-align: top; }
+.par-tabla tr[data-difiere="true"] td { background: var(--rubor); }
+.par-tabla small { display: block; color: var(--vino); }
+.par-acciones { margin-top: 1rem; }
+.par-boton { border: 1px solid var(--linea-fuerte); padding: .45rem .85rem; min-height: 44px; border-radius: var(--r-pill); color: var(--vino); cursor: pointer; }
+.par-boton:hover:not(:disabled) { background: var(--papel-2); }

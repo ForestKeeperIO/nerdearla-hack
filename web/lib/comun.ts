@@ -67,12 +67,13 @@ export type Fuente = {
 
 export type Anomalia = { fila: number; regla: string; campo: string; detalle: string };
 export type Omitida = { fila: number; ya_en_fuente: string; ya_en_fila: number };
+type LadoPar = { fuente: string; fila: number; etiqueta: string; fecha?: string; servicio?: string; programa?: string };
 export type Par = {
   id: string;
   estado: string;
   motivo: string;
-  a: { fuente: string; fila: number; etiqueta: string };
-  b: { fuente: string; fila: number; etiqueta: string };
+  a: LadoPar;
+  b: LadoPar;
 };
 export type EntradaBitacora = { id: string; en: string; por: string; tipo: string; detalle: string };
 export type CiudadConteo = { ciudad: string; personas: number };
