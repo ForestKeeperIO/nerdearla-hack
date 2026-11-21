@@ -95,3 +95,6 @@ export const eventos = () => `${P}eventos`;
 
 /** Hash: ciudad → denominador (p. ej. mujeres_25_64 = mujeres de 25 a 64, INEGI 2020). */
 export const den = (dimension: string) => `${P}den:${dimension}`;
+
+/** Hash: estado de cada informe (`fecha_corte`, `creado_en`, `calidad_resuelta`, `cifras_aprobadas`). */
+export const informe = (alcance: string) => `${P}informe:${alcance}`;

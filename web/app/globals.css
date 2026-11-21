@@ -1,140 +1,156 @@
-/* Capa visual EIRA: sobria, precisa, jerarquía clara. Neutro cálido + rosa solo como acento. */
+/* Capa visual EIRA: sobria, precisa. Neutro cálido + verde bosque como único acento. */
 @import url("./tokens.css");
 @import url("./base.css");
 @import "tailwindcss";
 @import "tw-animate-css";
-@import "shadcn/tailwind.css";
-
-@custom-variant dark (&:is(.dark *));
 
 @theme inline {
-  --color-background: var(--background);
-  --color-foreground: var(--foreground);
-  --font-sans: var(--font-body);
-  --font-mono: var(--font-outlier);
-  --font-heading: var(--font-body);
-  --color-ring: var(--ring);
-  --color-input: var(--input);
-  --color-border: var(--border);
-  --color-destructive: var(--destructive);
-  --color-destructive-foreground: var(--destructive-foreground);
-  --color-accent-foreground: var(--accent-foreground);
-  --color-accent: var(--accent);
-  --color-muted-foreground: var(--muted-foreground);
-  --color-muted: var(--muted);
-  --color-secondary-foreground: var(--secondary-foreground);
-  --color-secondary: var(--secondary);
-  --color-primary-foreground: var(--primary-foreground);
-  --color-primary: var(--primary);
-  --color-popover-foreground: var(--popover-foreground);
-  --color-popover: var(--popover);
-  --color-card-foreground: var(--card-foreground);
-  --color-card: var(--card);
-  --color-sidebar: var(--sidebar);
-  --color-sidebar-foreground: var(--sidebar-foreground);
-  --color-sidebar-primary: var(--sidebar-primary);
-  --color-sidebar-primary-foreground: var(--sidebar-primary-foreground);
-  --color-sidebar-accent: var(--sidebar-accent);
-  --color-sidebar-accent-foreground: var(--sidebar-accent-foreground);
-  --color-sidebar-border: var(--sidebar-border);
-  --color-sidebar-ring: var(--sidebar-ring);
-  --color-rosa: var(--color-accent-2);
-  --radius-sm: calc(var(--radius) * 0.6);
-  --radius-md: calc(var(--radius) * 0.8);
-  --radius-lg: var(--radius);
-  --radius-xl: calc(var(--radius) * 1.4);
-  --radius-2xl: calc(var(--radius) * 1.8);
-  --radius-3xl: calc(var(--radius) * 2.2);
-  --radius-4xl: calc(var(--radius) * 2.6);
-}
-
-:root {
-  --font-body: var(--font-inter, ui-sans-serif), ui-sans-serif, system-ui, sans-serif;
-  --font-outlier: var(--font-plex-mono, ui-monospace), ui-monospace, monospace;
-
-  --background: var(--color-paper);
-  --foreground: var(--color-ink);
-  --card: var(--color-cotton);
-  --card-foreground: var(--color-ink);
-  --popover: var(--color-cotton);
-  --popover-foreground: var(--color-ink);
-  --primary: var(--color-accent-2);
-  --primary-foreground: #fdf2f8;
-  --secondary: var(--color-paper-2);
-  --secondary-foreground: var(--color-ink);
-  --muted: var(--color-paper-2);
-  --muted-foreground: var(--color-muted);
-  --accent: var(--color-accent);
-  --accent-foreground: var(--color-accent-ink);
-  --destructive: var(--color-error);
-  --destructive-foreground: #fef2f2;
-  --border: var(--color-rule);
-  --input: var(--color-rule-2);
-  --ring: var(--color-focus);
-  --radius: var(--radius-card);
-
-  /* Sidebar (shadcn): blanca, activa en rosa suave. */
-  --sidebar: var(--color-cotton);
-  --sidebar-foreground: var(--color-ink-2);
-  --sidebar-primary: var(--color-accent-2);
-  --sidebar-primary-foreground: #fdf2f8;
-  --sidebar-accent: var(--color-accent);
-  --sidebar-accent-foreground: var(--color-accent-ink);
-  --sidebar-border: var(--color-rule);
-  --sidebar-ring: var(--color-focus);
-
-  /* Estados del flujo de archivos: siempre con texto además de color. */
-  --estado-listo: #047857;
-  --estado-listo-fondo: #ecfdf5;
-  --estado-aviso: #92400e;
-  --estado-aviso-fondo: #fffbeb;
-  --estado-error: #b91c1c;
-  --estado-error-fondo: #fef2f2;
-  --estado-info: #57534e;
-  --estado-info-fondo: var(--color-paper-2);
-
-  /* Impresión. */
-  --print-paper: #fff;
-  --print-rule: #999;
+  --color-background: var(--paper);
+  --color-foreground: var(--ink);
+  --color-card: var(--white);
+  --color-card-foreground: var(--ink);
+  --color-popover: var(--white);
+  --color-popover-foreground: var(--ink);
+  --color-primary: var(--accent);
+  --color-primary-foreground: var(--accent-ink);
+  --color-secondary: var(--paper-2);
+  --color-secondary-foreground: var(--ink);
+  --color-muted: var(--paper-2);
+  --color-muted-foreground: var(--gray);
+  --color-accent: var(--accent-dim);
+  --color-accent-foreground: var(--accent);
+  --color-destructive: var(--error);
+  --color-destructive-foreground: #FFFFFF;
+  --color-border: var(--line);
+  --color-input: var(--line-strong);
+  --color-ring: var(--accent);
+  --font-sans: var(--font-ui);
+  --font-mono: var(--font-mono);
+  --font-heading: var(--font-display);
+  --radius-sm: var(--r-sm);
+  --radius-md: var(--r-md);
+  --radius-lg: var(--r-md);
+  --radius-xl: var(--r-lg);
 }
 
 @layer base {
-  /* Objetivos táctiles de 44 px en todo lo interactivo. */
-  button, [role="button"], select, input[type="checkbox"], input[type="radio"] { min-height: 44px; }
-  input:not([type="checkbox"]):not([type="radio"]), select { min-height: 44px; }
-  button:not(:disabled):active, [role="button"]:active { transform: translateY(1px); }
-  button:disabled, [aria-disabled="true"] { opacity: 0.55; cursor: not-allowed; }
-  button, a, [role="button"] { transition: background-color var(--dur-short) var(--ease-out), border-color var(--dur-short) var(--ease-out), color var(--dur-short) var(--ease-out); }
+  button, [role="button"], select, input[type="checkbox"], input[type="radio"] { min-height: 40px; }
+  input:not([type="checkbox"]):not([type="radio"]), select { min-height: 40px; }
+  button:disabled, [aria-disabled="true"] { opacity: 0.5; cursor: not-allowed; }
+  button, a, [role="button"] { transition: background-color var(--dur) var(--ease), border-color var(--dur) var(--ease), color var(--dur) var(--ease); }
 }
 
-.mono { font-family: var(--font-outlier); font-variant-numeric: tabular-nums; }
-.etiqueta { color: var(--color-muted); font-size: var(--text-sm); font-weight: 500; }
+/* ---------- piezas del sistema ---------- */
 
-/* Tarjeta: blanca, borde 1 px, radio 10, sombra casi nula. */
-.tarjeta { background: var(--color-cotton); border: 1px solid var(--color-rule); border-radius: var(--radius-card); box-shadow: var(--shadow-card); padding: var(--space-lg); }
-.tarjeta > h3 { font-size: var(--text-md); }
-.cifra { font-family: var(--font-body); font-variant-numeric: tabular-nums; font-size: var(--text-3xl); font-weight: 600; letter-spacing: -0.03em; line-height: 1.1; }
+.etiqueta { color: var(--gray); font-size: var(--fs-small); }
+.lead { font-size: 16px; line-height: 1.55; color: var(--ink-soft); }
 
-/* Marcas de estado: texto + fondo + color, nunca solo color. */
-.estado { display: inline-flex; align-items: center; gap: var(--space-xs); padding: var(--space-2xs) var(--space-sm); border-radius: var(--radius-pill); font-size: var(--text-sm); font-weight: 600; line-height: 1.6; }
-.estado--listo { color: var(--estado-listo); background: var(--estado-listo-fondo); }
-.estado--aviso { color: var(--estado-aviso); background: var(--estado-aviso-fondo); }
-.estado--error { color: var(--estado-error); background: var(--estado-error-fondo); }
-.estado--info { color: var(--estado-info); background: var(--estado-info-fondo); }
+/* Tarjeta blanca de borde fino (OhMD): ocupa lo que su contenido necesita. */
+.tarjeta {
+  background: var(--white);
+  border: var(--border);
+  border-radius: var(--r-lg);
+  box-shadow: var(--shadow-card);
+  padding: var(--sp-6);
+}
 
-/* El "Cómo se calculó": desplegable nativo, operable con teclado. */
-details.calculo summary { cursor: pointer; color: var(--color-muted); font-size: var(--text-sm); min-height: 44px; display: inline-flex; align-items: center; }
-details.calculo summary:hover { color: var(--color-accent-2); }
-details.calculo .calculo__cuerpo { font-family: var(--font-outlier); font-size: var(--text-sm); color: var(--color-ink-2); background: var(--color-paper-2); border: 1px solid var(--color-rule); border-radius: var(--radius-input); padding: var(--space-sm) var(--space-md); margin-top: var(--space-2xs); overflow-wrap: anywhere; }
+/* Cifra grande en peso ligero (OhMD stats): jerarquía por peso, no por tamaño. */
+.cifra {
+  font-family: var(--font-display);
+  font-variant-numeric: tabular-nums;
+  font-size: var(--fs-stat);
+  font-weight: 500;
+  letter-spacing: -0.02em;
+  line-height: 1.05;
+}
+.cifra--sm { font-size: var(--fs-stat-sm); }
+
+/* Marca de estado: siempre palabras, además de color. */
+.estado {
+  display: inline-flex; align-items: center; gap: var(--sp-2);
+  padding: 3px var(--sp-3);
+  border-radius: var(--r-pill);
+  font-size: var(--fs-small); font-weight: 500; line-height: 1.5;
+  white-space: nowrap;
+}
+.estado--listo { color: var(--ok); background: var(--ok-bg); }
+.estado--aviso { color: var(--warn); background: var(--warn-bg); }
+.estado--error { color: var(--error); background: var(--error-bg); }
+.estado--info { color: var(--info); background: var(--info-bg); }
+
+/* Fila editorial (Revelatio): índice mono a la izquierda, título, dato a la derecha, hairline. */
+.fila {
+  display: flex; align-items: center; gap: var(--sp-6);
+  padding-block: var(--sp-5, 20px);
+  border-top: var(--border);
+}
+.fila:first-child { border-top: 0; }
+.fila__indice {
+  font-family: var(--font-mono); font-size: var(--fs-small); color: var(--gray);
+  width: 2.5rem; flex-shrink: 0;
+}
+.fila__cuerpo { flex: 1; min-width: 0; }
+.fila__dato { flex-shrink: 0; text-align: right; }
+
+/* Indicador de pasos (Decimals): número en mono + título + conector hairline. */
+.pasos { display: flex; align-items: flex-start; }
+.pasos__paso { display: flex; align-items: flex-start; min-width: 0; }
+.pasos__item { display: flex; align-items: center; gap: var(--sp-3); }
+.pasos__num {
+  font-family: var(--font-mono); font-size: var(--fs-small);
+  display: inline-flex; align-items: center; justify-content: center;
+  width: 1.75rem; height: 1.75rem; border-radius: var(--r-pill);
+  border: 1px solid var(--line-strong); color: var(--gray); flex-shrink: 0;
+}
+.pasos__item--actual .pasos__num { border-color: var(--accent); color: var(--accent); }
+.pasos__item--hecho .pasos__num { border-color: var(--accent); background: var(--accent); color: var(--accent-ink); }
+.pasos__nombre { font-size: var(--fs-small); font-weight: 500; white-space: nowrap; }
+.pasos__item--actual .pasos__nombre { color: var(--ink); }
+.pasos__item--hecho .pasos__nombre { color: var(--ink-soft); }
+.pasos__item--bloqueado .pasos__nombre, .pasos__item--bloqueado .pasos__num { color: var(--gray); }
+.pasos__linea { flex: 1; min-width: 16px; height: 1px; background: var(--line); margin: 0.9rem var(--sp-3) 0; }
+.pasos__motivo { display: block; font-size: var(--fs-meta); color: var(--gray); font-weight: 400; white-space: normal; margin-top: 2px; }
+
+/* Botones (Viru): primario píldora verde bosque, secundario de borde fino. */
+.btn {
+  display: inline-flex; align-items: center; justify-content: center; gap: var(--sp-2);
+  min-height: 44px; padding: 0 var(--sp-6);
+  border-radius: var(--r-pill);
+  font-size: var(--fs-body); font-weight: 500; line-height: 1;
+  cursor: pointer; text-decoration: none;
+  border: 1px solid transparent;
+}
+.btn--primario { background: var(--accent); color: var(--accent-ink); }
+.btn--primario:hover:not(:disabled) { background: var(--accent-hover); }
+.btn--secundario { background: var(--white); color: var(--ink); border-color: var(--line-strong); }
+.btn--secundario:hover:not(:disabled) { background: var(--paper-2); }
+.btn--quieto { background: transparent; color: var(--gray); }
+.btn--quieto:hover:not(:disabled) { color: var(--ink); background: var(--paper-2); }
+.btn--sm { min-height: 36px; padding: 0 var(--sp-4); font-size: var(--fs-small); }
+
+/* Desplegable "Cómo se calculó": discreto, el detalle técnico vive aquí. */
+details.calculo summary {
+  cursor: pointer; color: var(--gray); font-size: var(--fs-small);
+  min-height: 40px; display: inline-flex; align-items: center; gap: var(--sp-2);
+  list-style: none;
+}
+details.calculo summary::before { content: "▸"; font-size: var(--fs-meta); }
+details.calculo[open] summary::before { content: "▾"; }
+details.calculo summary:hover { color: var(--accent); }
+details.calculo .calculo__cuerpo {
+  font-family: var(--font-mono); font-size: var(--fs-meta); color: var(--ink-soft);
+  background: var(--paper-2); border: var(--border); border-radius: var(--r-sm);
+  padding: var(--sp-3) var(--sp-4); margin-top: var(--sp-1); overflow-wrap: anywhere;
+}
 
 /* Impresión del informe. */
 .solo-imprimir { display: none; }
 @media print {
   .no-imprimir { display: none !important; }
   .solo-imprimir { display: block; }
-  body { background: var(--print-paper); font-size: 12pt; }
+  body { background: #fff; font-size: 12pt; }
   main { max-width: none; padding: 0 !important; }
-  .tarjeta, [data-slot="card"] { box-shadow: none !important; border: 1px solid var(--print-rule) !important; break-inside: avoid; }
+  .tarjeta { box-shadow: none !important; border: 1px solid #999 !important; break-inside: avoid; }
   a[href]::after { content: ""; }
   @page { margin: 18mm; }
 }

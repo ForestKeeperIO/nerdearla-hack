@@ -71,6 +71,16 @@ export async function POST(request: Request) {
     por,
     creado_en: creadoEn,
   });
+  // Un archivo nuevo reabre la revisión: Calidad y Vista previa del programa y del Global.
+  const ahora = new Date().toISOString();
+  for (const alcanceInforme of [programa, 'global']) {
+    const clave = `eira:informe:${alcanceInforme}`;
+    if (!(await v.exists(clave))) await v.hset(clave, 'creado_en', ahora);
+    await v.hset(clave, 'calidad_resuelta', '0', 'cifras_aprobadas', '0');
+  }
+  if (!(await v.hget(`eira:informe:${programa}`, 'fecha_corte'))) {
+    await v.hset(`eira:informe:${programa}`, 'fecha_corte', fechaCorte);
+  }
   await v.xadd(
     trabajos(), '*',
     'id', id,

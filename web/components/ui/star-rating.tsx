@@ -1,6 +1,4 @@
-// Calificación en estrellas, solo lectura, con relleno parcial.
-// Reimplementación propia del patrón del componente "star-rating" de shadcncraft en 21st.dev
-// (licencia Apache-2.0 declarada en la página, pero el código fuente no es visible sin API key).
+// Calificación de 1 a 5 estrellas, solo lectura: llenas en tinta, vacías en línea.
 import { Star } from "lucide-react"
 import { cn } from "cn"
 
@@ -10,46 +8,37 @@ export function StarRating({
   etiqueta,
   className,
 }: {
-  /** Calificación, admite fracciones (p. ej. 3.5). */
+  /** Calificación entera de 1 a 5. */
   valor: number
   max?: number
-  /** Texto visible junto a las estrellas (p. ej. "3.5 / 5"). */
+  /** Texto visible junto a las estrellas (p. ej. "3 / 5"). */
   etiqueta?: string
   className?: string
 }) {
-  const acotado = Math.max(0, Math.min(max, valor))
-  const porcentaje = (acotado / max) * 100
-  const fila = (llena: boolean) => (
-    <span aria-hidden="true" className="flex gap-0.5">
-      {Array.from({ length: max }, (_, i) => (
-        <Star
-          key={i}
-          className={cn(
-            "size-4",
-            llena ? "fill-primary text-primary" : "fill-transparent text-input"
-          )}
-          strokeWidth={1.5}
-        />
-      ))}
-    </span>
-  )
+  const acotado = Math.max(0, Math.min(max, Math.round(valor)))
   return (
     <span className={cn("inline-flex items-center gap-2", className)}>
       <span
         role="img"
-        aria-label={`${etiqueta ?? `${acotado} de ${max} estrellas`}`}
-        className="relative inline-flex shrink-0"
+        aria-label={etiqueta ?? `${acotado} de ${max} estrellas`}
+        className="inline-flex shrink-0 gap-0.5"
       >
-        {fila(false)}
-        <span
-          aria-hidden="true"
-          className="absolute inset-y-0 left-0 overflow-hidden"
-          style={{ width: `${porcentaje}%` }}
-        >
-          {fila(true)}
-        </span>
+        {Array.from({ length: max }, (_, i) => (
+          <Star
+            key={i}
+            className={cn(
+              "size-4",
+              i < acotado
+                ? "estrella-llena fill-[var(--ink)] text-[var(--ink)]"
+                : "estrella-vacia fill-transparent text-[var(--line-strong)]"
+            )}
+            strokeWidth={1.5}
+          />
+        ))}
       </span>
-      {etiqueta && <span className="text-sm font-medium text-muted-foreground tabular-nums">{etiqueta}</span>}
+      {etiqueta && (
+        <span className="text-sm font-medium text-[var(--gray)] tabular-nums">{etiqueta}</span>
+      )}
     </span>
   )
 }

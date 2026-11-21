@@ -1,7 +1,8 @@
 import {
-  conteoUnidad, edadPromedio, fechaCorteActual, listarFuentes, NOMBRE_UNIDAD,
+  conteoUnidad, edadPromedio, filtrosDe, NOMBRE_UNIDAD,
   personasPorCiudad, personasUnicas, sinIdentificar, unidadesConDatos,
 } from '@/lib/datos';
+import { esAlcance, fechaCorteDe, fuentesDe } from '@/lib/informe';
 
 export const dynamic = 'force-dynamic';
 
@@ -13,23 +14,28 @@ function celda(v: string | number): string {
   return s;
 }
 
-export async function GET() {
-  const f = {};
-  const [fuentes, unidades, personas, sinId, corte, porCiudad] = await Promise.all([
-    listarFuentes(), unidadesConDatos(), personasUnicas(f), sinIdentificar(f),
-    fechaCorteActual(), personasPorCiudad(f),
+export async function GET(_req: Request, { params }: { params: Promise<{ alcance: string }> }) {
+  const { alcance: a } = await params;
+  if (!esAlcance(a)) return new Response('No encontrado', { status: 404 });
+  const alcance = a;
+
+  const f = await filtrosDe(alcance);
+  const corte = await fechaCorteDe(alcance);
+  const fuentes = await fuentesDe(alcance);
+  const [unidades, personas, sinId, porCiudad] = await Promise.all([
+    unidadesConDatos(), personasUnicas(f), sinIdentificar(f), personasPorCiudad(f),
   ]);
   const edad = await edadPromedio(f, corte);
   const conteos = await Promise.all(unidades.valor.map((u) => conteoUnidad(u, f)));
 
   const nombres = fuentes.valor.map((x) => x.nombre).join('; ') || 'sin archivos';
-  const advert = 'Datos ficticios de demostración; unidades no sumables entre sí; valores de personas menores a 5 se muestran como <5';
+  const advert = 'Datos ficticios de demostración; tipos de registro no sumables entre sí; valores de personas menores a 5 se muestran como <5';
 
   const filas: (string | number)[][] = [
     ['indicador', 'valor', 'unidad', 'definicion', 'fecha_corte', 'fuentes', 'advertencias'],
     [
       'personas_identificadas', personas.valor, 'persona',
-      'Personas únicas identificadas, sin duplicados (SINTERCARD sobre eira:per:*)',
+      'Personas únicas identificadas, sin duplicados',
       corte, nombres, advert,
     ],
     [
@@ -46,14 +52,16 @@ export async function GET() {
 
   for (let i = 0; i < unidades.valor.length; i++) {
     const u = unidades.valor[i];
+    if (conteos[i].valor === 0) continue;
     filas.push([
       NOMBRE_UNIDAD[u].toLowerCase(), conteos[i].valor, u,
-      `Registros de la unidad «${NOMBRE_UNIDAD[u]}» en los archivos importados`,
+      `Registros del tipo «${NOMBRE_UNIDAD[u]}» en los archivos importados`,
       corte, nombres, advert,
     ]);
   }
 
   for (const c of porCiudad.valor) {
+    if (c.personas === 0) continue;
     filas.push([
       `personas_${c.ciudad}`, c.personas < 5 ? '<5' : c.personas, 'persona',
       `Personas únicas en ${c.ciudad}`,
@@ -65,7 +73,7 @@ export async function GET() {
   return new Response(csv, {
     headers: {
       'content-type': 'text/csv; charset=utf-8',
-      'content-disposition': 'attachment; filename="informe-eira.csv"',
+      'content-disposition': `attachment; filename="informe-eira-${alcance}.csv"`,
     },
   });
 }

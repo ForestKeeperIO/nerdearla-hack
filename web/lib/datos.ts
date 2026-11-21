@@ -13,6 +13,7 @@ import type {
   Omitida, Par, Trabajo, Unidad,
 } from './comun';
 import { NOMBRE_UNIDAD, UNIDADES } from './comun';
+import { valoresPrograma } from './catalogo';
 
 export type {
   Anomalia, CiudadConteo, Cobertura, EntradaBitacora, Filtros, Fuente, Med,
@@ -73,7 +74,7 @@ export async function personasCerteza(nivel: 'folio' | 'id', f: Filtros): Promis
 
 function coincide(campo: string, f: Filtros): boolean {
   const [programa, ciudad, periodo, servicio] = campo.split('|');
-  if (f.programa && programa !== f.programa) return false;
+  if (f.programa && programa !== f.programa && programa !== f.programaAlt) return false;
   if (f.ciudad && ciudad !== f.ciudad) return false;
   if (f.periodo && periodo !== f.periodo) return false;
   if (f.servicio && servicio !== f.servicio) return false;
@@ -386,4 +387,49 @@ export async function fechaCorteActual(): Promise<string> {
   let corte: string | null = null;
   for (const f of fs.valor) if (f.fecha_corte && (!corte || f.fecha_corte > corte)) corte = f.fecha_corte;
   return corte ?? new Date().toISOString().slice(0, 10);
+}
+
+// --- Lecturas por alcance de informe -------------------------------------------
+
+/** Con qué valor quedó guardado el programa en los conjuntos (id o nombre del catálogo). */
+export async function valorProgramaGuardado(programaId: string): Promise<string> {
+  const v = valkey();
+  for (const candidato of valoresPrograma(programaId)) {
+    if (await v.exists(perPrograma(candidato))) return candidato;
+  }
+  return programaId;
+}
+
+/** Filtros de lectura para un informe: el programa resuelto, o sin filtro para el Global. */
+export async function filtrosDe(alcance: string): Promise<Filtros> {
+  if (alcance === 'global') return {};
+  const valor = await valorProgramaGuardado(alcance);
+  const alt = valoresPrograma(alcance).find((x) => x !== valor);
+  return { programa: valor, programaAlt: alt };
+}
+
+/** Personas únicas de un solo programa (SCARD del conjunto resuelto). */
+export async function personasDePrograma(programaId: string): Promise<Med<number>> {
+  const clave = perPrograma(await valorProgramaGuardado(programaId));
+  return medir(`SCARD ${clave}`, () => valkey().scard(clave));
+}
+
+/** Personas presentes en dos programas a la vez (SINTERCARD de ambos conjuntos). */
+export async function personasEntre(programaA: string, programaB: string): Promise<Med<number>> {
+  const [a, b] = await Promise.all([valorProgramaGuardado(programaA), valorProgramaGuardado(programaB)]);
+  const ks = [perPrograma(a), perPrograma(b)];
+  return medir(`SINTERCARD ${ks.length} ${ks.join(' ')}`, async () =>
+    Number(await valkey().call('SINTERCARD', ks.length, ...ks)),
+  );
+}
+
+/** Filas que dos coordinaciones registraron igual (omitidas de todas las fuentes). */
+export async function filasCompartidas(): Promise<Med<number>> {
+  return medir(`ZREVRANGE ${fuentes()} → LLEN ${omitidas('<id>')}`, async () => {
+    const v = valkey();
+    const ids = await v.zrevrange(fuentes(), 0, -1);
+    let n = 0;
+    for (const id of ids) n += await v.llen(omitidas(id));
+    return n;
+  });
 }

@@ -1,43 +1,60 @@
 'use server';
 
-import { cookies } from 'next/headers';
 import { revalidatePath } from 'next/cache';
+import { redirect } from 'next/navigation';
 import { emitirDecision } from './datos';
-import { COOKIE_ROL, type Rol } from './rol';
+import { escribirInforme, esAlcance } from './informe';
+import type { Alcance } from './recorrido';
 
-export async function cambiarRol(rol: Rol) {
-  if (rol !== 'coordinacion' && rol !== 'presidencia') return;
-  const c = await cookies();
-  c.set(COOKIE_ROL, rol, { path: '/', sameSite: 'lax', maxAge: 60 * 60 * 24 * 30 });
-  revalidatePath('/', 'layout');
-}
+const POR = 'Presidencia';
 
-async function porQuien(): Promise<string> {
-  const c = await cookies();
-  return c.get(COOKIE_ROL)?.value === 'presidencia' ? 'Presidencia' : 'Coordinación';
+function base(alcance: Alcance) {
+  return `/informe/${alcance}`;
 }
 
 /** Decisión sobre un par de personas: XADD eira:decisiones (tipo persona). */
-export async function decidirPar(parId: string, decision: 'misma' | 'distinta') {
+export async function decidirPar(alcance: string, parId: string, decision: 'misma' | 'distinta') {
+  if (!esAlcance(alcance)) return;
   if (decision !== 'misma' && decision !== 'distinta') return;
-  await emitirDecision({
-    tipo: 'persona',
-    par: parId,
-    decision,
-    por: await porQuien(),
-  });
-  revalidatePath('/calidad');
+  await emitirDecision({ tipo: 'persona', par: parId, decision, por: POR });
+  revalidatePath(base(alcance), 'layout');
 }
 
 /** "Contar de todos modos" una fila omitida: XADD eira:decisiones (tipo restituir_fila). */
-export async function restituirFila(fuenteId: string, fila: number) {
+export async function restituirFila(alcance: string, fuenteId: string, fila: number) {
+  if (!esAlcance(alcance)) return;
   if (!fuenteId || !Number.isFinite(fila)) return;
   await emitirDecision({
     tipo: 'restituir_fila',
     fuente: fuenteId,
     fila: String(fila),
     decision: 'restituir',
-    por: await porQuien(),
+    por: POR,
   });
-  revalidatePath('/calidad');
+  revalidatePath(base(alcance), 'layout');
+}
+
+/** La usuaria termina Calidad (con o sin decisiones pendientes). */
+export async function resolverCalidad(alcance: string) {
+  if (!esAlcance(alcance)) return;
+  await escribirInforme(alcance as Alcance, { calidad_resuelta: '1' });
+  revalidatePath(base(alcance), 'layout');
+  redirect(`${base(alcance)}/vista-previa`);
+}
+
+/** "Las cifras son correctas": abre Exportar. */
+export async function aprobarCifras(alcance: string) {
+  if (!esAlcance(alcance)) return;
+  await escribirInforme(alcance as Alcance, { cifras_aprobadas: '1' });
+  revalidatePath(base(alcance), 'layout');
+  redirect(`${base(alcance)}/exportar`);
+}
+
+/** Fecha de corte del informe, la primera vez que se entra. */
+export async function fijarFechaCorte(alcance: string, formData: FormData) {
+  if (!esAlcance(alcance)) return;
+  const fecha = String(formData.get('fecha_corte') ?? '');
+  if (!/^\d{4}-\d{2}-\d{2}$/.test(fecha)) return;
+  await escribirInforme(alcance as Alcance, { fecha_corte: fecha });
+  revalidatePath(base(alcance), 'layout');
 }

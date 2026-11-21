@@ -10,6 +10,8 @@ export function personasTxt(n: number): string {
 
 export type Filtros = {
   programa?: string;
+  /** Otro valor aceptado para el mismo programa (la semilla vieja usa el nombre, la nueva el id). */
+  programaAlt?: string;
   ciudad?: string;
   periodo?: string;
   servicio?: string;

@@ -1,39 +1,60 @@
-/* Tema sobrio EIRA — neutro cálido (stone), tarjetas blancas, rosa solo como acento. */
+/* Sistema visual EIRA — tokens de docs/referencias/auditoria-componentes.md.
+   Neutros cálidos + un solo acento: verde bosque #1C4633. Nada de rosa. */
 :root {
   color-scheme: light;
 
-  /* Espacio (escala de 4 px) y duraciones. */
-  --space-3xs: 2px; --space-2xs: 4px; --space-xs: 8px; --space-sm: 12px;
-  --space-md: 16px; --space-lg: 24px; --space-xl: 40px; --space-2xl: 64px;
-  --ease-out: cubic-bezier(0.16, 1, 0.3, 1);
-  --dur-micro: 120ms; --dur-short: 200ms;
-  --container: 1280px; --gutter: 32px;
+  /* Neutros cálidos */
+  --ink:        #17140F;
+  --ink-soft:   #4A463E;
+  --gray:       #7A756B;
+  --line:       #E3E0D8;
+  --line-strong:#CFCBC0;
+  --paper:      #F7F5F1;
+  --paper-2:    #EFECE5;
+  --white:      #FFFFFF;
 
-  /* Texto. */
-  --text-xs: 0.75rem; --text-sm: 0.875rem; --text-md: 1rem; --text-lg: 1.125rem;
-  --text-xl: 1.375rem; --text-2xl: 1.75rem; --text-3xl: 2.25rem;
+  /* Acento único: verde bosque */
+  --accent:     #1C4633;
+  --accent-hover:#153726;
+  --accent-ink: #FFFFFF;
+  --accent-dim: #E0E9DD;
 
-  /* Neutro cálido: fondo stone-50, tinta stone-900, reglas stone-200. */
-  --color-paper: #fafaf9;      /* fondo de la app */
-  --color-paper-2: #f5f5f4;    /* relleno suave (filtros, código) */
-  --color-cotton: #ffffff;     /* tarjetas */
-  --color-ink: #1c1917;        /* texto principal */
-  --color-ink-2: #44403c;      /* texto secundario */
-  --color-muted: #78716c;      /* texto terciario / etiquetas */
-  --color-rule: #e7e5e4;       /* bordes */
-  --color-rule-2: #d6d3d1;     /* bordes de inputs / dashed */
+  /* Semánticos */
+  --warn:       #8A6D1F;
+  --warn-bg:    #F6F0DC;
+  --error:      #8C3B2E;
+  --error-bg:   #F5E7E3;
+  --ok:         #1C4633;
+  --ok-bg:      #E0E9DD;
+  --info:       #4A463E;
+  --info-bg:    #EFECE5;
 
-  /* Rosa EIRA: acento único (botón primario, estrellas, barra activa). */
-  --color-accent: #fdf2f8;     /* rosa-50, fondos de acento */
-  --color-selection: #fce7f3;  /* rosa-100, texto seleccionado */
-  --color-accent-ink: #9d174d; /* rosa-800, texto sobre rosa-50 */
-  --color-accent-2: #be185d;   /* rosa-700, acción primaria */
-  --color-accent-3: #9d174d;   /* rosa-800, hover de la acción */
-  --color-focus: #be185d;
+  /* Tipografía */
+  --font-display: var(--font-space-grotesk), "Space Grotesk", sans-serif;
+  --font-ui:      var(--font-inter), "Inter", ui-sans-serif, system-ui, sans-serif;
+  --font-mono:    var(--font-plex-mono), "IBM Plex Mono", ui-monospace, monospace;
 
-  --color-error: #b91c1c;
-  --radius-card: 10px;
-  --radius-input: 8px;
-  --radius-pill: 999px;
-  --shadow-card: 0 1px 2px rgb(28 25 23 / 0.04);
+  /* Escala (px) */
+  --fs-hero: 30px; --fs-h2: 20px; --fs-stat: 40px; --fs-stat-sm: 28px;
+  --fs-body: 15px; --fs-small: 13px; --fs-meta: 12px;
+  --lh-body: 1.5; --lh-tight: 1.15;
+
+  /* Espaciado (4px base) */
+  --sp-1: 4px; --sp-2: 8px; --sp-3: 12px; --sp-4: 16px;
+  --sp-6: 24px; --sp-8: 32px; --sp-10: 40px; --sp-12: 48px; --sp-16: 64px;
+
+  /* Radios */
+  --r-sm: 6px; --r-md: 10px; --r-lg: 16px; --r-pill: 999px;
+
+  /* Bordes y sombras: hairline primero, sombra casi nula */
+  --border: 1px solid var(--line);
+  --shadow-card: 0 1px 2px rgba(23, 20, 15, .05);
+  --shadow-modal: 0 8px 32px rgba(23, 20, 15, .14);
+
+  /* Duraciones */
+  --dur: 160ms;
+  --ease: cubic-bezier(0.16, 1, 0.3, 1);
+
+  --container: 880px;
+  --gutter: 32px;
 }
