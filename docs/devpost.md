@@ -82,7 +82,7 @@ de referencias de diseño, con una tabla de licencias de cada componente.
 - El motor ya corre: detección del mismo archivo en cinco niveles (idéntico,
   mismo contenido, versión nueva, traslape parcial, distinto) con mensajes en
   español para una persona no técnica, verificada sobre los siete archivos del
-  caso de la guía; 24 pruebas en verde.
+  caso de la guía; 60 pruebas en verde.
 - El recorrido guiado por informe ya está construido: dos programas (Tamizaje
   Rosa y Melenas en Movimiento) más el Global, que suma las personas de cada
   programa y muestra aparte cuántas se repiten.

@@ -43,7 +43,7 @@ npm run limpiar   # cuando se quiera vaciar
 # 3. Base de reporte SQLite y motor de procesamiento (rama motor)
 uv sync
 uv run python -m db.crear --con-denominadores   # escribe data/impacto.sqlite
-uv run pytest                                    # 24 pruebas
+uv run pytest                                    # 60 pruebas
 # worker en primer plano y, en otra terminal, procesar un Excel sin frontend:
 IMPACTO_HMAC_KEY=<clave> bash scripts/arrancar-motor.sh
 uv run python scripts/procesar_local.py reportes/tamizaje-rosa.xlsx \
@@ -205,19 +205,19 @@ importan:
 | Pieza | Estado |
 |---|---|
 | Valkey local, semilla de demostración, verificador del contrato (`npm run valkey/semilla/verificar`) | **Implementado** en `main`/`valkey-base`; `verificar` reporta 9 comprobaciones OK |
-| Esquema SQLite de reporte con vistas, denominadores INEGI y catálogos de iniciativas, tipos de registro, roles y municipios (`db/`) | **Implementado** en rama `motor` (`db/esquema.sql`); sus pruebas corren dentro de las 24 del motor |
-| Frontend: recorrido guiado por informe (Tamizaje Rosa, Melenas en Movimiento y Global), subida de Excel a Valkey, calidad con estrellas, vista previa y exportar CSV (`web/`) | **Implementado** en rama `fe`: los programas salen del catálogo, el Global suma programas y muestra las repetidas aparte. Ejercitado con la semilla de desarrollo (capturas en `docs/capturas/`); falta correrlo punta a punta con el motor en un entorno |
+| Esquema SQLite de reporte con vistas, denominadores INEGI y catálogos de iniciativas, tipos de registro, roles y municipios (`db/`) | **Implementado** en `main` (`db/esquema.sql`); sus pruebas corren dentro de las 60 del motor |
+| Frontend: Tablero e Informes (Tamizaje Rosa, Melenas en Movimiento y Global), subida de Excel o CSV a Valkey, calidad con estrellas, vista previa y exportar CSV (`web/`) | **Implementado**: los programas salen del catálogo y el Global suma programas. Probado de punta a punta con el motor por la URL pública el 21 nov (4 archivos: nuevo, nuevo, duplicado idéntico y versión nueva) |
 | Catálogo de iniciativas y tipos de registro | **Implementado** (`catalogos/iniciativas.json`); una iniciativa marcada `por_confirmar` |
 | Reportes con datos públicos reales de Jalisco (`reportes-reales/`) | **Implementado** en rama `fuentes-reales` (4 CSV con fuente y fecha) |
-| Motor Python: leer Excel/CSV, huellas de archivo y fila, personas con reglas exactas + rapidfuzz, escribir Valkey + SQLite (`py/`) | **Implementado** en rama `motor`: 24 pruebas en verde y los 7 archivos del caso verificados con sus mensajes exactos (tabla en `NOTAS.md`). Splink quedó instalado como respaldo, no es la vinculación activa |
-| Detección de "el mismo archivo con otro nombre" y "la misma persona" | **Implementado** en el motor y verificado en local (niveles: idéntico, mismo contenido, versión nueva, traslape parcial, distinto); falta ejercitarla extremo a extremo desde el frontend |
-| Reportes de prueba del caso de la guía (7 archivos: 120 atenciones, 80 participaciones, traslapes y versiones) | **Implementado** en rama `motor` (`reportes/` + `esperado.json`); sus pruebas en verde |
-| Tableros de Metabase (Impacto y Calidad, con enlaces públicos e iframe verificado) | **Implementado** en rama `metabase` sobre un esquema provisional con datos ficticios; falta apuntarlo al esquema de `db/` e incrustarlo en el frontend |
-| Trazabilidad territorial por estado y municipio INEGI | **Implementado** en el esquema (`v_presencia`, `v_presencia_municipios`, catálogo de 2,478 municipios); el bloque visual de "presencia" del frontend está **pendiente** y la clave `eira:presencia:*` solo está propuesta |
-| Paleta de EIRA (vino/ciruela, Rosarivo + Montserrat) | **Decidida y documentada** en `docs/referencias/paleta-eira.md`; **pendiente de aplicar** al frontend (aún trae el acento del rediseño anterior) |
+| Motor Python: leer Excel/CSV, huellas de archivo y fila, personas con reglas exactas + rapidfuzz, escribir Valkey + SQLite (`py/`) | **Implementado** en `main`: 60 pruebas en verde. El archivo subido se borra de Valkey al terminar el trabajo. Splink quedó instalado como respaldo, no es la vinculación activa |
+| Detección de "el mismo archivo con otro nombre" y "la misma persona" | **Implementado** en el motor (niveles: idéntico, mismo contenido, versión nueva, traslape parcial, distinto) y probado desde el frontend; las decisiones humanas ("misma" o "distinta") las aplica el motor y cambian las cifras |
+| Reportes de prueba del caso de la guía (7 archivos: 120 atenciones, 80 participaciones, traslapes y versiones) | **Implementado** (`reportes/` + `esperado.json`); datos ficticios, sin pacientes reales |
+| Tableros de Metabase (Impacto y Calidad, con enlaces públicos) | **Implementado**: leen la base SQLite que escribe el motor y van incrustados en el frontend; incluyen un mapa de presencia por estado. Metabase corre como servicio aparte (AGPL) |
+| Trazabilidad territorial por estado y municipio INEGI | **Implementado**: `v_presencia`, `v_presencia_municipios`, catálogo de 2,478 municipios y la clave `eira:presencia:<alcance>`. Se muestra como presencia, no como cobertura. Personas y edad por municipio, mes o servicio: **pendiente** |
+| Paleta de EIRA (vino/ciruela, Rosarivo + Montserrat) | **Aplicada** al frontend; reglas en `docs/referencias/paleta-eira.md` |
 | Cuentas, contraseñas y permisos por rol | **Simulado**: el prototipo no tiene; es requisito de piloto |
-| Dos versiones en línea (en blanco y con fuentes reales) | **Por verificar al integrar**: los scripts de operación existen (`scripts/demo.sh`, `docs/operacion-demo.md`, rama `demo`) y los datos reales están; al cierre de esta nota aún falta levantar ambas con el frontend actual y procesar las reales |
-| URL pública estable | **Por verificar al integrar**: hubo un túnel temporal de una versión anterior |
+| Dos versiones en línea (en blanco y con fuentes reales) | **En línea solo la versión en blanco**, con los reportes de prueba. La versión con fuentes reales **no se construyó**; los 4 CSV públicos están en la rama `fuentes-reales` sin cargar |
+| URL pública estable | **Parcial**: la aplicación y Metabase corren como servicios en un servidor propio y se publican con túneles temporales de Cloudflare; la dirección cambia si el túnel se reinicia |
 | Autenticación, respaldo automático, HTTPS gestionado, aviso de privacidad | **Para piloto**: requisitos de la guía de EIRA y de la ley mexicana de datos personales |
 
 ## Privacidad y seguridad (con sus límites reales)
