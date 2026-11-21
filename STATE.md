@@ -1,5 +1,9 @@
 # STATE: Impacto EIRA (Nerdearla Vibeathon)
 
+Integración (rama `integra-selma`, 14:30 CDMX): export de `soe_python@13a806d`, siete pruebas del procesador pasaron con Valkey privado. Base del frontend `6abb898`: `rolesDe` necesita dos claves del procesador. Staging sin acceso a los servicios en línea; evidencia y criterios de corte en `docs/integracion-selma.md`.
+
+14:42 CDMX: 7 cargas listas y 7 duplicadas por API, ambas v2 agregan 8 filas; decisión de separar confirmada. Las 17 tarjetas Metabase leen el exportador. Puerta de corte roja: procesador/Metabase 245, tablero/CSV 0; Melenas de `reportes/` se lee 80 donaciones y 0 entregas. Próximo: repetir con tip nuevo de Selma y FE corregido. No activar producción.
+
 Snapshot taken 2026-11-21 between 20:35 and 20:52 CET (13:35 to 13:52 CDMX) by a read-only worker. Hours below are CET. Paths are relative to `~/projects/` on the VPS.
 
 Everything here was checked against the real thing in this session unless it says **UNVERIFIED**. Other agents were committing while this was written: `main` moved from `81dad45` to `526b2b2` during the snapshot. Run the commands in "How to refresh" before you rely on a row.

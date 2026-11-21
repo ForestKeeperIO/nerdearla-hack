@@ -1,0 +1,15 @@
+[Unit]
+Description=Procesador de archivos EIRA (Selma)
+Conflicts=eira-motor.service
+After=eira-motor.service
+Wants=eira-selma-vistas.service
+
+[Service]
+EnvironmentFile=%h/.config/eira/selma.env
+ExecStart=/bin/bash ${EIRA_ADAPTADOR}/scripts/arrancar-selma.sh
+UMask=0077
+Restart=on-failure
+RestartSec=3
+
+[Install]
+WantedBy=default.target
