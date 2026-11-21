@@ -23,6 +23,14 @@ Actualización: para la demo la integración ya publica presencia usando la fich
 
 No pedimos duplicar `per:*` ni mover donantes allí. Las claves canónicas del procesador bastan; el lector frontend debe elegirlas explícitamente. No representar los registros sin ID como personas identificadas.
 
+## Mensaje de un archivo con dos tipos de registro (21 nov, archivos de Ian)
+
+Con `13a806d`, los dos archivos de Ian (`datos-de-prueba/jornada-nueva-chapala.csv` y `datos-de-prueba/prueba-mapeo-excel01.xlsx`) entran sin cambios en Python. El mapeo sale al 100 % en todas las columnas, la fila TOTAL se excluye y no hay anomalías. Comprobado por la pantalla de Subir en una copia aislada; cifras en `guion-demo.md`, «Archivos de Ian».
+
+| Prioridad | Dónde | Qué pedimos y cómo comprobarlo |
+|---|---|---|
+| Baja, mejora el demo | `importar.py:114-138` | Si el archivo trae columna de tipo de registro, que el mensaje desglose por tipo: «Se agregaron 30 filas: 23 donaciones recibidas y 7 productos entregados. Se excluyó 1 fila de totales.» Hoy dice «Se agregaron 30 filas. Se excluyó 1 fila de totales.», y quien presenta tiene que explicar aparte por qué Melenas sube solo 7 personas. Para comprobarlo, subir `prueba-mapeo-excel01.xlsx` en Melenas en Movimiento: el mensaje nombra los dos tipos con sus filas. |
+
 ## Separar la identidad del evento
 
 En `eira:decisiones`, para `tipo=persona`, el frontend mantiene `decision=misma|distinta` y añade `intencion=mismo_evento|diferentes_eventos|distinta`. Los dos primeros valores viajan con `decision=misma`. Los consumidores antiguos ignoran `intencion`.
