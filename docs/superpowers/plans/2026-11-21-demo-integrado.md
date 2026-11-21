@@ -227,6 +227,8 @@ export function puedeEntrar(e: EstadoRecorrido, p: Paso): boolean;
 export function motivoBloqueo(e: EstadoRecorrido, p: Paso): string | null;   // texto para la usuaria
 ```
 
+**Alcance (decisión de las 13:00, manda sobre las firmas de arriba):** hay tres informes, `tamizaje-rosa`, `salud-que-florece` y `global`; las rutas llevan el alcance (`/informe/<alcance>/subir`, `/calidad`, `/vista-previa`, `/exportar`) y la portada lista los tres con su avance. `type Alcance = 'tamizaje-rosa' | 'salud-que-florece' | 'global'`; `EstadoRecorrido` es por alcance y agrega `alcance: Alcance` y `programasConArchivos: number`; el paso `nuevo` desaparece; el Global no tiene `subir` y exige `programasConArchivos === 2` (motivo: "Falta subir archivos de <programa>."). Todas las lecturas de cifras reciben el alcance: un programa filtra por su id; el Global no filtra y agrega personas en ambos programas. Pruebas adicionales: el Global está bloqueado con un solo programa cargado; subir a un programa pone en falso `calidad_resuelta` y `cifras_aprobadas` de ese programa y del Global; las cifras del informe de un programa no incluyen registros del otro.
+
 Reglas: sin informe solo se entra a `nuevo`; `calidad` exige `fuentes ≥ 1` y `trabajosEnCurso = 0`; `vista-previa` exige `calidadResuelta`; `exportar` exige `cifrasAprobadas`. Subir un archivo nuevo pone `calidadResuelta` y `cifrasAprobadas` en falso. Siempre se puede volver a un paso anterior.
 
 - [ ] **Step 1:** Pruebas que fallan en `web/lib/recorrido.test.ts`:

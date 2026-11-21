@@ -21,11 +21,10 @@ No viene a "explorar datos" ni a "administrar un sistema". Por eso la aplicació
 
 ## El recorrido
 
-Cuatro pasos, con las palabras que usó EIRA. **No se puede saltar adelante**: cada paso se abre cuando el anterior está resuelto. Siempre se puede volver atrás.
+Cuatro pasos por informe, con las palabras que usó EIRA. **No se puede saltar adelante**: cada paso se abre cuando el anterior está resuelto. Siempre se puede volver atrás.
 
 | Paso | Qué hace la persona | Cuándo queda resuelto | Qué abre |
 |---|---|---|---|
-| 0. Nuevo informe | Le pone nombre, elige para quién es y la fecha de corte | Al guardar | Subir |
 | 1. Subir | Arrastra los Excel de cada coordinación; por archivo dice de qué programa es | Hay al menos un archivo importado y ninguno procesándose | Calidad |
 | 2. Calidad | Ve la calificación de cada archivo y lo que le falta; decide los casos dudosos de personas; puede restituir filas omitidas | No quedan decisiones pendientes, o confirma que continúa con N pendientes sabiendo que cuentan como una sola persona | Vista previa |
 | 3. Vista previa | Revisa las cifras del informe tal como saldrán | Pulsa "Las cifras son correctas" | Exportar |
@@ -39,11 +38,29 @@ Reglas del recorrido:
 - Si después de avanzar se sube otro archivo, los pasos posteriores se vuelven a abrir para revisión: Calidad y Vista previa dejan de estar resueltos.
 - No hay selector de rol. La persona usuaria es Presidencia. Que no haya cuentas ni contraseñas se declara como simulado.
 
+## Un informe por programa, y uno global
+
+Decisión de Ian (13:00): el informe va **separado por programa**, igual que la carga, y existe además un informe **Global** con todos los programas. Para el demo se usan **dos programas más el Global**: Tamizaje Rosa y Salud que Florece (propuesta; son los del caso de la guía).
+
+| Informe | Qué archivos recibe | Qué cifras muestra | Recorrido |
+|---|---|---|---|
+| **Tamizaje Rosa** | Solo los de ese programa | Solo las de ese programa | Subir → Calidad → Vista previa → Exportar |
+| **Salud que Florece** | Solo los de ese programa | Solo las de ese programa | Subir → Calidad → Vista previa → Exportar |
+| **Global** | Ninguno: usa lo que ya subió cada programa | Las de todos, con cada programa por separado y las personas contadas una sola vez aunque estén en varios | Calidad → Vista previa → Exportar |
+
+Reglas:
+
+- La pantalla de inicio muestra los tres informes como tres entradas, cada una con su avance ("Paso 2 de 4: Calidad", "Sin empezar", "Listo para exportar"). Se entra a uno y el recorrido guiado es el de ese informe.
+- Dentro de un informe de programa no se pregunta el programa por archivo: ya se sabe. Solo se elige el tipo de registro, entre los que admite ese programa.
+- El Global está bloqueado hasta que los dos programas tengan al menos un archivo importado, y lo dice ("Falta subir archivos de Salud que Florece").
+- En el Global, Calidad muestra lo que solo se ve al juntar programas: personas que aparecen en los dos y filas que dos coordinaciones registraron igual. Vista previa muestra personas impactadas en total (sin contar dos veces a quien está en ambos), cuántas están en los dos programas, y luego cada programa con sus cifras.
+- Subir un archivo a un programa vuelve a abrir para revisión los pasos posteriores de ese programa **y** los del Global.
+- Cada informe guarda su estado por separado: `eira:informe:<alcance>`, con `<alcance>` igual a `tamizaje-rosa`, `salud-que-florece` o `global`.
+- "Paso 0, Nuevo informe" desaparece: los tres informes ya existen; la fecha de corte se pide al entrar por primera vez a cada uno.
+
 ## Lo que debe tener cada pantalla
 
-**Inicio (sin informe).** Una sola acción: "Crear informe". Dos líneas que dicen qué va a pasar. Nada más.
-
-**Nuevo informe.** Tres campos: nombre, para quién (lista corta: socios estratégicos, donantes, uso interno) y fecha de corte.
+**Inicio.** Los tres informes (dos programas y el Global), cada uno con su avance y una sola acción ("Empezar", "Continuar" o "Ver informe"). En la versión en blanco los tres dicen "Sin empezar" y el Global aparece bloqueado con su motivo. Nada más en la pantalla.
 
 **1. Subir.**
 - Zona para arrastrar archivos `.xlsx` o `.csv`.
@@ -69,8 +86,8 @@ Reglas del recorrido:
 
 | Versión | Qué trae | Para qué |
 |---|---|---|
-| **En blanco** | Nada. Abre en "Crear informe" | Probar el recorrido desde cero, subiendo los reportes de prueba con formato de EIRA |
-| **Con fuentes reales** | Un informe ya creado con reportes de datos abiertos oficiales (INEGI y otros que se verifiquen), ya procesados | Ver la herramienta trabajando con información real |
+| **En blanco** | Nada. Los tres informes aparecen "Sin empezar" | Probar el recorrido desde cero, subiendo los reportes de prueba con formato de EIRA |
+| **Con fuentes reales** | Informes ya avanzados con reportes de datos abiertos oficiales (INEGI y otros que se verifiquen), ya procesados | Ver la herramienta trabajando con información real |
 
 Límite que se declara en la propia versión con fuentes reales: los datos públicos son agregados o registros sin identificador de persona. Sirven para mostrar la unificación de fuentes, la calificación de calidad, la detección del mismo archivo subido dos veces y los tableros. La deduplicación de personas solo se puede ver en la versión en blanco, con los reportes de prueba.
 
@@ -88,4 +105,4 @@ Cuentas y contraseñas; varios informes a la vez; registro con tarjeta NFC; edic
 
 ## Lo que cambia en el contrato de Valkey
 
-Una clave nueva, que escribe y lee solo el frontend: `eira:informe` (Hash) con `nombre`, `audiencia`, `fecha_corte`, `creado_en`, `calidad_resuelta` (0 o 1) y `cifras_aprobadas` (0 o 1). El resto del contrato no cambia.
+Una clave por informe, que escribe y lee solo el frontend: `eira:informe:<alcance>` (Hash) con `fecha_corte`, `creado_en`, `calidad_resuelta` (0 o 1) y `cifras_aprobadas` (0 o 1); `<alcance>` es `tamizaje-rosa`, `salud-que-florece` o `global`. Los programas activos del demo están en `catalogos/iniciativas.json` (campo `en_demo`). El resto del contrato no cambia.
