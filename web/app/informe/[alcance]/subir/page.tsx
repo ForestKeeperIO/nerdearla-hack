@@ -22,6 +22,7 @@ export default async function PaginaSubir({ params }: { params: Promise<{ alcanc
     fuentesDe(alcance),
   ]);
   const tipos = tiposDe(alcance).map((t) => ({ clave: t.clave, etiqueta: t.etiqueta }));
+  if (tipos.length > 1) tipos.unshift({ clave: 'segun_fila', etiqueta: 'Leer el tipo de cada fila' });
   const fechaCorte = inf.fecha_corte || (await fechaCorteDe(alcance));
   const listo = puedeEntrar(estado, 'calidad');
 

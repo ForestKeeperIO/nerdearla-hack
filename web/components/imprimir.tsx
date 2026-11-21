@@ -1,11 +1,9 @@
 'use client';
 
-import { Button } from '@/components/ui/button';
-
 export function BotonImprimir() {
   return (
-    <Button variant="outline" onClick={() => window.print()}>
-      Imprimir o guardar PDF
-    </Button>
+    <button type="button" className="btn btn--primario" onClick={() => window.print()}>
+      Descargar informe (PDF)
+    </button>
   );
 }

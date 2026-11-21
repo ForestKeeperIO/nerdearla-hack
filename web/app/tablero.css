@@ -46,6 +46,18 @@ iframe:focus-visible { outline: 3px solid var(--vino); outline-offset: 2px; }
 .mesa-boton { white-space: nowrap; }
 .facetas-fila { display: grid; grid-template-columns: repeat(5,minmax(0,1fr)); gap: var(--sp-3); }
 .selector { position: relative; min-width: 0; }
+.archivo-selectores { display: grid; grid-template-columns: repeat(2,minmax(0,1fr)); gap: var(--sp-3); width: min(100%,380px); }
+.pasos-ayuda { margin-top: var(--sp-2); }
+.nota-rango { padding: var(--sp-3) var(--sp-6); border-top: var(--border); font-size: var(--fs-small); }
+.tabla-mapeo { border-collapse: collapse; width: 100%; text-align: left; margin-block: var(--sp-3); font-size: var(--fs-small); }
+.tabla-mapeo :is(td,th) { border-bottom: var(--border); padding-block: var(--sp-2); }
+.tabla-mapeo :last-child:is(td,th) { text-align: right; }
+[data-slot=accordion-item] { border-color: var(--linea); }
+@media print {
+  body:has(.informe-imprimible) main :is(header,section,footer,div):not(:has(.informe-imprimible)):not(.informe-imprimible *) { display: none; }
+  .informe-imprimible { border: 0; box-shadow: none; padding: 0; }
+  .informe-imprimible section { break-inside: avoid; }
+}
 .selector label { display: flex; gap: var(--sp-2); align-items: center; margin-bottom: var(--sp-1); font: 500 var(--fs-small)/1.4 var(--font-ui); }
 .selector label span { border-radius: var(--r-sm); background: var(--vino); color: var(--superficie); padding-inline: var(--sp-1); }
 .selector-campo { position: relative; cursor: text; }

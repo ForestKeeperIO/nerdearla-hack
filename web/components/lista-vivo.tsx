@@ -1,6 +1,7 @@
 'use client';
 
-import { useEffect, useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
+import { useRouter } from 'next/navigation';
 import { FileSpreadsheet } from 'lucide-react';
 import type { Fuente, Trabajo } from '@/lib/comun';
 import { StarRating } from '@/components/ui/star-rating';
@@ -27,6 +28,9 @@ function estadoTrabajo(t: Trabajo): { texto: string; clase: string } {
 export function ListaVivo({ alcance, inicial }: { alcance: string; inicial: Datos }) {
   const [datos, setDatos] = useState<Datos>(inicial);
   const [alDia, setAlDia] = useState(true);
+  const router = useRouter();
+  const firma = (d: Datos) => JSON.stringify([d.fuentes.map(f=>f.id), d.trabajos.map(t=>[t.id,t.estado])]);
+  const version = useRef(firma(inicial));
 
   useEffect(() => {
     const t = setInterval(async () => {
@@ -35,6 +39,11 @@ export function ListaVivo({ alcance, inicial }: { alcance: string; inicial: Dato
         const j = (await r.json()) as { ok: boolean } & Datos;
         if (j.ok) {
           setDatos({ trabajos: j.trabajos, fuentes: j.fuentes });
+          const nueva = firma(j);
+          if (version.current !== nueva) {
+            version.current = nueva;
+            router.refresh();
+          }
           setAlDia(true);
         } else setAlDia(false);
       } catch {
@@ -42,7 +51,7 @@ export function ListaVivo({ alcance, inicial }: { alcance: string; inicial: Dato
       }
     }, 2000);
     return () => clearInterval(t);
-  }, [alcance]);
+  }, [alcance,router]);
 
   const vacio = datos.trabajos.length === 0 && datos.fuentes.length === 0;
 
@@ -60,7 +69,7 @@ export function ListaVivo({ alcance, inicial }: { alcance: string; inicial: Dato
         <ul style={{ listStyle: 'none', padding: 0, margin: 0 }}>
           {/* Un trabajo ya importado también es fuente: no lo listamos dos veces. */}
           {datos.trabajos
-            .filter((t) => !(t.estado === 'listo' && datos.fuentes.some((f) => f.nombre === t.nombre)))
+            .filter((t) => !(t.estado === 'listo' && datos.fuentes.some((f) => f.id === t.fuente)))
             .map((t) => {
             const e = estadoTrabajo(t);
             return (

@@ -1,5 +1,6 @@
 import { exigirPaso } from '@/lib/guardia';
-import { fuentesDe, paresDe } from '@/lib/informe';
+import { nombrePrograma } from '@/lib/catalogo';
+import { fuentesDe, paresDe, trabajosDe } from '@/lib/informe';
 import {
   anomaliasDe, cruceProgramas, filasCompartidas, omitidasDe, personasTxt,
   type Anomalia, type Med,
@@ -61,7 +62,7 @@ export default async function PaginaCalidad({ params }: { params: Promise<{ alca
   const { alcance, estado } = await exigirPaso(a, 'calidad');
   const esGlobal = alcance === 'global';
 
-  const [fuentes, pares, todas] = await Promise.all([fuentesDe(alcance), paresDe(alcance), listarFuentes()]);
+  const [fuentes, pares, todas, trabajos] = await Promise.all([fuentesDe(alcance), paresDe(alcance), listarFuentes(), trabajosDe(alcance)]);
   const nombreFuente = Object.fromEntries(todas.valor.map((f) => [f.id, f.nombre]));
   const paresPendientes: Par[] = pares.valor.filter((p) => p.estado === 'pendiente');
 
@@ -98,7 +99,7 @@ export default async function PaginaCalidad({ params }: { params: Promise<{ alca
             {cruces.valor.map((c) => (
               <div key={c.par.join('·')}>
                 <p className="cifra cifra--sm">{personasTxt(c.n)}</p>
-                <p className="etiqueta" style={{ marginTop: 'var(--sp-1)' }}>personas en {c.par[0]} y {c.par[1]}</p>
+                <p className="etiqueta" style={{ marginTop: 'var(--sp-1)' }}>personas en {nombrePrograma(c.par[0])} y {nombrePrograma(c.par[1])}</p>
               </div>
             ))}
             <div>
@@ -106,7 +107,7 @@ export default async function PaginaCalidad({ params }: { params: Promise<{ alca
               <p className="etiqueta" style={{ marginTop: 'var(--sp-1)' }}>filas registradas igual por dos coordinaciones (se cuentan una vez)</p>
             </div>
           </div>
-          <ComoSeCalculo med={cruces} />
+          <ComoSeCalculo med={cruces} texto="Se comparan las personas identificadas de cada programa. Quien aparece en ambos se cuenta una vez en el cruce." />
         </div>
       )}
 
@@ -114,6 +115,7 @@ export default async function PaginaCalidad({ params }: { params: Promise<{ alca
         <section aria-label="Por archivo">
           {detalles.map(({ fuente: f, anomalias, omitidas }) => {
             const planas = Object.values(anomalias.valor).flat();
+            const mapeo = trabajos.valor.find(t => t.fuente === f.id && t.estado === 'listo')?.mapeo;
             return (
               <Card key={f.id} className="mb-4" style={{ borderRadius: 'var(--r-lg)', border: 'var(--border)', boxShadow: 'var(--shadow-card)' }}>
                 <CardHeader className="flex flex-wrap items-center justify-between gap-3">
@@ -128,6 +130,12 @@ export default async function PaginaCalidad({ params }: { params: Promise<{ alca
                   {f.motivos.length > 0 ? `Qué le falta: ${f.motivos.join('; ')}.` : 'No le falta nada: está completa.'}
                 </p>
                 <GrupoProblemas anomalias={anomalias.valor} />
+                {!!mapeo?.length && <details className="calculo">
+                  <summary>Cómo se leyeron las columnas</summary>
+                  <table className="tabla-mapeo"><thead><tr><th>En el archivo</th><th>En el informe</th></tr></thead>
+                    <tbody>{mapeo.map((m,i) => <tr key={i}><td>{m.encabezado}</td><td>{m.campo.replaceAll('_',' ')}</td></tr>)}</tbody>
+                  </table>
+                </details>}
                 {omitidas.valor.length > 0 && (
                   <details className="calculo" style={{ marginTop: 'var(--sp-2)' }}>
                     <summary style={{ color: 'var(--tinta)', fontWeight: 500 }}>
@@ -150,7 +158,7 @@ export default async function PaginaCalidad({ params }: { params: Promise<{ alca
                 {planas.length === 0 && omitidas.valor.length === 0 && (
                   <p className="etiqueta" style={{ marginTop: 'var(--sp-2)' }}>Sin problemas detectados: todas las filas entraron.</p>
                 )}
-                <ComoSeCalculo med={anomalias} />
+                <ComoSeCalculo med={anomalias} texto={`Las observaciones se agrupan por regla y fila del archivo ${f.nombre}, con corte al ${fechaEs(f.fecha_corte)}.`} />
                 </CardContent>
               </Card>
             );

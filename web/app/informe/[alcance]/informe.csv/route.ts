@@ -1,6 +1,6 @@
 import {
   edadPromedioIds, filtrosDe, rolesDe,
-  personasEnMasDeUnPrograma, personasPorCiudadIds, resumenTiposDe, sinIdentificar,
+  personasEnMasDeUnPrograma, resumenTiposDe, sinIdentificar,
 } from '@/lib/datos';
 import { esAlcance, fechaCorteDe, fuentesDe } from '@/lib/informe';
 import { nombrePrograma, pluralTipo } from '@/lib/catalogo';
@@ -32,10 +32,10 @@ export async function GET(_req: Request, { params }: { params: Promise<{ alcance
   })));
 
   const f = await filtrosDe(alcance);
-  const [sinId, edad, porCiudad] = await Promise.all([
+  const [sinId, edad, presencia] = await Promise.all([
     sinIdentificar(f),
     edadPromedioIds(idsUnicos, corte),
-    personasPorCiudadIds(idsUnicos),
+    presenciaDe(alcance),
   ]);
 
   const nombres = fuentes.valor.map((x) => x.nombre).join('; ') || 'sin archivos';
@@ -103,16 +103,6 @@ export async function GET(_req: Request, { params }: { params: Promise<{ alcance
     }
   }
 
-  for (const c of porCiudad.valor) {
-    if (c.personas === 0) continue;
-    filas.push([
-      `personas_${c.ciudad}`, c.personas < 5 ? '<5' : c.personas, 'persona',
-      `Personas únicas en ${c.ciudad}`,
-      corte, nombres, advert,
-    ]);
-  }
-
-  const presencia = await presenciaDe(alcance);
   if (presencia) {
     filas.push([
       'presencia_municipios', presencia.municipios, 'municipio',

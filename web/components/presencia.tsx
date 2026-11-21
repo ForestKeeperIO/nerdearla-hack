@@ -22,9 +22,10 @@ export function PresenciaTerritorial({
       {estados.map((e) => (
         <div key={e.estadoClave} style={{ marginTop: 'var(--sp-4)' }}>
           <p style={{ fontWeight: 500 }}>{e.estado}</p>
-          <p className="etiqueta" style={{ marginTop: 'var(--sp-1)' }}>
-            {e.activos.map((a) => a.nombre).join(' · ')}
-          </p>
+          <table className="tabla-mapeo"><caption className="visually-hidden">Actividad en {e.estado}</caption>
+            <thead><tr><th>Municipio</th><th>Registros</th></tr></thead>
+            <tbody>{e.activos.map(a => <tr key={a.clave}><td>{a.nombre}</td><td>{a.registros.toLocaleString('es-MX')}</td></tr>)}</tbody>
+          </table>
           <div className="mosaico" style={{ marginTop: 'var(--sp-3)' }} aria-hidden="true">
             {e.mosaico.map((c) => (
               <span
