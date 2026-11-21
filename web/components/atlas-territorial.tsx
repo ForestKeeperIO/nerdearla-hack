@@ -4,6 +4,7 @@ import Link from 'next/link';
 import { ChevronRight, ListOrdered, MapPinned, MoveUpRight } from 'lucide-react';
 import type { Lugar } from '@/lib/tablero-impacto';
 import { consultaDe, type Seleccion } from '@/lib/seleccion-tablero';
+import { MapaAmpliable } from '@/components/mapa-ampliable';
 
 type Mapa = { vista: string; trazos: Record<string,string> };
 function geometria(id: string): Mapa {
@@ -32,14 +33,14 @@ export function AtlasTerritorial({ lugares, f, nacional }: { lugares: Lugar[]; f
             <path key={id} d={d} className={id === state ? 'presente' : undefined}/>)}</svg>}
           <p>{state ? <><Link scroll={false} href={`${href(f)}&mapa=mx`}>México</Link><ChevronRight size={13} aria-hidden/>{entidad}</> : entidad}</p>
         </div>
-        <svg className="atlas-geo" viewBox={mapa.vista} role="group" aria-label={`Mapa de presencia en ${entidad}`}>
+        <MapaAmpliable titulo={`Presencia territorial · ${entidad}`}><svg className="atlas-geo" viewBox={mapa.vista} role="group" aria-label={`Mapa de presencia en ${entidad}`}>
           {Object.entries(mapa.trazos).map(([id,d]) => {
             const dato = grupos.get(id);
             return dato ? <a key={id} href={href(state ? {...f,estado:[state],municipio:[id]} : {...f,estado:[id],municipio:f.municipio.filter(m => m.startsWith(id))})}
               aria-label={`Filtrar ${dato.nombre}: ${dato.n} registros`}><title>{`${dato.nombre}: ${dato.n} registros`}</title><path className="presente" d={d}/></a> :
               <path key={id} aria-hidden d={d}/>;
           })}
-        </svg>
+        </svg></MapaAmpliable>
       </div>
       <footer><span><i/>Con actividad</span><small>INEGI · Marco Geoestadístico 2025</small></footer>
     </section>

@@ -164,3 +164,21 @@ body:has(.atlas) footer .etiqueta { color:var(--tinta-suave); font:12px var(--be
   .atlas-calidad { flex-wrap:wrap; gap:4px; padding-block:4px }
   .atlas-calidad p { flex:1; font-size:12px }
 }
+
+/* Mapa ampliable: botón en la tarjeta y diálogo grande con zoom y arrastre. */
+.mapa-ampliar { position:absolute; top:10px; right:10px; display:inline-flex; align-items:center; gap:6px; min-height:32px; padding:4px 10px; border:1px solid var(--linea-fuerte); border-radius:999px; background:var(--superficie); color:var(--tinta); font-size:12px; font-weight:650; cursor:pointer }
+.mapa-ampliar:hover,.mapa-ampliar:focus-visible { border-color:var(--vino); color:var(--vino) }
+.mapa-dialogo { width:90vw; height:85vh; max-width:none; max-height:none; margin:auto; padding:16px; border:0; border-radius:var(--bento-radio,16px); background:var(--superficie); color:var(--tinta); display:flex; flex-direction:column; gap:12px }
+.mapa-dialogo:not([open]) { display:none }
+.mapa-dialogo::backdrop { background:rgb(40 20 24 / .55) }
+.mapa-dialogo > header { display:flex; flex-wrap:wrap; align-items:center; justify-content:space-between; gap:10px }
+.mapa-dialogo h2 { font-size:1.15rem; margin:0 }
+.mapa-dialogo [role=group] { display:flex; flex-wrap:wrap; gap:6px }
+.mapa-dialogo [role=group] button { display:inline-flex; align-items:center; gap:6px; min-width:36px; min-height:36px; justify-content:center; padding:4px 10px; border:1px solid var(--linea-fuerte); border-radius:10px; background:var(--superficie); color:var(--tinta); font-size:13px; font-weight:600; cursor:pointer }
+.mapa-dialogo [role=group] button:disabled { opacity:.45; cursor:default }
+.mapa-dialogo [role=group] button:not(:disabled):hover { border-color:var(--vino); color:var(--vino) }
+.mapa-dialogo .mapa-escena { flex:1; min-height:0; padding:12px; overflow:hidden; cursor:grab; touch-action:none; user-select:none }
+.mapa-dialogo .mapa-escena:active { cursor:grabbing }
+.mapa-dialogo .mapa-capa { width:100%; height:100%; transform-origin:center; will-change:transform }
+.mapa-dialogo .mapa-capa .atlas-geo { width:100%; height:100%; min-height:0 }
+.mapa-dialogo > p { margin:0; font-size:12.5px; color:var(--tinta-suave) }
