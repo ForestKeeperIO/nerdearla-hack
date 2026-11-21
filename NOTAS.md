@@ -144,6 +144,9 @@ sembrados. La dependencia `splink` queda instalada para el piloto.
 - `edad_inconsistente` está implementada pero no se ejercita en los datos.
 - `posible_correccion` (fila casi igual con un campo distinto) está en las
   reglas pero sin detección aún.
+
+---
+
 # NOTAS — Metabase (rama metabase, Tarea 4)
 
 ## Estado
