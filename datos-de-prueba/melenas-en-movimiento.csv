@@ -1,0 +1,84 @@
+Melenas en Movimiento — registro de donaciones y entregas (ficticio),,,,,,
+,,,,,,
+ID,Nombre,Edad,Ciudad,Fecha,Tipo,Largo (cm)
+MEL19610101,María Elena López,65,Zapotlán el Grande,2026-05-12,Donación de trenza,25
+AET19680612,Ana Elena Torres,58,Sayula,2026-05-25,Donación de trenza,26
+JEV19751123,Juana Elena Vega,51,Gómez Farías,2026-06-07,Donación de trenza,27
+REM19820406,Rosa Elena Mora,44,Tapalpa,2026-06-20,Donación de trenza,28
+LEA19890917,Leticia Elena Anaya,37,Jocotepec,2026-07-03,Donación de trenza,29
+CEG19960228,Carmen Elena García,30,San Martín Hidalgo,2026-07-16,Donación de trenza,30
+SEH19630711,Silvia Elena Hernández,63,Zapotlán el Grande,2026-07-29,Donación de trenza,31
+PEM19701222,Paola Elena Martínez,55,Sayula,2026-08-11,Donación de trenza,32
+TER19770505,Teresa Elena Ramírez,49,Gómez Farías,2026-08-24,Donación de trenza,33
+EEF19841016,Elena Elena Flores,42,Tapalpa,2026-09-06,Donación de trenza,34
+BER19910327,Beatriz Elena Rivera,35,Jocotepec,2026-09-19,Donación de trenza,35
+DEG19980810,Dolores Elena Gómez,28,San Martín Hidalgo,2026-02-04,Donación de trenza,36
+GED19650121,Gloria Elena Díaz,61,Zapotlán el Grande,2026-02-17,Donación de trenza,37
+HEC19720604,Hilda Elena Cruz,54,Sayula,2026-03-02,Donación de trenza,38
+IER19791115,Irene Elena Reyes,47,Gómez Farías,2026-03-15,Donación de trenza,39
+TMR19671115,Teresa Mar Ramírez,59,Gómez Farías,2026-03-28,Donación de trenza,25
+EMF19740426,Elena Mar Flores,52,Ciudad Guzmán,2026-04-10,Donación de trenza,26
+BMR19810909,Beatriz Mar Rivera,45,Jocotepec,2026-04-23,Donación de trenza,27
+DMG19880220,Dolores Mar Gómez,38,San Martín Hidalgo,2026-05-06,Donación de trenza,28
+GMD19950703,Gloria Mar Díaz,31,Zapotlán el Grande,2026-05-19,Donación de trenza,29
+HMC19621214,Hilda Mar Cruz,63,Cd. Guzmán,2026-06-01,Donación de trenza,30
+IMR19690525,Irene Mar Reyes,57,Gómez Farías,2026-06-14,Donación de trenza,31
+JMM19761008,Josefina Mar Morales,50,Tapalpa,2026-06-27,Donación de trenza,32
+KMO19830319,Karla Mar Ortiz,43,Jocotepec,2026-07-10,Donación de trenza,33
+LMG19900802,Laura Mar Gutiérrez,36,San Martín Hidalgo,2026-07-23,Donación de trenza,34
+NMC19970113,Nadia Mar Chávez,29,Zapotlán el Grande,2026-08-05,Donación de trenza,35
+OMR19640624,Ofelia Mar Ruiz,62,Sayula,2026-08-18,Donación de trenza,36
+PMM19711107,Patricia Mar Mendoza,55,Gómez Farías,2026-08-31,Donación de trenza,37
+QMA19780418,Queta Mar Aguilar,48,Tapalpa,2026-09-13,Donación de trenza,38
+RMC19850901,Ramona Mar Castillo,41,Jocotepec,2026-09-26,Donación de trenza,39
+SMR19920212,Sofía Mar Romero,34,San Martín Hidalgo,2026-02-11,Donación de trenza,25
+ÚMÁ19990723,Úrsula Mar Álvarez,27,Zapotlán el Grande,2026-02-24,Donación de trenza,26
+VMV19661206,Valeria Mar Vargas,60,Sayula,2026-03-09,Donación de trenza,27
+WMS19730517,Wendy Mar Soto,53,Gómez Farías,2026-03-22,Donación de trenza,28
+XMR19801028,Ximena Mar Rojas,46,Tapalpa,2026-04-04,Donación de trenza,29
+YMN19870311,Yolanda Mar Navarro,39,Jocotepec,2026-04-17,Donación de trenza,30
+ZMP19940822,Zoe Mar Paredes,32,San Martín Hidalgo,2026-04-30,Donación de trenza,31
+MAL19610105,María Alicia López,65,Zapotlán el Grande,2026-05-13,Donación de trenza,32
+AAT19680616,Ana Alicia Torres,58,Sayula,2026-05-26,Donación de trenza,33
+JAV19751127,Juana Alicia Vega,51,Gómez Farías,2026-06-08,Donación de trenza,34
+RAM19820410,Rosa Alicia Mora,44,Tapalpa,2026-06-21,Donación de trenza,35
+LAA19890921,Leticia Alicia Anaya,37,Jocotepec,2026-07-04,Donación de trenza,36
+CAG19960204,Carmen Alicia García,30,San Martín Hidalgo,2026-07-17,Donación de trenza,37
+SAH19630715,Silvia Alicia Hernández,63,Zapotlán el Grande,2026-07-30,Donación de trenza,38
+PAM19701226,Paola Alicia Martínez,55,Sayula,2026-08-12,Donación de trenza,39
+TAR19770509,Teresa Alicia Ramírez,49,Gómez Farías,2026-08-25,Donación de trenza,25
+EAF19841020,Elena Alicia Flores,42,Tapalpa,2026-09-07,Donación de trenza,26
+BAR19910303,Beatriz Alicia Rivera,35,Jocotepec,2026-09-20,Donación de trenza,27
+DAG19980814,Dolores Alicia Gómez,28,San Martín Hidalgo,2026-02-05,Donación de trenza,28
+GAD19650125,Gloria Alicia Díaz,61,Zapotlán el Grande,2026-02-18,Donación de trenza,29
+HAC19720608,Hilda Alicia Cruz,54,Sayula,2026-03-03,Donación de trenza,30
+IAR19791119,Irene Alicia Reyes,47,Gómez Farías,2026-03-16,Donación de trenza,31
+,Josefina Alicia Morales,40,Tapalpa,2026-03-29,Donación de trenza,32
+,Karla Alicia Ortiz,33,Jocotepec,2026-04-11,Donación de trenza,33
+,Laura Alicia Gutiérrez,26,San Martín Hidalgo,2026-04-24,Donación de trenza,34
+,Nadia Alicia Chávez,59,Zapotlán el Grande,2026-05-07,Donación de trenza,35
+,Ofelia Alicia Ruiz,51,Sayula,2026-05-20,Donación de trenza,36
+,Patricia Alicia Mendoza,45,Gómez Farías,2026-06-02,Donación de trenza,37
+,Queta Alicia Aguilar,38,Tapalpa,2026-06-15,Donación de trenza,38
+,Ramona Alicia Castillo,31,Jocotepec,2026-06-28,Donación de trenza,39
+MEL19840312,Mónica Esther Luna,42,San Martín Hidalgo,2026-05-02,Entrega de peluca,
+AMS19710725,Alberta María Sánchez,55,Zapotlán el Grande,2026-12-05,Entrega de peluca,
+CAV19880504,Carmen Alisia Vega,38,Sayula,2026-05-28,Entrega de peluca,
+RIM19650919,Rosa Izela Mora,61,Gómez Farías,2026-06-10,Entrega de peluca,
+LAR19790130,Leticia Anaia Ruiz,47,Tapalpa,2026-06-23,Entrega de peluca,
+YAN19970905,Yolanda Alicia Navarro,29,Jocotepec,2026-07-06,Entrega de peluca,
+ZAP19640216,Zoe Alicia Paredes,62,San Martín Hidalgo,2026-07-19,Entrega de peluca,
+MGL19710727,María Guadalupe López,55,Zapotlán el Grande,2026-08-01,Entrega de peluca,
+AGT19781210,Ana Guadalupe Torres,47,Sayula,2026-08-14,Entrega de peluca,
+JGV19850521,Juana Guadalupe Vega,41,Gómez Farías,2026-08-27,Entrega de peluca,
+RGM19921004,Rosa Guadalupe Mora,34,Tapalpa,2027-01-15,Entrega de peluca,
+LGA19990315,Leticia Guadalupe Anaya,27,Jocotepec,2026-09-22,Entrega de peluca,
+CGG19660826,Carmen Guadalupe García,60,San Martín Hidalgo,2026-02-07,Entrega de peluca,
+SGH19730109,Silvia Guadalupe Hernández,53,Zapotlán el Grande,2026-02-20,Entrega de peluca,
+PGM19800620,Paola Guadalupe Martínez,46,Sayula,2026-03-05,Entrega de peluca,
+TGR19871103,Teresa Guadalupe Ramírez,39,Gómez Farías,2026-03-18,Entrega de peluca,
+,Elena Guadalupe Flores,32,Tapalpa,2026-03-31,Entrega de peluca,
+,Beatriz Guadalupe Rivera,65,Jocotepec,2026-04-13,Entrega de peluca,
+,Dolores Guadalupe Gómez,58,San Martín Hidalgo,2026-04-26,Entrega de peluca,
+,Gloria Guadalupe Díaz,51,Zapotlán el Grande,2026-05-09,Entrega de peluca,
+TOTAL,,,,,,80
