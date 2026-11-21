@@ -20,6 +20,18 @@ export async function decidirPar(alcance: string, parId: string, decision: 'mism
   revalidatePath(base(alcance), 'layout');
 }
 
+/** Decisión en masa sobre pares seleccionados: un XADD por par en eira:decisiones
+    (mismo camino que la decisión individual — el procesador los aplica igual). */
+export async function decidirPares(alcance: string, parIds: string[], decision: 'misma' | 'distinta') {
+  if (!esAlcance(alcance)) return;
+  if (decision !== 'misma' && decision !== 'distinta') return;
+  for (const parId of parIds.filter((id) => typeof id === 'string' && id.length > 0)) {
+    await emitirDecision({ tipo: 'persona', par: parId, decision, por: POR });
+  }
+  revalidatePath(base(alcance), 'layout');
+  revalidatePath('/tablero');
+}
+
 /** "Contar de todos modos" una fila omitida: XADD eira:decisiones (tipo restituir_fila). */
 export async function restituirFila(alcance: string, fuenteId: string, fila: number) {
   if (!esAlcance(alcance)) return;
