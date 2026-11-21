@@ -16,6 +16,18 @@
 
 **Manifiesto de la demo:** Tamizaje, su v2, Nutrición y **`py/datos_demo/archivos/melenas-en-movimiento.xlsx` del pin de Selma**. Su Melenas produce 40 filas de donación (60 objetos) y 20 entregas. No usar el homónimo de `reportes/`: el encabezado `Tipo` no se reconoce en ese pin y las 80 filas aparecen como donaciones.
 
+## Tablero y reportes actuales (fase 3)
+
+`/tablero`, `/tablero/version` y los reportes con filtros usan `EIRA_TABLERO_DB` en modo Selma, incluso si también está definido `IMPACTO_DB`. Si falta la ruta del Atlas, es un error de configuración: no se abre la base del otro motor.
+
+| Consulta del frontend | Datos que publica el proyector en el Atlas |
+|---|---|
+| Cargas recientes y servicios por unidad | `fuentes`: una fila por archivo aceptado (id, programa, nombre, corte, carga UTC, estrellas y puntaje). `v_registros_ef.fuente_id` une cada actividad con su carga; `tipo_registro` la une al plural de `tipos_de_registro`. |
+| Revisión de pares y refresco sin recargar | `pares_persona` solo expone estados; `v_pares_pendientes` cuenta pendientes. `bitacora.id` guarda únicamente el último ID de `eira:bitacora`, no su mensaje ni su autor. Los tres se publican en la misma transacción del Atlas. |
+| CSV de aliados y territorial | Usan la selección del tablero. Para la tasa de 25 a 64 años, `edad_objetivo` se calcula al día de la atención en la base privada; el informe no necesita una tabla de nacimientos. |
+
+Ensayo de fase 3, base aislada `6398/8`: build limpio de Next, selector 4/4, suite de Selma 7/7. Chromium mantuvo la pestaña abierta durante las cargas: de 0 a 150 personas, cuatro archivos recientes y seis municipios activos en el SVG. Con Melenas + Jalisco quedaron 20 personas tanto en Tablero como en el CSV; agosto mostró comparación con julio. `scripts/cotejar-selma.py` salió `0` con **150 en procesador, Tablero, Metabase, CSV global y CSV de aliados**. También se comprobó la actualización de una copia del Atlas anterior sin rehacer el estado privado. No se ejecutó el corte.
+
 ## Evidencia en staging
 
 Valkey aislado en `6396/8`, nuevo SQLite y llave; Next `3196`, Metabase `3296`. Solo datos ficticios.

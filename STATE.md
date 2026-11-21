@@ -1,5 +1,7 @@
 # STATE: Impacto EIRA (Nerdearla Vibeathon)
 
+15:29 CDMX, fase 3: `integra-selma` incorporó `cb1094e`, los reportes de `f79e096` y el corpus de `611b009`. Staging aislado `6398/8`: procesador, Tablero, Metabase y ambos CSV = 150; seis municipios. Chromium observó el refresco de la misma pestaña, cuatro cargas recientes, 20 personas con Melenas/Jalisco y comparación mensual; cero errores de página. Build limpio, selector 4/4 y Selma 7/7. El GO cubre solo este staging, no es un corte.
+
 15:19 CDMX, fase 3: merge de `main@cb1094e` en curso. Se conservan revisión, cargas y comparación; pruebas del pin de Selma: 7/7. Falta validar el Atlas ampliado en el navegador y cotejar los cuatro lectores en una base 8 nueva. No usar el GO de la fase 2 para este corte.
 
 15:04 CDMX, integración fijada en `13a806d`: **GO de staging, no de producción**. Selector de roles `EIRA_MOTOR`, Atlas y proyector por eventos probados en `6396/8`. HTML, tarjeta Metabase y CSV = 150; mapa = 6 municipios; bytes terminales = 0. Melenas del export de Selma. Vigente: `docs/integracion-selma.md`; los bloqueos de las notas anteriores corresponden al ensayo previo.
