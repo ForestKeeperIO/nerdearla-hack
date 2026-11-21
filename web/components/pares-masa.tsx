@@ -5,10 +5,13 @@
 // que la decisión individual (decidirPares → XADD tipo persona).
 import { useEffect, useState, useTransition } from 'react';
 import { useRouter } from 'next/navigation';
+import { Copy, CalendarDays, UsersRound } from 'lucide-react';
 import type { Par } from '@/lib/comun';
 import { decidirPares } from '@/lib/acciones';
 import { opcionesPar, type IntencionPar } from '@/lib/decision-par';
 import './pares.css';
+
+const iconosPar = { mismo_evento:Copy, diferentes_eventos:CalendarDays, distinta:UsersRound };
 
 function leerEtiqueta(s: string) {
   const [iniciales,...partes] = s.split(/\s*·\s*/);
@@ -85,8 +88,11 @@ export function ParesMasa({
       {pendientes.map((p, i) => (
         <article className="par-caso" key={p.id}>
           <label className="par-elegir"><input type="checkbox" checked={elegidos.has(p.id)} onChange={e => alterna(p.id, e.target.checked)} />Elegir par {i + 1}</label>
-          <div className="par-ids">{[p.a,p.b].map((l,j)=><div key={j}><span>Registro {j?'B':'A'}</span><code>{l.fuente}:{l.fila}</code></div>)}</div>
-          <div className="par-acciones" role="group" aria-label={`Decidir par ${i+1}`}>{(Object.keys(opcionesPar) as IntencionPar[]).map(k => <button key={k} className="par-boton" disabled={cargando || sinConfirmar} onClick={() => decidir(k,[p.id])}>{opcionesPar[k]}</button>)}</div>
+          <div className="par-ids">{[p.a,p.b].map((l,j)=><div key={j}><span>Registro {j?'B':'A'}</span><strong>{l.etiqueta || 'Sin etiqueta'}</strong><code>{l.fuente}:{l.fila}</code></div>)}</div>
+          <div className="par-acciones" role="group" aria-label={`Decidir par ${i+1}`}>{(Object.keys(opcionesPar) as IntencionPar[]).map(k => {
+            const Icono=iconosPar[k];
+            return <button key={k} className="par-boton" disabled={cargando || sinConfirmar} onClick={() => decidir(k,[p.id])}><Icono aria-hidden="true"/>{opcionesPar[k]}</button>;
+          })}</div>
           <details open={i === 0}><summary>Comparar registros</summary>
             <p>{p.motivo}</p>
             <table className="par-tabla"><thead><tr><th scope="col">Campo</th><th scope="col">Registro A</th><th scope="col">Registro B</th></tr></thead><tbody>

@@ -25,11 +25,13 @@ test('la carga llega al mapa abierto y a los dos documentos de la selección', a
 
   const carga=await context.newPage();
   await carga.goto('/subir');
-  await carga.getByRole('link',{name:/Tamizaje Rosa/}).click();
+  await expect(carga.getByRole('button',{name:'Elegir archivo',exact:true})).toBeEnabled();
   const nombre='atencion-demo-tonala.csv';
   const filas=['Sol','Luna','Mar','Alba','Luz','Cielo'].map((n,i)=>
     `TST19800${i+1}01,${n} Ficticia Demo,Papanicolaou,46,Tonalá,Sí,2026-09-15`);
-  await carga.locator('input[type=file]').setInputFiles({name:nombre,mimeType:'text/csv',
+  const esperaSelector=carga.waitForEvent('filechooser');
+  await carga.getByRole('button',{name:'Elegir archivo',exact:true}).click();
+  await (await esperaSelector).setFiles({name:nombre,mimeType:'text/csv',
     buffer:Buffer.from(['ID,Nombre,Estudio,Edad,Ciudad,Asistencia,Fecha',...filas].join('\n'))});
   await carga.getByRole('button',{name:'Subir 1 archivo'}).click();
   const recibo=carga.locator('.fila').filter({hasText:nombre}).filter({hasText:'6 filas nuevas'});
