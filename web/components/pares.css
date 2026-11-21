@@ -1,4 +1,7 @@
+/* Hallmark: EIRA / cotejo de registros. Theme: custom. Signature: dos evidencias, tres decisiones. */
 .par-caso { padding-block: 1rem; border-block-start: var(--border); }
+.par-caso :focus-visible { outline: 3px solid var(--vino-oscuro); outline-offset: 3px; }
+.par-boton:active:not(:disabled) { transform: translateY(1px); }
 .par-elegir, .par-acciones { display: flex; align-items: center; flex-wrap: wrap; gap: .65rem; }
 .par-elegir { color: var(--tinta-suave); font-size: .875rem; }
 .par-elegir input { accent-color: var(--vino); }

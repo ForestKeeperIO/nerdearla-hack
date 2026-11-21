@@ -8,7 +8,11 @@
   --bento-interno: 16px;
   --bento-gap: 18px;
 }
-body:has(.archivo-eira) { background: var(--bento-lienzo); }
+body:has(.archivo-eira) { background: var(--bento-lienzo); --tinta-tenue: var(--tinta-suave); }
+.archivo-eira :focus-visible,.eira-cabecera :focus-visible { outline: 3px solid var(--vino-oscuro); outline-offset: 3px; }
+.archivo-eira .tapa:not(.tapa-mapa) :focus-visible,.archivo-eira .respuesta :focus-visible,
+.archivo-eira section[aria-label="Subir archivos"] > div:first-child :focus-visible { outline-color: var(--papel); }
+.archivo-eira .btn:active:not(:disabled) { transform: translateY(1px); }
 .eira-cabecera,.archivo-eira { font-family: var(--bento-fuente); }
 .eira-cabecera { max-width: 88rem; }
 .eira-mastil { background: var(--superficie); border: 0; border-radius: var(--bento-radio); padding: .55rem 1.2rem; }
@@ -17,7 +21,7 @@ body:has(.archivo-eira) { background: var(--bento-lienzo); }
 .eira-nav { background: var(--bento-lienzo); }
 main.contenido:has(.archivo-eira) { max-width: 88rem; }
 .archivo-eira { --font-display: var(--bento-fuente); --font-mono: var(--bento-fuente); --shadow-card: none; }
-.archivo-eira :is(h1,h2,h3),.archivo-eira .apertura h1 { font-family: var(--bento-fuente); font-weight: 590; letter-spacing: -.035em; }
+.archivo-eira :is(h1,h2,h3),.archivo-eira .apertura h1 { font-family: var(--bento-fuente); font-weight: 590; letter-spacing: -.035em; text-wrap: balance; }
 .archivo-eira .apertura { padding-block: 2.5rem 1.65rem; }
 .archivo-eira .apertura h1 { font-size: clamp(2.5rem,4.3vw,3.8rem); color: var(--tinta); }
 .archivo-eira :is(.btn,select,.pasos__item,.par-boton) { border-radius: var(--r-pill); }
@@ -93,18 +97,26 @@ main.contenido:has(.archivo-eira) { max-width: 88rem; }
 .norma-bento { display: grid; grid-template-columns: minmax(8rem,1fr) minmax(0,4fr); align-items: center; gap: 1.5rem; }
 .hoja .sin-dato { background: var(--bento-rayado); border-radius: var(--bento-interno); }
 .hoja .ficha-metodo h2 { display: flex; gap: .7rem; align-items: center; }
-.hoja .lector-filtros select { border-radius: var(--r-pill); background: var(--superficie); }
+.hoja .lector-filtros select { border-color: var(--tinta-suave); border-radius: var(--r-pill); background: var(--superficie); }
+.expediente-carga section[aria-label="Subir archivos"] button.underline { min-height: 44px !important; }
 @media (max-width: 900px) { .hoja .resumen-bento > div { grid-column: span 6; } }
 @media (max-width: 767px) {
   .eira-mastil { padding-inline: .5rem; }
-  .catalogo-reportes .tapa,.registro .asiento,.registro .asiento:first-child { grid-column: 1/-1; padding: 22px; }
+  .catalogo-reportes .tapa,.registro .asiento,.registro .asiento:first-child { grid-column: 1/-1; padding: 24px; }
   .hoja .columnas,.calidad-bento,.norma-bento { grid-template-columns: minmax(0,1fr); }
   .archivo-eira.hoja .resumen-bento { gap: .65rem; }
-  .hoja .resumen-bento > div { padding: 14px; }
+  .hoja .resumen-bento > div { padding: 16px; grid-column: 1/-1; }
   .dato-bento > span,.respuesta > span { flex-wrap: wrap; gap: .35rem; }
   .par-caso { padding: .6rem; }
   .expediente-carga > div > section[aria-label="Subir archivos"],.expediente-carga > div > section[aria-label="Subir archivos"] + div { grid-column: 1/-1; }
-  .expediente-carga .tarjeta { padding: 15px; }
+  .expediente-carga .tarjeta { padding: 16px; }
+  .expediente-carga footer { flex-wrap: wrap; }
+  .expediente-carga footer > * { max-width: 100%; }
+}
+@media (max-width: 360px) {
+  .eira-mastil { flex-wrap: wrap; }
+  .eira-mastil .eira-nav { flex-basis: 100%; justify-content: space-between; }
+  .eira-nav a { white-space: nowrap; }
 }
 @media print {
   body:has(.archivo-eira) { background: var(--superficie); }
