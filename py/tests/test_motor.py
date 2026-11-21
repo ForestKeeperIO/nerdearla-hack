@@ -35,15 +35,16 @@ def test_roles_por_fila(motor):
     roles = dict(motor.db.execute(
         "select rol_persona, count(*) from registros group by rol_persona"))
     assert roles == {"donante": 60, "beneficiaria": 20}
-    # Conjuntos en Valkey: todas las del programa, impactadas y donantes.
-    assert motor.v.scard("eira:per:programa:melenas-en-movimiento") == 80
-    assert motor.v.scard("eira:per:impactadas:melenas-en-movimiento") == 20
-    assert motor.v.scard("eira:per:donantes:melenas-en-movimiento") == 60
+    # Conjuntos en Valkey: todas las del programa, impactadas y donantes
+    # (las 13 filas sin ID no entran: quedan sin persona identificada).
+    assert motor.v.scard("eira:per:programa:melenas-en-movimiento") == 67
+    assert motor.v.scard("eira:per:impactadas:melenas-en-movimiento") == 16
+    assert motor.v.scard("eira:per:donantes:melenas-en-movimiento") == 51
     # Las donantes no cuentan como personas impactadas en las vistas.
     fila = motor.db.execute(
         "select personas_impactadas, donantes from v_personas_por_programa"
         " where iniciativa='melenas-en-movimiento'").fetchone()
-    assert fila == (20, 60)
+    assert fila == (16, 51)
 
 
 def test_global_suma_sin_deduplicar(motor):
@@ -249,7 +250,10 @@ def test_contrato(motor):
     r = subprocess.run(["npm", "run", "verificar"], cwd=REPO, capture_output=True,
                        text=True, env={**os.environ,
                                        "VALKEY_URL": "redis://127.0.0.1:6391/15",
-                                       "VERIFICAR_ATENCION": "130",
+                                       # 117 con ID: las filas sin ID de
+                                       # EIRA no cuentan como atenciones,
+                                       # van a eira:sinid (hallazgo 9).
+                                       "VERIFICAR_ATENCION": "117",
                                        "VERIFICAR_PROGRAMA_A": "tamizaje-rosa",
                                        "VERIFICAR_PROGRAMA_B": "melenas-en-movimiento",
                                        # 15 cruzan de verdad + 5 pares pendientes

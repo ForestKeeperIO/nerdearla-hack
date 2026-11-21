@@ -178,11 +178,9 @@ def guardar(db, v, fuente: dict, df: pd.DataFrame, anomalias: list[dict],
             "id": par_id(p["persona_a"], p["persona_b"]), "estado": "pendiente",
             "motivo": p["motivo"], "a": p["a"], "b": p["b"]}))
 
-    # Huellas AL FINAL: un archivo a medias no queda marcado.
+    # Huella de archivo AL FINAL: un archivo a medias no queda marcado.
+    # (Las huellas de fila ya se reclamaron con HSETNX en el worker.)
     pipe.hset(H_ARCHIVO, fuente["huella_bytes"], fid)
-    for r in df.itertuples(index=False):
-        if r.contado:
-            pipe.hset(H_FILA, r.huella_fila, f"{fid}:{int(r.fila)}")
     pipe.xadd("eira:bitacora", {"en": en, "por": "motor", "tipo": "carga",
                               "detalle": f"Se cargó '{fuente['nombre']}' "
                                          f"({fuente['filas_nuevas']} filas nuevas)."})

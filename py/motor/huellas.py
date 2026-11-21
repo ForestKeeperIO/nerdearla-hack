@@ -78,8 +78,12 @@ def _fecha_linda(iso: str) -> str:
         return str(iso)[:10]
 
 
-def evaluar(v, huella_b: str, huellas_f: list[str]) -> dict:
-    """Nivel de duplicado del archivo. Lee (no escribe) las huellas globales."""
+def evaluar(v, huella_b: str, huellas_f: list[str],
+            excluir_fuente: str = "") -> dict:
+    """Nivel de duplicado del archivo. Lee (no escribe) las huellas globales.
+
+    excluir_fuente: en un reintento las huellas que reclamó esta misma
+    fuente antes de caer no cuentan como duplicado de otra."""
     unicas = list(dict.fromkeys(huellas_f))
     veredicto = {"nivel": "distinto", "fuente_original": "", "mensaje": "",
                  "coinciden": 0, "total": len(unicas)}
@@ -97,6 +101,9 @@ def evaluar(v, huella_b: str, huellas_f: list[str]) -> dict:
         return veredicto
 
     duenos = [x for x in v.hmget(H_FILA, unicas) if x]
+    if excluir_fuente:
+        duenos = [d for d in duenos
+                  if d.split(":", 1)[0] != excluir_fuente]
     veredicto["coinciden"] = len(duenos)
     por_fuente = Counter(d.split(":")[0] for d in duenos)
 

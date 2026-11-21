@@ -73,7 +73,7 @@ def _calidad(anomalias: list[dict], filas: int, omitidas: int, inasistencias: in
     estrellas = max(1, min(5, round(puntaje / 20)))
     motivos = []
     if sin_id:
-        motivos.append(f"{sin_id} registros sin ID de EIRA (persona por nombre)")
+        motivos.append(f"{sin_id} registros sin ID de EIRA (quedan sin identificar)")
     if omitidas:
         motivos.append(f"{omitidas} filas omitidas porque ya estaban registradas")
     n = len(anomalias)
@@ -84,6 +84,23 @@ def _calidad(anomalias: list[dict], filas: int, omitidas: int, inasistencias: in
     if not motivos:
         motivos.append("Datos completos y consistentes")
     return estrellas, puntaje, motivos
+
+
+def _reclamar_huellas(v, fid: str, primera: dict) -> dict:
+    """Reclama cada huella con HSETNX antes de contarla.
+
+    primera: {huella_fila: numero de la primera fila con esa huella}.
+    Devuelve {huella: "fid:fila"} solo de las que ya eran de OTRA fuente;
+    las que esta fuente ya habia reclamado (reintento tras caida) cuentan
+    como propias.
+    """
+    dueños = {}
+    for h, num in primera.items():
+        if not v.hsetnx(huellas.H_FILA, h, f"{fid}:{num}"):
+            actual = v.hget(huellas.H_FILA, h)
+            if actual and actual.split(":", 1)[0] != fid:
+                dueños[h] = actual
+    return dueños
 
 
 def _edad_inconsistente(fila) -> bool:
@@ -107,13 +124,21 @@ def procesar_trabajo(v, db: sqlite3.Connection, trabajo_id: str,
         if isinstance(contenido, str):
             contenido = contenido.encode("latin-1")
         if contenido is None:
-            raise RuntimeError("No encontré el archivo: expiró o no se subió.")
+            raise leer.ErrorVisible(
+                "No encontré el archivo: expiró o no se subió.")
 
         ini = catalogo.iniciativa(campos.get("programa", ""))
         if ini is None:
-            raise RuntimeError(
+            raise leer.ErrorVisible(
                 f"No reconozco el programa '{campos.get('programa', '')}': "
                 "no está en el catálogo de iniciativas.")
+        unidad_trabajo = campos.get("unidad", "") or ""
+        if (unidad_trabajo and unidad_trabajo != "segun_fila"
+                and unidad_trabajo not in ini["tipos_de_registro"]):
+            raise leer.ErrorVisible(
+                f"La unidad '{unidad_trabajo}' no es un tipo de registro "
+                f"válido para {ini['nombre']} "
+                f"({', '.join(ini['tipos_de_registro'])} o segun_fila).")
 
         df, anomalias = leer.leer_reporte(
             contenido, nombre, estado_clave=campos.get("estado_clave") or "14")
@@ -123,7 +148,6 @@ def procesar_trabajo(v, db: sqlite3.Connection, trabajo_id: str,
 
         # Tipo de registro y rol por fila: la columna Tipo decide cuando el
         # trabajo viene "segun_fila"; si no, manda la unidad del trabajo.
-        unidad_trabajo = campos.get("unidad", "") or ""
         tipos, roles = [], []
         for r in df.itertuples(index=False):
             tipo, seguro = catalogo.resolver_tipo(ini, r.tipo_texto or "",
@@ -141,7 +165,9 @@ def procesar_trabajo(v, db: sqlite3.Connection, trabajo_id: str,
         df["huella_fila"] = [huellas.huella_fila(r, clave)
                              for r in df.to_dict("records")]
         hb = huellas.huella_bytes(contenido)
-        veredicto = huellas.evaluar(v, hb, list(df["huella_fila"]))
+        fid = escribir.fuente_id_de(hb)
+        veredicto = huellas.evaluar(v, hb, list(df["huella_fila"]),
+                                    excluir_fuente=fid)
         veredicto["huella_bytes"] = hb
 
         if veredicto["nivel"] in ("identico", "mismo_contenido"):
@@ -150,10 +176,12 @@ def procesar_trabajo(v, db: sqlite3.Connection, trabajo_id: str,
             return v.hgetall(f"eira:trabajo:{trabajo_id}")
 
         # --- deduplicacion por fila: global (Valkey) y dentro del archivo -----
-        fid = escribir.fuente_id_de(hb)
-        unicas = list(dict.fromkeys(df["huella_fila"]))
-        dueños = ({h: d for h, d in zip(unicas, v.hmget(huellas.H_FILA, unicas)) if d}
-                  if unicas else {})
+        # Cada huella se reclama con HSETNX antes de contarla: dos archivos
+        # procesados a la vez no cuentan dos veces las filas compartidas.
+        primera: dict[str, int] = {}
+        for r in df.itertuples(index=False):
+            primera.setdefault(r.huella_fila, int(r.fila))
+        dueños = _reclamar_huellas(v, fid, primera)
         local: dict[str, int] = {}
         contados, omitidas_fuente, omitidas_fila = [], [], []
         for r in df.itertuples(index=False):
@@ -229,7 +257,9 @@ def procesar_trabajo(v, db: sqlite3.Connection, trabajo_id: str,
         filas_nuevas = int(df["contado"].sum())
         filas_omitidas = filas - filas_nuevas
         filas_repetidas = sum(1 for a in anomalias if a["regla"] == "fila_repetida")
-        inasistencias = int((df["asistio"] == False).sum())  # noqa: E712
+        # Solo filas contadas: una omitida con inasistencia ya esta en otra fuente.
+        inasistencias = int(((df["asistio"] == False)  # noqa: E712
+                             & (df["contado"] == 1)).sum())
         sin_id = int(((df["persona_id"].isna()) & (df["contado"] == 1)).sum())
         estrellas, puntaje, motivos = _calidad(anomalias, filas, filas_omitidas,
                                                inasistencias, sin_id)
@@ -278,9 +308,24 @@ def procesar_trabajo(v, db: sqlite3.Connection, trabajo_id: str,
             "terminado_en": escribir.ahora()})
         v.publish("eira:eventos", json.dumps({"tipo": "trabajo", "id": trabajo_id}))
         return v.hgetall(f"eira:trabajo:{trabajo_id}")
-    except Exception as e:  # noqa: BLE001 - el estado del trabajo lo refleja
+    except leer.ErrorVisible as e:
+        # Error del archivo o del encargo: se le muestra tal cual y no se
+        # reintenta (volver a leerlo daria lo mismo).
         v.hset(f"eira:trabajo:{trabajo_id}", mapping={
-            "estado": "error", "mensaje": f"No pude procesarlo: {e}",
+            "estado": "error", "mensaje": str(e),
+            "terminado_en": escribir.ahora()})
+        v.publish("eira:eventos", json.dumps({"tipo": "trabajo", "id": trabajo_id}))
+        return v.hgetall(f"eira:trabajo:{trabajo_id}")
+    except Exception:  # noqa: BLE001 - el estado del trabajo lo refleja
+        # El detalle tecnico va a la bitacora del servidor; la persona ve un
+        # mensaje generico (la excepcion puede traer contenido de celdas).
+        import traceback
+        print(f"[worker] {trabajo_id} no se pudo procesar:", file=sys.stderr)
+        traceback.print_exc()
+        v.hset(f"eira:trabajo:{trabajo_id}", mapping={
+            "estado": "error",
+            "mensaje": "No pude procesarlo: algo falló de mi parte. "
+                       "Avísanos para revisarlo.",
             "terminado_en": escribir.ahora()})
         v.publish("eira:eventos", json.dumps({"tipo": "trabajo", "id": trabajo_id}))
         raise

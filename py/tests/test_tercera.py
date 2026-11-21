@@ -279,3 +279,163 @@ def test_decision_misma_las_deja_unidas(motor):
     antes = motor.v.scard("eira:per:todas")
     motor.decidir("persona", par=par[0], decision="misma")
     assert motor.v.scard("eira:per:todas") == antes
+
+
+# --- Hallazgo 3: reclamo atomico de huellas (HSETNX) ---------------------------
+
+def test_reclamo_hsetnx_es_atomico(motor):
+    """Dos fuentes que comparten filas: quien reclama primero la huella la
+    cuenta; la segunda la marca como ya cargada."""
+    primera = {"h-uno": 2, "h-dos": 3}
+    assert worker._reclamar_huellas(motor.v, "f-aaa", primera) == {}
+    # Otra fuente reclama huellas: una compartida, una nueva.
+    dueños = worker._reclamar_huellas(
+        motor.v, "f-bbb", {"h-uno": 9, "h-tres": 4})
+    assert dueños == {"h-uno": "f-aaa:2"}
+    # La misma fuente re-reclama lo suyo (reintento tras caida): no cuenta
+    # como duplicado de otra.
+    assert worker._reclamar_huellas(motor.v, "f-aaa", {"h-dos": 7}) == {}
+    assert motor.v.hget("eira:huellas:fila", "h-dos") == "f-aaa:3"
+
+
+def test_reintento_tras_reclamo_no_se_auto_omite(motor, monkeypatch):
+    """Caida despues del reclamo y antes del commit: al reintentar, las
+    huellas que ya eran de esta fuente no la hacen verse como duplicada."""
+    from py.motor import escribir
+    monkeypatch.setattr(escribir, "guardar",
+                        lambda *a, **kw: (_ for _ in ()).throw(
+                            RuntimeError("caida tras reclamo")))
+    tid = _encolar(motor)
+    with pytest.raises(RuntimeError):
+        worker.procesar_trabajo(motor.v, motor.db, tid, vb=motor.vb)
+    monkeypatch.undo()
+    worker.procesar_trabajo(motor.v, motor.db, tid, vb=motor.vb)
+    t = motor.v.hgetall(f"eira:trabajo:{tid}")
+    assert t["estado"] == "listo"
+    assert int(t["filas_nuevas"]) == 126
+
+
+# --- Hallazgo 7 y 11: celdas combinadas y CSV real -----------------------------
+
+def test_celdas_combinadas_se_rellenan_hacia_abajo(motor):
+    import io
+    import openpyxl
+    wb = openpyxl.Workbook()
+    ws = wb.active
+    ws.append(["ID", "Nombre", "Ciudad", "Asistencia"])
+    ws.append(["AAA19800101", "Ana Ana Ana", "Sayula", "Sí"])
+    ws.append(["BBB19850202", "Berta Berta Berta", None, "Sí"])
+    ws.merge_cells("C2:C3")  # Ciudad combinada: Berta hereda Sayula
+    buf = io.BytesIO()
+    wb.save(buf)
+    tid = worker.encolar(motor.v, buf.getvalue(), "combinadas.xlsx",
+                         "tamizaje-rosa", "atencion", "2026-09-30")
+    worker.procesar_trabajo(motor.v, motor.db, tid, vb=motor.vb)
+    claves = [r[0] for r in motor.db.execute(
+        "select municipio_clave from registros order by fila")]
+    assert claves[0] == claves[1] != ""
+    assert motor.sql("select count(*) from anomalias"
+                     " where regla='ciudad_desconocida'") == 0
+
+
+def test_csv_punto_y_coma_y_latin1(motor):
+    contenido = ("ID;Nombre;Ciudad;Asistencia\n"
+                 "AAA19800101;Ana García;Sayula;Sí\n"
+                 "BBB19850202;Berta Núñez;Tamazula de Gordiano;No\n")
+    (REPORTES / "latin.csv").write_bytes(contenido.encode("latin-1"))
+    try:
+        t = motor.procesar("latin.csv", programa="tamizaje-rosa",
+                           unidad="atencion", fecha_corte="2026-09-30")
+    finally:
+        (REPORTES / "latin.csv").unlink()
+    assert t["estado"] == "listo"
+    assert int(t["filas_nuevas"]) == 2
+    assert motor.sql("select count(*) from registros") == 2
+
+
+def test_csv_utf8_con_bom(motor):
+    (REPORTES / "bom.csv").write_bytes(
+        "﻿ID,Nombre,Ciudad\nAAA19800101,Ana Ana Ana,Sayula\n".encode("utf-8"))
+    try:
+        t = motor.procesar("bom.csv", programa="tamizaje-rosa",
+                           unidad="atencion", fecha_corte="2026-09-30")
+    finally:
+        (REPORTES / "bom.csv").unlink()
+    assert t["estado"] == "listo"
+    assert int(t["filas_nuevas"]) == 1
+
+
+# --- Hallazgo 9: filas sin ID no se unen por nombre ----------------------------
+
+def test_sin_id_no_se_unen_por_nombre(motor):
+    """Dos 'María López' sin ID en coordinaciones distintas: no se fusionan,
+    cada fila queda sin persona identificada."""
+    (REPORTES / "sinid_a.csv").write_text(
+        "ID,Nombre,Ciudad\n,María López,Sayula\n", "utf-8")
+    (REPORTES / "sinid_b.csv").write_text(
+        "ID,Nombre,Ciudad\n,María López,Tamazula de Gordiano\n", "utf-8")
+    try:
+        motor.procesar("sinid_a.csv", programa="tamizaje-rosa",
+                       unidad="atencion", fecha_corte="2026-09-30")
+        motor.procesar("sinid_b.csv", programa="comunidades-de-origen",
+                       unidad="atencion", fecha_corte="2026-09-30")
+    finally:
+        (REPORTES / "sinid_a.csv").unlink()
+        (REPORTES / "sinid_b.csv").unlink()
+    assert motor.sql("select count(*) from personas") == 0
+    assert motor.sql("select count(*) from registros"
+                     " where persona_id is null") == 2
+    assert motor.sql("select count(*) from pares_persona") == 0
+
+
+# --- Hallazgo 10 (menores): mensajes, unidad, limites --------------------------
+
+def test_xlsm_se_rechaza_con_mensaje(motor):
+    tid = worker.encolar(motor.v, b"PK\x03\x04falso", "reporte.xlsm",
+                         "tamizaje-rosa", "atencion", "2026-09-30")
+    t = worker.procesar_trabajo(motor.v, motor.db, tid, vb=motor.vb)
+    assert t["estado"] == "error"
+    assert "xlsm" in t["mensaje"].lower()
+
+
+def test_mas_de_20000_filas_se_rechaza(motor):
+    lineas = ["ID,Nombre,Ciudad"] + \
+        [f"AAA{19800101 + i % 9000:08d},Persona {i},Sayula"
+         for i in range(20_001)]
+    (REPORTES / "gigante.csv").write_text("\n".join(lineas), "utf-8")
+    try:
+        t = motor.procesar("gigante.csv", programa="tamizaje-rosa",
+                           unidad="atencion", fecha_corte="2026-09-30")
+    finally:
+        (REPORTES / "gigante.csv").unlink()
+    assert t["estado"] == "error"
+    assert "20" in t["mensaje"] and "filas" in t["mensaje"]
+
+
+def test_unidad_invalida_es_error_no_ya_cargado(motor):
+    motor.procesar("tamizaje-rosa.xlsx")
+    t = motor.procesar("tamizaje-rosa.xlsx", unidad="insumo_raro")
+    assert t["estado"] == "error"
+    assert "insumo_raro" in t["mensaje"]
+    assert "ya se carg" not in t["mensaje"]
+
+
+def test_error_no_muestra_texto_de_excepcion(motor, capsys):
+    tid = worker.encolar(motor.v, b"\x00\x01basura-no-excel", "raro.xlsx",
+                         "tamizaje-rosa", "atencion", "2026-09-30")
+    t = worker.procesar_trabajo(motor.v, motor.db, tid, vb=motor.vb)
+    assert t["estado"] == "error"
+    for frag in ("zip", "Bad", "corrupt", "Traceback"):
+        assert frag.lower() not in t["mensaje"].lower()
+
+
+def test_inasistencias_no_cuenta_omitidas(motor):
+    """Una fila omitida con inasistencia no debe inflar el contador."""
+    motor.procesar("tamizaje-rosa.xlsx")
+    t = motor.procesar("tamizaje-rosa_v2.xlsx")
+    f = motor.v.hgetall("eira:fuente:" + t["fuente"])
+    # inasistencias = filas contadas con cantidad 0, nunca filas omitidas.
+    n = motor.db.execute(
+        "select count(*) from registros r where r.fuente_id=? and r.contado=1"
+        " and r.cantidad=0", (t["fuente"],)).fetchone()[0]
+    assert int(f["inasistencias"]) == n
