@@ -1,53 +1,44 @@
-# Guion del pitch — 2 minutos
+# Guion del demo · 2 minutos, 4 pasos
 
-Sobre la **versión en blanco** del prototipo. Los informes del demo son
-**Tamizaje Rosa**, **Melenas en Movimiento** y el **Global**. Los archivos que
-se pueden subir en vivo son los de `reportes/` (rama `motor`):
-`tamizaje-rosa.xlsx` (listo), `reporte_final_2.xlsx` (idéntico),
-`tamizaje-rosa-reguardado.xlsx` y `tamizaje-rosa.csv` (mismo contenido) y
-`tamizaje-rosa_v2.xlsx` (versión nueva).
+Definido por Ian el 21 nov. Sustituye al guion anterior. Datos ficticios; ningún paciente real.
 
-**Nota honesta de preparación:** el archivo de Melenas no existe aún como
-`.xlsx` real; su informe sale de la semilla de desarrollo
-(`web/scripts/semilla-dev.ts`, rama `fe`), que precarga las dos fuentes, los
-conteos y tres pares pendientes. Si el motor no está cableado al entorno en el
-momento del pitch, la semilla ya trae los mensajes de cada archivo tal como
-salieron en la verificación local (tabla de los siete archivos en `NOTAS.md`).
-El video de respaldo cubre cualquier falla en vivo (ver al final).
+**Archivo que se sube en vivo:** `reportes/demo/jornada-nueva-chapala.xlsx` (35 filas, formato de Tamizaje Rosa). No se ha cargado en la base en vivo: debe ser nuevo durante el demo.
 
-| Tiempo | En pantalla | Se dice |
+## Cifras esperadas
+
+Comprobadas el 21 nov, 14:58 CDMX, cargando el archivo en una copia aislada con los mismos tres archivos que tiene la base en vivo (`tamizaje-rosa.xlsx`, `melenas-en-movimiento.xlsx`, `tamizaje-rosa_v2.xlsx`).
+
+| Qué | Antes | Después de subir Chapala |
 |---|---|---|
-| 0:00–0:10 | Portada: los tres informes —Tamizaje Rosa, Melenas en Movimiento, Global bloqueado con su motivo | "Presidencia de EIRA junta a mano los Excel de cada coordinación cada vez que un donante pide un informe. Esto es lo que ven al entrar: un informe por programa y uno global." |
-| 0:10–0:25 | Tamizaje Rosa → Subir: arrastrar `tamizaje-rosa.xlsx`; aparece "Listo" con sus filas | "Sube el Excel de la coordinación. Sin tecnicismos: el archivo dice en palabras qué pasó." |
-| 0:25–0:40 | Subir `reporte_final_2.xlsx` → "Este archivo ya se cargó… como 'tamizaje-rosa.xlsx'" | "Si manda el mismo reporte con otro nombre —pasa seguido—, la plataforma lo reconoce y no cuenta nada dos veces. También si lo vuelve a guardar o lo exporta a CSV." |
-| 0:40–0:55 | Calidad: estrellas del archivo y "8 registros sin persona identificada"; un par "¿Es la misma persona?", dos registros lado a lado, botones Sí / No | "Cada archivo recibe de una a cinco estrellas, como me lo pidió EIRA, y una frase con lo que le falta. Su ID —iniciales más fecha de nacimiento— puede repetirse entre dos personas: el sistema propone el caso y explica por qué; una persona decide. Nunca se une ni se separa solo." |
-| 0:55–1:15 | Melenas en Movimiento → Vista previa: donaciones de trenza y entregas de peluca por separado | "Este programa es de otra naturaleza: registra trenzas donadas y pelucas entregadas. Quien dona cabello es donante, no persona impactada —si se contara igual, la cifra saldría inflada. La misma base lo modela porque todo sale de un catálogo: agregar un programa es agregar una entrada." |
-| 1:15–1:35 | Global → Vista previa: total de personas como suma de los programas; debajo "N personas aparecen en más de un programa" | "En el Global cada programa suma sus personas: quien está en dos programas cuenta dos veces, y se muestra aparte cuántas se repiten. Las tres cifras que más les piden —personas impactadas, edad promedio, desglose por ciudad— cada una con su fuente y fecha de corte. Conteo exacto sobre conjuntos en Valkey, nada estimado." |
-| 1:35–1:45 | Exportar: descargar el informe | "Y el informe sale listo para el aliado." |
-| 1:45–1:55 | Cambiar a la versión **con fuentes reales** (si está en línea; si no, se dice) | "Quince segundos de la versión con fuentes reales: defunciones por cáncer de mama y cervicouterino de INEGI y egresos hospitalarios y unidades de salud de la Secretaría de Salud, para Jalisco. Son datos agregados: aquí se ve la unificación y la calidad, no la deduplicación de personas." |
-| 1:55–2:00 | Cierre en la portada | "Implementado y simulado están marcados en el README. Lo difícil —no contar dos veces— funciona de verdad." |
+| Personas impactadas (suma por programa) | 108 | **138** |
+| Tamizaje Rosa | 92 | **122** |
+| Melenas en Movimiento | 16 | 16 |
+| Donantes de cabello | 51 | 51 |
+| Municipios con actividad | 6 | **7** (aparece Chapala, 33 registros) |
+| Pares por revisar | 4 | **6** |
+| Archivos | 3 | 4 |
 
-## Una frase por juez (si se acercan después)
+Mensaje del archivo: «Se agregaron 33 filas; 2 ya estaban en otros reportes y se omiten.» Calificación: 5 estrellas.
 
-De `docs/contexto/investigacion-inicial.md` (columna "Qué mostrarle"):
+Qué trae el archivo: 30 personas nuevas de Chapala; 3 filas de personas que ya existen (mismo ID): dos con el nombre escrito distinto, que piden decisión, y una que solo cambia un acento, que el sistema reconoce sola; 2 filas idénticas a filas ya cargadas, que se omiten.
 
-| Juez | Frase |
-|---|---|
-| Martí Cristobal (BettaTech) | "Le enseño la tabla Implementado/Simulado y las tres capas de deduplicación con sus pruebas: lo generado por IA tiene ingeniería detrás." |
-| Roberto Luna Rojas (Valkey, AWS) | "Cada cifra sale de `SCARD`/`SINTERCARD` sobre conjuntos que escribe el motor; Valkey es la cola y la memoria de duplicados, no un caché." |
-| Valeria Rivera Contreras (Nutanix, CNCF) | "Ningún nombre ni ID sale del Excel a las bases: solo identificadores opacos, formatos abiertos y un despliegue que corre en una laptop." |
-| Gael Hernández (Cognition) | "El README enlaza la auditoría que un agente de Devin hizo de nuestra sesión y las cinco revisiones del plan; el código se construyó por ramas con Devin." |
-| Ximena Cruz (Nerdearla) | "Le cuento el recorrido desde la persona que lo usa: sube dos Excel y sale el informe, sin tocar una fórmula." |
-| Jazmin Reyes Serrano | "Me apego a la guía: conteo exacto, límites de medición visibles y ninguna deduplicación estimada presentada como cifra oficial." |
+## Paso a paso
 
-## Plan B — video de respaldo
+| Tiempo | Clic | Se ve | Se dice |
+|---|---|---|---|
+| 0:00–0:25 | **Tablero**. En los filtros: Estado «Jalisco», luego Programa «Tamizaje Rosa»; después quitar el programa | Con Tamizaje Rosa: 92 personas. Sin filtro: 108 personas, 6 municipios, 51 donantes; mapa y gráficas cambian | «Presidencia de EIRA junta a mano los Excel de cada coordinación. Aquí ya están juntos: 108 personas impactadas en 6 municipios. Las donantes de cabello se cuentan aparte, no inflan la cifra.» |
+| 0:25–0:55 | **Subir archivos** → Tamizaje Rosa → arrastrar `jornada-nueva-chapala.xlsx` | «Se agregaron 33 filas; 2 ya estaban en otros reportes y se omiten.» 5 estrellas | «Llega el reporte de una jornada nueva en Chapala. El sistema dice en palabras qué pasó: 33 filas nuevas y 2 que ya teníamos y no se cuentan dos veces.» |
+| 0:55–1:20 | Volver a **Tablero** (o «Actualizar») | 138 personas, 7 municipios, Chapala en el mapa, 6 pares por revisar | «El tablero ya lo refleja: 138 personas y un municipio nuevo. Y avisa: dos personas de Chapala tienen el mismo ID que alguien ya registrado, con otro nombre. El sistema no las une ni las separa solo: lo decide una persona.» |
+| 1:20–1:50 | **Sacar reporte** → «Impacto para aliados estratégicos» → descargar. Luego «Territorial para gobierno y hospitales» → descargar | Los dos reportes con la selección del tablero; PDF y CSV | «Con esos mismos datos salen dos reportes: uno para aliados estratégicos y otro territorial, para gobierno y hospitales. Cada cifra dice de qué archivos sale y con qué fecha de corte.» |
+| 1:50–2:00 | — | — | «Motor en Python, Valkey para las colas, las huellas y el conteo exacto de personas, y tableros de Metabase. Los datos de persona van seudonimizados.» |
 
-- Grabar **antes de las 15:00** un recorrido del guion (90 s máximo) en la versión
-  en blanco, con el mismo texto, y subirlo como video del proyecto en Devpost.
-- Si falla el internet o el despliegue: se pone el video y el pitch se dice igual;
-  la tabla Implementado/Simulado del README sirve de apoyo visual en el laptop.
-- Si falla hasta el video: capturas en `docs/capturas/` + el README abierto en el
-  repositorio local.
-- Lo que **no** se hace en plan B: fingir que algo funciona en vivo si no funciona.
-  Si Melenas no tiene archivo real para subir, se dice que su informe sale de la
-  semilla; nunca se presenta como carga en vivo.
+## Antes de empezar
+
+- La base en vivo debe estar en el estado previo: 108 personas, 6 municipios, 3 archivos.
+- Para repetir el ensayo, en el servidor: `bash ~/projects/.demo-eira/reiniciar-demo.sh`. Detiene el motor, repone Valkey y la base SQLite desde la copia tomada antes del demo (`scripts/ensayo_demo.py`) y lo vuelve a arrancar. Después, pulsar «Actualizar» en el tablero.
+
+## Sin comprobar
+
+- El paso 4 (sección de reportes y sus descargas) y el aviso de datos nuevos del paso 3 dependen de trabajo del frontend que seguía en curso al escribir esto.
+- La carga del archivo se comprobó contra el motor en una copia aislada, no por la pantalla de Subir de la versión desplegada.
+- El comando de reinicio se probó en la copia aislada (guardar, dañar, restaurar: mismas cifras); no se ha ejecutado contra la base en vivo.
