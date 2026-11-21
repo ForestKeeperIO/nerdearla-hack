@@ -2,11 +2,14 @@
 
 - huella_bytes: sha256 de los bytes del archivo -> eira:huellas:archivo
 - huella_fila: HMAC-SHA256 de la fila canonica -> eira:huellas:fila
-- huella_contenido: sha256 de las huellas de fila ordenadas -> eira:huellas:contenido
+
+"Mismo contenido" no necesita huella propia: se deduce de que todas las
+filas del archivo ya estaban contadas en eira:huellas:fila y pertenecen a
+una misma fuente.
 
 La fila canonica no depende del orden de columnas, del formato (xlsx/csv)
-ni del encabezado: id_eira | nombre_norm | municipio | servicio | fecha |
-asistio | cantidad.
+ni del encabezado: id_eira | nombre_norm | municipio | servicio |
+tipo_registro | fecha | asistio | cantidad.
 """
 import hashlib
 import hmac
@@ -17,12 +20,16 @@ from datetime import datetime
 from .leer import norm
 
 H_ARCHIVO = "eira:huellas:archivo"
-H_CONTENIDO = "eira:huellas:contenido"
 H_FILA = "eira:huellas:fila"
 
 
 def clave_hmac() -> bytes:
-    return os.environ.get("IMPACTO_HMAC_KEY", "eira-demo-hmac").encode()
+    clave = os.environ.get("IMPACTO_HMAC_KEY")
+    if not clave:
+        raise RuntimeError(
+            "Falta IMPACTO_HMAC_KEY: sin esa variable no puedo seudonimizar "
+            "personas ni huellas. Defínela en el entorno y vuelve a arrancar.")
+    return clave.encode()
 
 
 def huella_bytes(contenido: bytes) -> str:
@@ -38,6 +45,10 @@ def _t(v) -> str:
 
 def huella_fila(fila: dict, clave: bytes | None = None) -> str:
     clave = clave or clave_hmac()
+    # Reportes sin persona: la huella es todo el contenido de la fila.
+    if fila.get("contenido_fila"):
+        return hmac.new(clave, ("cruda|" + fila["contenido_fila"]).encode(),
+                        hashlib.sha256).hexdigest()
     cant = fila.get("cantidad", 1)
     cant = 1.0 if cant != cant else float(cant)  # NaN -> 1
     cant_txt = str(int(cant)) if cant == int(cant) else f"{cant:.4f}"
@@ -46,15 +57,12 @@ def huella_fila(fila: dict, clave: bytes | None = None) -> str:
         _t(fila.get("nombre_norm")),
         _t(fila.get("municipio_clave")) or norm(fila.get("ciudad")),
         norm(fila.get("servicio")),
+        _t(fila.get("tipo_registro")),
         _t(fila.get("fecha")),
         "1" if fila.get("asistio") else "0",
         cant_txt,
     ])
     return hmac.new(clave, canon.encode(), hashlib.sha256).hexdigest()
-
-
-def huella_contenido(huellas: list[str]) -> str:
-    return hashlib.sha256("\n".join(sorted(set(huellas))).encode()).hexdigest()
 
 
 def _info_fuente(v, fuente_id: str) -> dict:
@@ -74,8 +82,7 @@ def evaluar(v, huella_b: str, huellas_f: list[str]) -> dict:
     """Nivel de duplicado del archivo. Lee (no escribe) las huellas globales."""
     unicas = list(dict.fromkeys(huellas_f))
     veredicto = {"nivel": "distinto", "fuente_original": "", "mensaje": "",
-                 "coinciden": 0, "total": len(unicas),
-                 "huella_contenido": huella_contenido(huellas_f)}
+                 "coinciden": 0, "total": len(unicas)}
 
     previa = v.hget(H_ARCHIVO, huella_b)
     if previa:
@@ -86,24 +93,34 @@ def evaluar(v, huella_b: str, huellas_f: list[str]) -> dict:
                      f"como '{info.get('nombre', previa)}'. No se vuelve a cargar."))
         return veredicto
 
-    previa = v.hget(H_CONTENIDO, veredicto["huella_contenido"])
-    if previa:
-        info = _info_fuente(v, previa)
-        veredicto.update(
-            nivel="mismo_contenido", fuente_original=previa, coinciden=len(unicas),
-            mensaje=(f"Mismo contenido que '{info.get('nombre', previa)}' "
-                     "(archivo vuelto a guardar o exportado). No hay nada nuevo."))
+    if not unicas:
         return veredicto
 
     duenos = [x for x in v.hmget(H_FILA, unicas) if x]
     veredicto["coinciden"] = len(duenos)
-    if not unicas:
-        return veredicto
     por_fuente = Counter(d.split(":")[0] for d in duenos)
+
+    if len(duenos) == len(unicas) and len(por_fuente) == 1:
+        # Todas las filas ya estaban y son de una misma fuente: es el mismo
+        # contenido con otro formato o vuelto a guardar.
+        fuente_top = por_fuente.most_common(1)[0][0]
+        info = _info_fuente(v, fuente_top)
+        veredicto.update(
+            nivel="mismo_contenido", fuente_original=fuente_top,
+            mensaje=(f"Mismo contenido que '{info.get('nombre', fuente_top)}' "
+                     "(archivo vuelto a guardar o exportado). No hay nada nuevo."))
+        return veredicto
+
     fuente_top, coinciden_top = por_fuente.most_common(1)[0] if por_fuente else ("", 0)
     ratio = len(duenos) / len(unicas)
     info = _info_fuente(v, fuente_top)
     nombre_top = info.get("nombre", fuente_top)
+
+    if len(duenos) == len(unicas):
+        veredicto.update(nivel="traslape_parcial", fuente_original=fuente_top, mensaje=(
+            f"Todas las filas ya estaban en otros reportes (la mayoría en "
+            f"'{nombre_top}'). Se omiten."))
+        return veredicto
 
     nuevas = len(unicas) - len(duenos)
     if ratio >= 0.9 and duenos:

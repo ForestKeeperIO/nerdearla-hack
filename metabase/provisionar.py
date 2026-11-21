@@ -33,6 +33,7 @@ Fuentes de la API verificadas contra el código de Metabase v0.65.6:
 import argparse
 import json
 import os
+import re
 import secrets
 import string
 import sys
@@ -116,10 +117,63 @@ class Metabase:
         self.s.headers["X-Metabase-Session"] = sesion["id"]
 
 
+TAG_PROGRAMA = {
+    "id": "5f4d8a2e-9b3c-4e7f-a1b2-c3d4e5f6a7b8",
+    "name": "programa",
+    "display-name": "Programa",
+    "type": "text",
+    "required": False,
+}
+
+COLECCIONES = {"real": "Impacto EIRA · Real", "blanco": "Impacto EIRA · En blanco"}
+
+
+def asegurar_coleccion(mb: Metabase, nombre: str) -> int:
+    for c in mb.api("GET", "/collection"):
+        if c["name"] == nombre and not c.get("archived"):
+            return c["id"]
+    return mb.api("POST", "/collection", json={"name": nombre})["id"]
+
+
+def migrar_sufijos(mb: Metabase, colecciones: dict) -> None:
+    """Primera pasada creó títulos con sufijo de entorno («X [real]»,
+    «X (blanco)»). Los renombra sin sufijo y los mueve a la colección de su
+    entorno: el entorno se distingue por la colección, no en el título.
+    Conserva ids y enlaces públicos."""
+    for card in mb.api("GET", "/card", params={"f": "all"}):
+        m = re.match(r"^(.*) \[(real|blanco)\]$", card["name"])
+        if m:
+            mb.api("PUT", f"/card/{card['id']}", json={
+                "name": m.group(1), "collection_id": colecciones[m.group(2)],
+            })
+    for d in mb.api("GET", "/dashboard"):
+        if d.get("archived"):
+            continue
+        if d["name"].endswith(" (blanco)"):
+            mb.api("PUT", f"/dashboard/{d['id']}", json={
+                "name": d["name"][: -len(" (blanco)")],
+                "collection_id": colecciones["blanco"],
+            })
+        elif d.get("collection_id") is None and d["name"] in ("Impacto", "Calidad"):
+            mb.api("PUT", f"/dashboard/{d['id']}",
+                   json={"collection_id": colecciones["real"]})
+
+
 def asegurar_base(mb: Metabase, nombre: str, ruta_db: str) -> int:
-    """Devuelve el id de la conexión a SQLite llamada `nombre`; la crea si falta."""
+    """Devuelve el id de la conexión a SQLite llamada `nombre`; la crea si falta.
+    La conexión «Impacto EIRA» de la primera pasada se renombra a
+    «Impacto EIRA (real)» en lugar de duplicarla."""
     dbs = mb.api("GET", "/database")
-    for db in dbs.get("data", dbs) if isinstance(dbs, dict) else dbs:
+    dbs = dbs.get("data", dbs) if isinstance(dbs, dict) else dbs
+    if nombre == "Impacto EIRA (real)":
+        for db in dbs:
+            if db["name"] == "Impacto EIRA":
+                mb.api("PUT", f"/database/{db['id']}", json={
+                    "name": nombre, "engine": "sqlite",
+                    "details": {"db": ruta_db}, "auto_run_queries": True,
+                })
+                return db["id"]
+    for db in dbs:
         if db["name"] == nombre:
             detalles = db.get("details") or {}
             if detalles.get("db") != ruta_db:
@@ -136,46 +190,65 @@ def asegurar_base(mb: Metabase, nombre: str, ruta_db: str) -> int:
     return db["id"]
 
 
-def asegurar_pregunta(mb: Metabase, db_id: int, coleccion_nombre: str, p: dict) -> int:
-    nombre = f"{p['nombre']} [{coleccion_nombre}]"
+def asegurar_pregunta(mb: Metabase, db_id: int, coleccion_id: int, p: dict) -> int:
+    native = {"query": p["sql"]}
+    if "{{programa}}" in p["sql"]:
+        native["template_tags"] = {"programa": dict(TAG_PROGRAMA)}
     cuerpo = {
-        "name": nombre,
+        "name": p["nombre"],
+        "collection_id": coleccion_id,
         "type": "question",
         "display": p["display"],
         "dataset_query": {
             "type": "native",
             "database": db_id,
-            "native": {"query": p["sql"]},
+            "native": native,
         },
         "visualization_settings": p.get("visualization_settings", {}),
     }
     for card in mb.api("GET", "/card", params={"f": "all"}):
-        if card["name"] == nombre:
+        if card["name"] == p["nombre"] and card.get("collection_id") == coleccion_id:
             mb.api("PUT", f"/card/{card['id']}", json=cuerpo)
             return card["id"]
     return mb.api("POST", "/card", json=cuerpo)["id"]
 
 
-def asegurar_tablero(mb: Metabase, nombre: str, tarjetas: list[dict]) -> int:
+def asegurar_tablero(mb: Metabase, nombre: str, coleccion_id: int,
+                     tarjetas: list[dict], parametros: list[dict] | None) -> int:
     """Crea el tablero si falta y deja su disposición como en tableros.json."""
     tablero_id = None
     for d in mb.api("GET", "/dashboard"):
-        if d["name"] == nombre and not d.get("archived"):
+        if (d["name"] == nombre and not d.get("archived")
+                and d.get("collection_id") == coleccion_id):
             tablero_id = d["id"]
             break
     if tablero_id is None:
-        tablero_id = mb.api("POST", "/dashboard", json={"name": nombre})["id"]
+        cuerpo = {"name": nombre, "collection_id": coleccion_id}
+        if parametros:
+            cuerpo["parameters"] = parametros
+        tablero_id = mb.api("POST", "/dashboard", json=cuerpo)["id"]
+    slug_programa = next((x["slug"] for x in parametros or [] if x["slug"] == "programa"), None)
     dashcards = [
         {
             "id": -(i + 1),  # id negativo temporal: la API lo crea como tarjeta nueva
             "card_id": t["card_id"],
             "row": t["row"], "col": t["col"],
             "size_x": t["size_x"], "size_y": t["size_y"],
-            "parameter_mappings": [], "series": [],
+            "parameter_mappings": (
+                [{
+                    "parameter_id": slug_programa,
+                    "card_id": t["card_id"],
+                    "target": ["variable", ["template-tag", "programa"]],
+                }] if slug_programa and t["con_programa"] else []
+            ),
+            "series": [],
         }
         for i, t in enumerate(tarjetas)
     ]
-    mb.api("PUT", f"/dashboard/{tablero_id}", json={"dashcards": dashcards})
+    cuerpo = {"dashcards": dashcards}
+    if parametros:
+        cuerpo["parameters"] = parametros
+    mb.api("PUT", f"/dashboard/{tablero_id}", json=cuerpo)
     return tablero_id
 
 
@@ -204,8 +277,11 @@ def main() -> None:
     mb.api("PUT", "/setting/site-url", json={"value": PUBLICA})
     mb.api("PUT", "/setting/enable-public-sharing", json={"value": True})
 
-    sufijo = "" if args.entorno == "real" else f" ({args.entorno})"
-    db_id = asegurar_base(mb, f"Impacto EIRA{sufijo}", ruta_db)
+    colecciones = {e: asegurar_coleccion(mb, n) for e, n in COLECCIONES.items()}
+    migrar_sufijos(mb, colecciones)
+    coleccion_id = colecciones[args.entorno]
+
+    db_id = asegurar_base(mb, f"Impacto EIRA ({args.entorno})", ruta_db)
     try:
         mb.api("POST", f"/database/{db_id}/sync_schema")
     except RuntimeError:
@@ -215,16 +291,22 @@ def main() -> None:
     enlaces = json.loads(ENLACES.read_text()) if ENLACES.exists() else {}
     enlaces.setdefault("entornos", {})
     for t in spec["tableros"]:
-        nombre = f"{t['nombre']}{sufijo}"
         tarjetas = []
         for p in t["preguntas"]:
-            card_id = asegurar_pregunta(mb, db_id, args.entorno, p)
+            card_id = asegurar_pregunta(mb, db_id, coleccion_id, p)
             tarjetas.append({"card_id": card_id, "row": p["row"], "col": p["col"],
-                             "size_x": p["size_x"], "size_y": p["size_y"]})
-        dash_id = asegurar_tablero(mb, nombre, tarjetas)
+                             "size_x": p["size_x"], "size_y": p["size_y"],
+                             "con_programa": "{{programa}}" in p["sql"]})
+        dash_id = asegurar_tablero(mb, t["nombre"], coleccion_id, tarjetas,
+                                   t.get("parametros"))
         url = enlace_publico(mb, dash_id)
-        enlaces["entornos"].setdefault(args.entorno, {})[t["nombre"].lower()] = url
-        print(f"Tablero «{nombre}»: {url}")
+        ent = enlaces["entornos"].setdefault(args.entorno, {})
+        ent[t["nombre"].lower()] = url
+        if t.get("parametros"):
+            # Plantilla: sustituir {programa} por el id de la iniciativa
+            # (p. ej. tamizaje-rosa, melenas-en-movimiento).
+            ent[f"{t['nombre'].lower()}_por_programa"] = f"{url}?programa={{programa}}"
+        print(f"Tablero «{t['nombre']}» ({args.entorno}): {url}")
 
     # Claves de primer nivel para el frontend: el entorno real si existe.
     pre = enlaces["entornos"].get("real") or enlaces["entornos"].get(args.entorno) or {}

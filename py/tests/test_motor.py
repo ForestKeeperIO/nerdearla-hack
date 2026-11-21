@@ -1,4 +1,4 @@
-"""Pruebas del motor de punta a punta (Tarea 3 del plan).
+"""Pruebas del motor de punta a punta (Tarea 3 del plan; segunda pasada).
 
 Valkey 6391 base 15, SQLite temporal por prueba.
 """
@@ -16,14 +16,45 @@ ESPERADO = json.loads((REPO / "reportes" / "esperado.json").read_text("utf-8"))
 
 def test_caso_de_la_guia(motor):
     motor.procesar("tamizaje-rosa.xlsx")
-    motor.procesar("salud-que-florece.xlsx")
+    motor.procesar("melenas-en-movimiento.xlsx")
     assert motor.sql("select sum(cantidad) from registros"
-                     " where unidad='atencion' and contado=1") == 120
+                     " where tipo_registro='atencion' and contado=1") == 120
     assert motor.sql("select sum(cantidad) from registros"
-                     " where unidad='participacion' and contado=1") == 80
+                     " where tipo_registro='donacion' and contado=1") == 60
+    assert motor.sql("select sum(cantidad) from registros"
+                     " where tipo_registro='producto_entregado' and contado=1") == 20
     assert motor.sql("select count(*) from personas") == \
         ESPERADO["globales"]["personas_identificadas"]
     assert motor.sql("select count(*) from pares_persona where estado='pendiente'") == 5
+
+
+def test_roles_por_fila(motor):
+    """Un mismo archivo trae donaciones (donante) y entregas (beneficiaria):
+    el tipo y el rol se deciden por fila segun el catalogo."""
+    motor.procesar("melenas-en-movimiento.xlsx")
+    roles = dict(motor.db.execute(
+        "select rol_persona, count(*) from registros group by rol_persona"))
+    assert roles == {"donante": 60, "beneficiaria": 20}
+    # Conjuntos en Valkey: todas las del programa, impactadas y donantes.
+    assert motor.v.scard("eira:per:programa:melenas-en-movimiento") == 80
+    assert motor.v.scard("eira:per:impactadas:melenas-en-movimiento") == 20
+    assert motor.v.scard("eira:per:donantes:melenas-en-movimiento") == 60
+    # Las donantes no cuentan como personas impactadas en las vistas.
+    fila = motor.db.execute(
+        "select personas_impactadas, donantes from v_personas_por_programa"
+        " where iniciativa='melenas-en-movimiento'").fetchone()
+    assert fila == (20, 60)
+
+
+def test_global_suma_sin_deduplicar(motor):
+    motor.procesar("tamizaje-rosa.xlsx")
+    motor.procesar("melenas-en-movimiento.xlsx")
+    g = ESPERADO["globales"]
+    fila = motor.db.execute("select * from v_global").fetchone()
+    assert fila[0] == g["impactadas"]["tamizaje-rosa"] + \
+        g["impactadas"]["melenas-en-movimiento"]
+    assert fila[1] == g["cruce_tamizaje_melenas"]  # 15, solo informativo
+    assert fila[2] == g["donantes"]["melenas-en-movimiento"]
 
 
 def test_mismo_reporte_con_otro_nombre(motor):
@@ -36,6 +67,8 @@ def test_mismo_reporte_con_otro_nombre(motor):
         assert t["nivel_duplicado"] == nivel, nombre
         assert "tamizaje-rosa.xlsx" in t["mensaje"], t["mensaje"]
     assert motor.sql("select count(*) from fuentes") == 1
+    # mismo_contenido se dedujo de las huellas de fila, sin clave de contenido.
+    assert motor.v.exists("eira:huellas:contenido") == 0
 
 
 def test_version_nueva_solo_agrega_lo_nuevo(motor):
@@ -44,7 +77,7 @@ def test_version_nueva_solo_agrega_lo_nuevo(motor):
     assert t["nivel_duplicado"] == "version_nueva"
     assert int(t["filas_nuevas"]) == 8
     assert motor.sql("select sum(cantidad) from registros"
-                     " where unidad='atencion' and contado=1") == 128
+                     " where tipo_registro='atencion' and contado=1") == 128
 
 
 def test_traslape_entre_coordinaciones(motor):
@@ -53,12 +86,12 @@ def test_traslape_entre_coordinaciones(motor):
     assert t["nivel_duplicado"] == "traslape_parcial"
     assert int(t["filas_omitidas"]) == 30
     assert motor.sql("select sum(cantidad) from registros"
-                     " where unidad='atencion' and contado=1") == 130
+                     " where tipo_registro='atencion' and contado=1") == 130
 
 
 def test_mismo_id_personas_distintas_no_se_unen_solas(motor):
     motor.procesar("tamizaje-rosa.xlsx")
-    motor.procesar("salud-que-florece.xlsx")
+    motor.procesar("melenas-en-movimiento.xlsx")
     pares = motor.db.execute(
         "select motivo, count(*) from pares_persona group by motivo").fetchall()
     por_motivo = dict(pares)
@@ -78,7 +111,7 @@ def test_fallo_a_media_carga_permite_reintentar(motor, monkeypatch):
     monkeypatch.setattr(escribir, "guardar", explosivo)
     from py.motor import worker
     tid = worker.encolar(motor.v, (REPO / "reportes/tamizaje-rosa.xlsx").read_bytes(),
-                         "tamizaje-rosa.xlsx", "Tamizaje Rosa", "atencion", "2026-09-30")
+                         "tamizaje-rosa.xlsx", "tamizaje-rosa", "atencion", "2026-09-30")
     with pytest.raises(RuntimeError):
         worker.procesar_trabajo(motor.v, motor.db, tid, vb=motor.vb)
     # Nada quedo marcado: ni fuente ni huella de archivo.
@@ -95,9 +128,9 @@ def test_fallo_a_media_carga_permite_reintentar(motor, monkeypatch):
 
 def test_dos_trabajos_seguidos_no_pierden_filas(motor):
     motor.procesar("tamizaje-rosa.xlsx")
-    motor.procesar("salud-que-florece.xlsx")
-    # 126 (130 - 4 repetidas) + 84: todas las filas unicas se conservan.
-    assert motor.sql("select count(*) from registros where contado=1") == 210
+    motor.procesar("melenas-en-movimiento.xlsx")
+    # 126 (130 - 4 repetidas) + 80: todas las filas unicas se conservan.
+    assert motor.sql("select count(*) from registros where contado=1") == 206
 
 
 def test_reporte_sin_personas(motor):
@@ -114,9 +147,67 @@ def test_reporte_sin_personas(motor):
     assert sum(int(x) for x in sinid) == 57
 
 
+def test_reporte_publico_con_clave_de_municipio(motor):
+    """Un reporte publico trae la clave INEGI directa (cvegeo): se usa tal
+    cual, sin buscar el nombre, y alimenta la presencia."""
+    (REPO / "reportes/def_publico.csv").write_text(
+        "cvegeo_resid,causa_grupo,edad_anios\n"
+        "14108,C50,38\n14100,C53,51\n14023,C50,44\n", "utf-8")
+    try:
+        t = motor.procesar("def_publico.csv", programa="salud-publica-jalisco",
+                           unidad="registro_publico", fecha_corte="2026-09-30")
+    finally:
+        (REPO / "reportes/def_publico.csv").unlink()
+    assert t["estado"] == "listo"
+    lugares = motor.db.execute(
+        "select municipio_clave, municipio from registros order by fila").fetchall()
+    assert lugares[0][0] == "14108" and lugares[0][1] == "Tuxpan"
+    assert lugares[2][0] == "14023"
+    assert motor.v.hget("eira:presencia:salud-publica-jalisco", "14108") == "1"
+    assert motor.v.hget("eira:presencia:global", "14023") == "1"
+
+
+def test_alias_de_ciudad_y_desconocida(motor):
+    motor.procesar("tamizaje-rosa.xlsx")
+    motor.procesar("melenas-en-movimiento.xlsx")
+    # "Ciudad Guzmán" y "Cd. Guzmán" caen en Zapotlán el Grande (14023).
+    n = motor.sql("select count(*) from registros where municipio_clave='14023'")
+    assert n > 0
+    # Una ciudad inexistente queda como anomalia y no entra a la presencia.
+    assert motor.sql("select count(*) from anomalias"
+                     " where regla='ciudad_desconocida'") == 2
+    pres = motor.db.execute(
+        "select estado, municipios_del_estado from v_presencia"
+        " where iniciativa_id='tamizaje-rosa'").fetchone()
+    assert pres == ("Jalisco", 125)
+    desconocidas = motor.v.hget("eira:presencia:tamizaje-rosa", "")
+    assert desconocidas is None
+
+
+def test_estado_de_la_columna_manda(motor):
+    """Si el archivo trae columna de estado, se usa esa para resolver."""
+    (REPO / "reportes/por_estado.csv").write_text(
+        "id,nombre,ciudad,estado\n"
+        "AAA19800101,Ana Ana Ana,Tepatitlán de Morelos,Jalisco\n"
+        "BBB19850202,Berta Berta Berta,Tepatitlán,Jalisco\n", "utf-8")
+    try:
+        t = motor.procesar("por_estado.csv", programa="tamizaje-rosa",
+                           unidad="atencion", fecha_corte="2026-09-30")
+    finally:
+        (REPO / "reportes/por_estado.csv").unlink()
+    assert t["estado"] == "listo"
+    lugares = motor.db.execute(
+        "select municipio_clave, estado from registros order by fila").fetchall()
+    assert lugares[0] == ("14093", "Jalisco")
+    # "Tepatitlán" no es nombre oficial: queda sin resolver -> anomalia.
+    assert lugares[1][0] == ""
+    assert motor.sql("select count(*) from anomalias"
+                     " where regla='ciudad_desconocida'") == 1
+
+
 def test_sin_nombres_en_sqlite_ni_valkey(motor):
     motor.procesar("tamizaje-rosa.xlsx")
-    motor.procesar("salud-que-florece.xlsx")
+    motor.procesar("melenas-en-movimiento.xlsx")
     prohibidos = ["María Elena López", "Mónica Esther Luna", "Carmen Alicia Vega",
                   "Carmen Alisia Vega", "MEL19840312", "CAV19880504"]
     # Valkey: ningun valor los contiene (salvo eira:archivo:*, que es el
@@ -151,26 +242,27 @@ def test_sin_nombres_en_sqlite_ni_valkey(motor):
 
 def test_contrato(motor):
     motor.procesar("tamizaje-rosa.xlsx")
-    motor.procesar("salud-que-florece.xlsx")
+    motor.procesar("melenas-en-movimiento.xlsx")
     motor.procesar("nutricion.xlsx")
     r = subprocess.run(["npm", "run", "verificar"], cwd=REPO, capture_output=True,
                        text=True, env={**os.environ,
                                        "VALKEY_URL": "redis://127.0.0.1:6391/15",
                                        "VERIFICAR_ATENCION": "130",
-                                       "VERIFICAR_PARTICIPACION": "80",
+                                       "VERIFICAR_PROGRAMA_A": "tamizaje-rosa",
+                                       "VERIFICAR_PROGRAMA_B": "melenas-en-movimiento",
                                        "VERIFICAR_CRUCE": "15"})
     assert r.returncode == 0, r.stdout + r.stderr
 
 
 def test_decision_misma_persona_fusiona(motor):
     motor.procesar("tamizaje-rosa.xlsx")
-    motor.procesar("salud-que-florece.xlsx")
+    motor.procesar("melenas-en-movimiento.xlsx")
     par = motor.db.execute(
         "select id, persona_a, persona_b from pares_persona"
         " where motivo='Posible variante de escritura' limit 1").fetchone()
     antes_todas = motor.v.scard("eira:per:todas")
-    cruce_keys = ["eira:per:programa:Tamizaje Rosa",
-                  "eira:per:programa:Salud que Florece"]
+    cruce_keys = ["eira:per:programa:tamizaje-rosa",
+                  "eira:per:programa:melenas-en-movimiento"]
     antes_cruce = motor.v.sintercard(2, cruce_keys)
     motor.decidir("persona", par=par[0], decision="misma")
     assert motor.sql("select estado from pares_persona where id=?", par[0]) == "misma"
@@ -184,7 +276,7 @@ def test_decision_misma_persona_fusiona(motor):
 
 def test_decision_distinta_solo_marca(motor):
     motor.procesar("tamizaje-rosa.xlsx")
-    motor.procesar("salud-que-florece.xlsx")
+    motor.procesar("melenas-en-movimiento.xlsx")
     par = motor.db.execute(
         "select id from pares_persona where motivo='Mismo ID, nombres distintos'"
         " limit 1").fetchone()
@@ -199,8 +291,8 @@ def test_restituir_fila(motor):
     fila = motor.sql("select fila from registros where fuente_id=? and contado=0"
                      " limit 1", fid)
     antes = motor.sql("select sum(cantidad) from registros"
-                      " where unidad='atencion' and contado=1")
+                      " where tipo_registro='atencion' and contado=1")
     motor.decidir("restituir_fila", fuente=fid, fila=str(fila))
     assert motor.sql("select sum(cantidad) from registros"
-                     " where unidad='atencion' and contado=1") == antes + 1
+                     " where tipo_registro='atencion' and contado=1") == antes + 1
     assert motor.v.llen(f"eira:omitidas:{fid}") == 29

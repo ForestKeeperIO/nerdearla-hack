@@ -54,3 +54,8 @@
 - Mergeadas a main y verificadas 0-ahead: fe, motor, fuentes-reales, referencias, valkey-base, entrega, metabase, demo. Conflictos resueltos: .gitignore (unión), NOTAS.md (concatenación por secciones).
 - sync-repo.sh v2: cada ciclo commitea pendientes en TODOS los worktrees/clones nerdearla-hack-*, pushea su rama, mergea origin/* a main (aborta si hay conflicto) y pushea main. Salta árboles con rutas sin resolver.
 - Ojo: clones separados (demo, entrega, metabase dirs) pushean por este mismo cron.
+
+## 13:20 CDMX — pausado por orden de Ian ("todo lo demás sleep hasta mañana")
+- Temporizadores detenidos: mobil3-harness-drain, leads-asana, orca-board-sync, mobil3-harness-heartbeat, asana-board-sync, mobil3-crosspost. Servicios detenidos: hermes-gateway, bot-brave, gh-runner-fintechjobs.
+- NO se tocó: orca-serve, fintechjobs-pg-54330 (posible base en producción), night-watch, oom-prefer-agents, respaldos.
+- REANUDAR MAÑANA: `bash ~/projects/.demo-eira/reanudar-temporizadores.sh`. Avisar a Ian si no lo pide.

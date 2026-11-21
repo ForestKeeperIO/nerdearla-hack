@@ -9,31 +9,36 @@ import { conectar } from './conexion';
 import { limpiar } from './limpiar';
 import {
   anom, bitacora, campoConteo, cnt, contrato, den, fuente, fuentes, nac,
-  omitidas, pares, perCerteza, perCiudad, perPeriodo, perPrograma, perServicio,
-  perTodas, sinid, trabajo, trabajos, valores,
+  omitidas, pares, perCerteza, perCiudad, perDonantes, perImpactadas,
+  perPeriodo, perPrograma, perServicio, perTodas, presencia, sinid, trabajo,
+  trabajos, valores,
 } from './claves';
 
 // --- Datos ficticios fijos -------------------------------------------------
 
-const CIUDADES = [
-  'Zapotlán el Grande', 'Sayula', 'Gómez Farías',
-  'Tapalpa', 'Jocotepec', 'San Martín Hidalgo',
+// Ciudad → clave INEGI de municipio (Jalisco, publicos/municipios_mexico.json).
+const CIUDADES: [string, string][] = [
+  ['Zapotlán el Grande', '14023'], ['Sayula', '14082'], ['Gómez Farías', '14079'],
+  ['Tapalpa', '14086'], ['Jocotepec', '14050'], ['San Martín Hidalgo', '14077'],
 ];
 
 const PERIODOS = ['2026-02', '2026-03', '2026-04', '2026-05', '2026-06', '2026-07', '2026-08', '2026-09'];
 
-const P_TAMIZAJE = 'Tamizaje Rosa';
-const P_SALUD = 'Salud que Florece';
-const P_NUTRICION = 'Nutrición';
+// Ids de iniciativa de catalogos/iniciativas.json (el campo `programa` lleva
+// el id, no el nombre para mostrar).
+const P_TAMIZAJE = 'tamizaje-rosa';
+const P_MELENAS = 'melenas-en-movimiento';
+const P_NUTRICION = 'comunidades-de-origen';
 
 const S_PAP = 'Papanicolaou';
 const S_USG = 'Ultrasonido de mama';
 const S_EXP = 'Exploración clínica';
-const S_TALLER = 'Taller de salud';
+const S_TRENZA = 'Donación de trenza';
+const S_PELUCA = 'Entrega de peluca';
 const S_NUT = 'Valoración nutricional';
 
 const F_TAMIZAJE = 'f-tamizaje-rosa';
-const F_SALUD = 'f-salud-que-florece';
+const F_MELENAS = 'f-melenas-en-movimiento';
 const F_NUTRICION = 'f-nutricion';
 
 const N_PERSONAS = 150;
@@ -63,7 +68,8 @@ const nacimiento = (i: number) => {
   return `${a}-${String(m).padStart(2, '0')}-${String(d).padStart(2, '0')}`;
 };
 
-const ciudadDe = (i: number) => CIUDADES[i % CIUDADES.length];
+const ciudadDe = (i: number) => CIUDADES[i % CIUDADES.length][0];
+const claveDe = (i: number) => CIUDADES[i % CIUDADES.length][1];
 
 const ahora = '2026-11-21T15:40:00Z';
 
@@ -72,7 +78,7 @@ const ahora = '2026-11-21T15:40:00Z';
 async function registrar(
   v: Valkey,
   unidad: string, programa: string, servicio: string,
-  iPersona: number, periodo: string,
+  iPersona: number, periodo: string, rol: 'impactada' | 'donante' = 'impactada',
 ) {
   const id = pid(iPersona);
   const ciudad = ciudadDe(iPersona);
@@ -80,9 +86,12 @@ async function registrar(
   pipe.hincrby(cnt(unidad), campoConteo(programa, ciudad, periodo, servicio), 1);
   pipe.sadd(perTodas(), id);
   pipe.sadd(perPrograma(programa), id);
+  pipe.sadd(rol === 'donante' ? perDonantes(programa) : perImpactadas(programa), id);
   pipe.sadd(perCiudad(ciudad), id);
   pipe.sadd(perPeriodo(periodo), id);
   pipe.sadd(perServicio(servicio), id);
+  pipe.hincrby(presencia(programa), claveDe(iPersona), 1);
+  pipe.hincrby(presencia('global'), claveDe(iPersona), 1);
   await pipe.exec();
 }
 
@@ -103,10 +112,16 @@ export async function cargarSemilla(v: Valkey) {
     const servicio = [S_PAP, S_USG, S_EXP][r % 3];
     await registrar(v, 'atencion', P_TAMIZAJE, servicio, r % 90, PERIODOS[r % 8]);
   }
-  // Salud que Florece: 80 participaciones, personas 75..149
-  // (las personas 75..89 también están en Tamizaje Rosa: cruce de 15).
+  // Melenas en Movimiento: 80 filas (60 donaciones de trenza + 20 entregas de
+  // peluca), personas 75..149 — las 75..89 también están en Tamizaje Rosa:
+  // cruce de 15. Donantes y beneficiarias van a conjuntos distintos.
   for (let r = 0; r < 80; r++) {
-    await registrar(v, 'participacion', P_SALUD, S_TALLER, 75 + (r % 75), PERIODOS[(r * 3) % 8]);
+    const donacion = r < 60;
+    await registrar(
+      v, donacion ? 'donacion' : 'producto_entregado', P_MELENAS,
+      donacion ? S_TRENZA : S_PELUCA, 75 + (r % 75), PERIODOS[(r * 3) % 8],
+      donacion ? 'donante' : 'impactada',
+    );
   }
   // Nutrición: 40 atenciones nuevas, personas 90..129.
   for (let r = 0; r < 40; r++) {
@@ -119,10 +134,10 @@ export async function cargarSemilla(v: Valkey) {
     await v.hincrby(
       sinid(),
       campoConteo(
-        enTamizaje ? P_TAMIZAJE : P_SALUD,
-        CIUDADES[r % 6],
+        enTamizaje ? P_TAMIZAJE : P_MELENAS,
+        CIUDADES[r % 6][0],
         PERIODOS[(r * 2) % 8],
-        enTamizaje ? S_EXP : S_TALLER,
+        enTamizaje ? S_EXP : S_TRENZA,
       ),
       1,
     );
@@ -138,12 +153,12 @@ export async function cargarSemilla(v: Valkey) {
       estrellas: '4', puntaje: '84',
       motivos: JSON.stringify(['12 registros sin persona identificada', '3 anomalías de calidad', '6 inasistencias registradas']),
     }, 0],
-    [F_SALUD, {
-      nombre: 'salud-que-florece.xlsx', programa: P_SALUD, unidad: 'participacion',
-      fecha_corte: '2026-09-30', cargada_en: cargada(9), por: 'Coord. Salud que Florece',
-      filas: '88', filas_nuevas: '88', filas_omitidas: '0', inasistencias: '4',
+    [F_MELENAS, {
+      nombre: 'melenas-en-movimiento.xlsx', programa: P_MELENAS, unidad: 'segun_fila',
+      fecha_corte: '2026-09-30', cargada_en: cargada(9), por: 'Coord. Melenas en Movimiento',
+      filas: '80', filas_nuevas: '80', filas_omitidas: '0', inasistencias: '0',
       estrellas: '3', puntaje: '71',
-      motivos: JSON.stringify(['8 registros sin persona identificada', '2 anomalías de calidad', '4 inasistencias registradas']),
+      motivos: JSON.stringify(['12 registros sin persona identificada', '2 fechas de servicio posteriores al corte']),
     }, 9],
     [F_NUTRICION, {
       nombre: 'nutricion.xlsx', programa: P_NUTRICION, unidad: 'atencion',
@@ -167,9 +182,9 @@ export async function cargarSemilla(v: Valkey) {
       { fila: 44, regla: 'fecha_futura', campo: 'fecha', detalle: 'La fecha de servicio es posterior al corte' },
       { fila: 88, regla: 'ciudad_desconocida', campo: 'ciudad', detalle: 'Municipio no reconocido en el catálogo' },
     ]],
-    [F_SALUD, [
+    [F_MELENAS, [
       { fila: 9, regla: 'faltante', campo: 'servicio', detalle: 'Servicio vacío' },
-      { fila: 61, regla: 'fecha_invalida', campo: 'fecha', detalle: 'Formato de fecha no reconocido' },
+      { fila: 61, regla: 'fecha_futura', campo: 'fecha', detalle: 'La fecha de servicio es posterior al corte' },
     ]],
     [F_NUTRICION, [
       { fila: 5, regla: 'posible_correccion', campo: 'servicio', detalle: 'Texto parecido a «Valoración nutricional»' },
@@ -207,7 +222,7 @@ export async function cargarSemilla(v: Valkey) {
     await v.hset(pares(), id, JSON.stringify({
       id, estado: 'pendiente', motivo,
       a: { fuente: F_TAMIZAJE, fila: 10 + i * 3, etiqueta: ea },
-      b: { fuente: F_SALUD, fila: 20 + i * 5, etiqueta: eb },
+      b: { fuente: F_MELENAS, fila: 20 + i * 5, etiqueta: eb },
     }));
   }
 
@@ -226,14 +241,14 @@ export async function cargarSemilla(v: Valkey) {
       ]),
     }],
     ['tr-002', {
-      estado: 'listo', nombre: 'salud-que-florece.xlsx', programa: P_SALUD, unidad: 'participacion',
-      fecha_corte: '2026-09-30', por: 'Coord. Salud que Florece', creado_en: '2026-11-21T14:09:00Z',
+      estado: 'listo', nombre: 'melenas-en-movimiento.xlsx', programa: P_MELENAS, unidad: 'segun_fila',
+      fecha_corte: '2026-09-30', por: 'Coord. Melenas en Movimiento', creado_en: '2026-11-21T14:09:00Z',
       terminado_en: '2026-11-21T14:09:37Z',
-      mensaje: 'Se agregaron 88 filas.', nivel_duplicado: 'distinto', fuente: F_SALUD,
-      fuente_original: '', filas: '88', filas_nuevas: '88', filas_omitidas: '0', filas_repetidas: '0',
+      mensaje: 'Se agregaron 80 filas.', nivel_duplicado: 'distinto', fuente: F_MELENAS,
+      fuente_original: '', filas: '80', filas_nuevas: '80', filas_omitidas: '0', filas_repetidas: '0',
       mapeo: JSON.stringify([
-        { encabezado: 'Participante', campo: 'nombre', probabilidad: 0.96 },
-        { encabezado: 'Taller', campo: 'servicio', probabilidad: 0.93 },
+        { encabezado: 'Nombre', campo: 'nombre', probabilidad: 0.96 },
+        { encabezado: 'Tipo', campo: 'tipo', probabilidad: 0.93 },
       ]),
     }],
     ['tr-003', {
@@ -262,7 +277,7 @@ export async function cargarSemilla(v: Valkey) {
   // 8 entradas de bitácora.
   const entradas: [string, string][] = [
     ['carga', "Se cargó 'tamizaje-rosa.xlsx': 132 filas, 120 atenciones identificadas."],
-    ['carga', "Se cargó 'salud-que-florece.xlsx': 88 filas, 80 participaciones identificadas."],
+    ['carga', "Se cargó 'melenas-en-movimiento.xlsx': 80 filas, 60 donaciones y 20 entregas."],
     ['duplicado', "Se rechazó 'tamizaje-rosa.xlsx': archivo idéntico ya cargado."],
     ['carga', "Se cargó 'nutricion.xlsx': 70 filas, 40 atenciones nuevas y 30 omitidas."],
     ['version_nueva', "'tamizaje-rosa-v2.xlsx': 122 filas ya estaban; se agregan 8."],
@@ -278,10 +293,10 @@ export async function cargarSemilla(v: Valkey) {
 
   // Valores vistos por dimensión (llenan los filtros del frontend).
   const p3 = v.pipeline();
-  for (const x of [P_TAMIZAJE, P_SALUD, P_NUTRICION]) p3.sadd(valores('programa'), x);
-  for (const x of CIUDADES) p3.sadd(valores('ciudad'), x);
+  for (const x of [P_TAMIZAJE, P_MELENAS, P_NUTRICION]) p3.sadd(valores('programa'), x);
+  for (const [nombre] of CIUDADES) p3.sadd(valores('ciudad'), nombre);
   for (const x of PERIODOS) p3.sadd(valores('periodo'), x);
-  for (const x of [S_PAP, S_USG, S_EXP, S_TALLER, S_NUT]) p3.sadd(valores('servicio'), x);
+  for (const x of [S_PAP, S_USG, S_EXP, S_TRENZA, S_PELUCA, S_NUT]) p3.sadd(valores('servicio'), x);
   await p3.exec();
 
   // Denominadores públicos: mujeres de 25 a 64 por municipio (INEGI, Censo 2020).
@@ -290,10 +305,11 @@ export async function cargarSemilla(v: Valkey) {
   const cols = lineas[0].split(',');
   const iMun = cols.indexOf('nom_mun');
   const iDen = cols.indexOf('mujeres_25_64');
+  const nombres = CIUDADES.map(([n]) => n);
   const p4 = v.pipeline();
   for (const linea of lineas.slice(1)) {
     const c = linea.split(',');
-    if (CIUDADES.includes(c[iMun])) p4.hset(den('mujeres_25_64'), c[iMun], c[iDen]);
+    if (nombres.includes(c[iMun])) p4.hset(den('mujeres_25_64'), c[iMun], c[iDen]);
   }
   await p4.exec();
 

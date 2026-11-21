@@ -45,8 +45,17 @@ export const omitidas = (fuenteId: string) => `${P}omitidas:${fuenteId}`;
 /** Set: todos los identificadores de persona. */
 export const perTodas = () => `${P}per:todas`;
 
-/** Set: personas con al menos un registro en ese programa. */
+/** Set: personas con al menos un registro en esa iniciativa (id del catálogo). */
 export const perPrograma = (programa: string) => `${P}per:programa:${programa}`;
+
+/** Set: personas impactadas de la iniciativa (roles beneficiaria y participante). */
+export const perImpactadas = (programa: string) => `${P}per:impactadas:${programa}`;
+
+/** Set: donantes de la iniciativa (rol donante; se reportan aparte). */
+export const perDonantes = (programa: string) => `${P}per:donantes:${programa}`;
+
+/** Hash: municipio_clave → registros, por iniciativa o `global`. */
+export const presencia = (iniciativa: string) => `${P}presencia:${iniciativa}`;
 
 /** Set: personas por ciudad. */
 export const perCiudad = (ciudad: string) => `${P}per:ciudad:${ciudad}`;
