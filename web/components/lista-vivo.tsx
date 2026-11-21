@@ -95,7 +95,7 @@ export function ListaVivo({ alcance, inicial }: { alcance: string; inicial: Dato
               <span className="fila__cuerpo">
                 <span style={{ display: 'block', fontWeight: 500 }}>{f.nombre}</span>
                 <span className="etiqueta" style={{ display: 'block' }}>
-                  Listo · {f.filas_nuevas} filas nuevas, {f.filas_omitidas} omitidas{datos.paresPorFuente!==undefined && `, ${datos.paresPorFuente[f.id]||0} pares detectados con esta carga`}.
+                  Listo · {f.filas_nuevas} {f.filas_nuevas===1?'fila nueva':'filas nuevas'}, {f.filas_omitidas} {f.filas_omitidas===1?'omitida':'omitidas'}{datos.paresPorFuente!==undefined && `, ${datos.paresPorFuente[f.id]||0} pares detectados con esta carga`}.
                 </span>
               </span>
               <span className="fila__dato"><StarRating valor={f.estrellas} etiqueta={`${f.estrellas} / 5`} /></span>

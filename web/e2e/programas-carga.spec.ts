@@ -17,7 +17,7 @@ test('los programas llegan desde la carga al Tablero y a Reportes sin reasignar 
     'ID,Nombre,Edad,Ciudad,Asistencia,Fecha\nABC19951201,Luna Ficticia,30,Tuxpan,Sí,2026-10-01')};
   await page.getByRole('link',{name:'Otro programa',exact:true}).click();
   await page.getByLabel('Nombre del programa').fill('Programa sin alta');
-  await page.getByLabel('Unidad',{exact:true}).selectOption('participacion');
+  await page.getByRole('combobox',{name:'Unidad',exact:true}).selectOption('participacion');
   await page.locator('input[type=file]').setInputFiles(archivo);
   await expect(page.getByText('Pide su alta', {exact:false})).toBeVisible();
   await expect(page.getByRole('button',{name:'Subir 1 archivo'})).toBeDisabled();
@@ -26,7 +26,7 @@ test('los programas llegan desde la carga al Tablero y a Reportes sin reasignar 
   await page.getByLabel('Nombre del programa').fill('Salud que Florece');
   await page.getByRole('button',{name:'Subir 1 archivo'}).click();
   await expect(page).toHaveURL(/\/informe\/salud-que-florece\/subir$/);
-  await expect(page.locator('.fila').filter({hasText:'taller.csv'})).toContainText('1 filas nuevas', {timeout:30000});
+  await expect(page.locator('.fila').filter({hasText:'taller.csv'})).toContainText('1 fila nueva', {timeout:30000});
 
   await page.goto('/tablero');
   const programa = page.getByRole('combobox',{name:'Programa',exact:true});
