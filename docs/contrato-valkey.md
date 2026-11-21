@@ -1,6 +1,6 @@
 # Contrato de Valkey · versión 1
 
-> Adiciones del 21 nov, 13:00 (no rompen compatibilidad): `eira:informe` y las tres claves `eira:huellas:*`. Cada entorno (en blanco, con fuentes reales) usa un número de base distinto de Valkey, indicado en `VALKEY_URL`.
+> Adiciones del 21 nov, 13:00 (no rompen compatibilidad): `eira:informe:<alcance>` y las tres claves `eira:huellas:*`. Cada entorno (en blanco, con fuentes reales) usa un número de base distinto de Valkey, indicado en `VALKEY_URL`.
 
 Valkey es el único punto de contacto entre el **procesamiento en Python** (leer Excel, deduplicar, unificar programas) y el **frontend** (subir archivos, tableros, calidad, informe). Ninguno llama al otro: los dos leen y escriben estas claves.
 
@@ -113,7 +113,7 @@ Un valor desconocido se escribe como cadena vacía en su posición del campo.
 |---|---|---|
 | `eira:den:mujeres_25_64` | Hash | ciudad → mujeres de 25 a 64 años (INEGI, Censo 2020; `publicos/`) |
 | `eira:contrato` | String | `1` |
-| `eira:informe` | Hash | El informe en preparación: `nombre`, `audiencia`, `fecha_corte`, `creado_en`, `calidad_resuelta` (0 o 1), `cifras_aprobadas` (0 o 1). Solo lo usa el frontend |
+| `eira:informe:<alcance>` | Hash | Estado de cada informe: `fecha_corte`, `creado_en`, `calidad_resuelta` (0 o 1), `cifras_aprobadas` (0 o 1). `<alcance>` es el id de un programa (`tamizaje-rosa`, `salud-que-florece`) o `global`. Solo lo usa el frontend |
 
 ## Ejemplo mínimo en Python
 
