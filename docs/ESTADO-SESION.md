@@ -41,3 +41,11 @@
 - En línea (versión VIEJA rechazada): https://presence-ability-grounds-selective.trycloudflare.com → next start :3100, Valkey base 0 con semilla. cloudflared en ~/.local/bin. Sustituir por dos entornos (blanco /0 :3100, real /1 :3101) al pasar G5.
 - Límite de 5 worktrees por repo (hook). Se quitó el de valkey-base (ya integrado).
 - Pendiente de Ian: correo de la compañera en el historial público; confirmar motor de referencia; formatos reales de EIRA.
+
+## 13:12 CDMX — decisiones de Ian
+- Informe separado POR PROGRAMA + GLOBAL. Programas del demo: Tamizaje Rosa y Melenas en Movimiento. Versión real: además "Datos públicos de salud (Jalisco)". Programas salen de `catalogos/iniciativas.json`, nada fijo en código.
+- GLOBAL: persona en dos programas cuenta DOS veces (suma de programas). Donantes de cabello no son personas impactadas.
+- FE relanzado (3.ª vez) con esto; brief en scratchpad devin3/fe.txt. Motor (1.ª pasada, esquema viejo) sigue corriendo: al terminar, lanzar 2.ª pasada con devin3/motor2.txt (catálogo, Melenas, roles, v_global, vistas para Metabase).
+- Metabase listo (rama metabase, clon ../nerdearla-hack-metabase, :3200): falta quitar "[real]" de títulos, ancho completo, filtro por programa; reprovisionar sobre db/esquema.sql del motor.
+- Entrega (rama entrega): README/devpost/guion en borrador; sustituir capturas viejas.
+- Demo (rama demo): scripts en curso.
