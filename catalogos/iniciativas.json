@@ -103,6 +103,10 @@
       "roles_por_tipo": {
         "donacion": "donante",
         "producto_entregado": "beneficiaria"
+      },
+      "valores_tipo": {
+        "Donación de trenza": "donacion",
+        "Entrega de peluca": "producto_entregado"
       }
     },
     {
