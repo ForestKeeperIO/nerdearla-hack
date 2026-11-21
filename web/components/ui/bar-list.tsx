@@ -29,7 +29,7 @@ export function BarList({
           <span className="truncate text-sm">{d.nombre}</span>
           <span className="h-2.5 min-w-8 overflow-hidden rounded-full bg-muted">
             <span
-              className="block h-full rounded-full bg-primary"
+              className="block h-full rounded-full bg-[var(--rosa)]"
               style={{ width: `${Math.max(2, (d.valor / max) * 100)}%` }}
             />
           </span>
