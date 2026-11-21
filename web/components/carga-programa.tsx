@@ -53,7 +53,7 @@ export async function CargaPrograma({ programa:a }: {programa:string}) {
         programas={informesActivos().map(({id,nombre,tipos_de_registro})=>({id,nombre,tipos_de_registro}))} lectura={soloLectura()} />
 
       <div className="mt-10">
-        <ListaVivo alcance={alcance} inicial={{ trabajos: trabajos.valor, fuentes: fuentes.valor }} />
+        <ListaVivo alcance={alcance} inicial={{ trabajos: trabajos.valor, fuentes: fuentes.valor }} lectura={soloLectura()} />
       </div>
 
       <PieDePaso estado={estado} paso="subir">

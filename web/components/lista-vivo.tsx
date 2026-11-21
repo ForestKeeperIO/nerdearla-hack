@@ -4,11 +4,13 @@ import { useEffect, useRef, useState } from 'react';
 import { useRouter } from 'next/navigation';
 import { FileSpreadsheet } from 'lucide-react';
 import type { Fuente, Trabajo } from '@/lib/comun';
+import { explicarErrorCarga } from '@/lib/error-carga';
 import { StarRating } from '@/components/ui/star-rating';
 
 type Datos = { trabajos: Trabajo[]; fuentes: Fuente[]; paresPorFuente?:Record<string,number> };
 
 function estadoTrabajo(t: Trabajo): { texto: string; clase: string } {
+  if (!t.estado) return { texto: 'Sin respuesta del procesador', clase: 'estado--aviso' };
   if (t.estado === 'pendiente') return { texto: 'En espera', clase: 'estado--info' };
   if (t.estado === 'procesando') return { texto: 'Procesando', clase: 'estado--info' };
   if (t.estado === 'error') return { texto: 'No se pudo leer', clase: 'estado--error' };
@@ -25,7 +27,7 @@ function estadoTrabajo(t: Trabajo): { texto: string; clase: string } {
 }
 
 /** Lista en vivo de trabajos y archivos importados del informe (cada 2 s). */
-export function ListaVivo({ alcance, inicial }: { alcance: string; inicial: Datos }) {
+export function ListaVivo({ alcance, inicial, lectura = false }: { alcance: string; inicial: Datos; lectura?: boolean }) {
   const [datos, setDatos] = useState<Datos>(inicial);
   const [alDia, setAlDia] = useState(true);
   const router = useRouter();
@@ -78,12 +80,17 @@ export function ListaVivo({ alcance, inicial }: { alcance: string; inicial: Dato
             .filter((t) => !(t.estado === 'listo' && datos.fuentes.some((f) => f.id === t.fuente)))
             .map((t) => {
             const e = estadoTrabajo(t);
+            const fallo = !t.estado || t.estado === 'error';
+            const detalle = !t.estado ? 'No hay un resultado confirmado. Revisa si el archivo aparece como listo antes de reintentar.'
+              : fallo ? explicarErrorCarga(t.mensaje) : t.mensaje;
             return (
               <li key={t.id} className="fila">
                 <FileSpreadsheet className="size-5" style={{ color: 'var(--tinta-tenue)', flexShrink: 0 }} aria-hidden="true" />
                 <span className="fila__cuerpo">
                   <span style={{ display: 'block', fontWeight: 500 }}>{t.nombre}</span>
-                  {t.mensaje && <span className="etiqueta" style={{ display: 'block' }}>{t.mensaje}</span>}
+                  {detalle && <span className="etiqueta" style={{ display: 'block' }}>{detalle}</span>}
+                  {fallo && !lectura && <button type="button" className="btn btn--secundario btn--sm"
+                    onClick={() => document.getElementById('elegir-archivo-carga')?.click()}>Volver a subir</button>}
                 </span>
                 <span className="fila__dato"><span className={`estado ${e.clase}`}>{e.texto}</span></span>
               </li>

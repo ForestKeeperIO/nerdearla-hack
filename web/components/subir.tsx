@@ -8,6 +8,7 @@ import { ArrowUpRight, Check, FileSpreadsheet, Trash2, UploadCloud, XCircle } fr
 import { toast } from 'sonner';
 import { Selector } from './selector';
 import { resolverNombre, SIN_ALTA } from '@/lib/programa-libre';
+import { explicarErrorCarga } from '@/lib/error-carga';
 
 const MAX_BYTES = 10 * 1024 * 1024;
 
@@ -26,6 +27,7 @@ type ArchivoLocal = {
 
 function textoError(r: FileRejection): string {
   const codigo = r.errors[0]?.code;
+  if (r.file.name.toLowerCase().endsWith('.xlsm')) return 'No se aceptan macros.';
   if (codigo === 'file-too-large') return `Pesa más de 10 MB (${Math.round(r.file.size / 1048576)} MB).`;
   if (codigo === 'file-invalid-type') return 'Solo se aceptan .xlsx o .csv.';
   return 'No se acepta este archivo. Elige un Excel (.xlsx) o un CSV.';
@@ -64,6 +66,7 @@ export function SubirArchivos({
   const [archivos, setArchivos] = useState<ArchivoLocal[]>([]);
   const [enviando, setEnviando] = useState(false);
   const siguiente = useRef(1);
+  const reemplazar = useRef<number | null>(null);
   const [nombreLibre, setNombreLibre] = useState('');
   const [unidadLibre, setUnidadLibre] = useState('');
   const [corteLibre, setCorteLibre] = useState(fechaCorte);
@@ -89,11 +92,16 @@ export function SubirArchivos({
         error: textoError(r),
       });
     }
-    if (nuevos.length) setArchivos((a) => [...a, ...nuevos]);
+    if (nuevos.length) {
+      const id = reemplazar.current;
+      reemplazar.current = null;
+      setArchivos((a) => [...a.filter(x => x.id !== id), ...nuevos]);
+    }
   }, [tipos]);
 
   const { getRootProps, getInputProps, isDragActive, open } = useDropzone({
     onDrop: agregar,
+    onFileDialogCancel: () => { reemplazar.current = null; },
     disabled: lectura,
     accept: {
       'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet': ['.xlsx'],
@@ -172,7 +180,7 @@ export function SubirArchivos({
         <p aria-live="polite">
           {isDragActive ? 'Suelta los archivos aquí' : `Arrastra aquí los Excel o CSV de ${elegido?.nombre || 'tu programa'}`}
         </p>
-        <button type="button" onClick={open} disabled={lectura} className="elegir-archivo">Elegir archivo</button>
+        <button id="elegir-archivo-carga" type="button" onClick={open} disabled={lectura} className="elegir-archivo">Elegir archivo</button>
         <small>{lectura?'Modo de consulta: no se reciben archivos.':'Excel (.xlsx) o CSV · Hasta 10 MB por archivo'}</small>
       </div>
 
@@ -186,8 +194,8 @@ export function SubirArchivos({
                   <span style={{ display: 'block', fontWeight: 500, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{a.file.name}</span>
                   <span className="etiqueta mono">{(a.file.size / 1024).toFixed(0)} KB</span>
                   {a.error && (
-                    <span style={{ display: 'flex', alignItems: 'center', gap: 'var(--sp-2)', color: 'var(--error)', fontSize: 'var(--fs-small)', marginTop: 2 }}>
-                      <XCircle className="size-3.5" aria-hidden="true" /> {a.error}
+                    <span role="alert" style={{ display: 'flex', alignItems: 'center', gap: 'var(--sp-2)', color: 'var(--error)', fontSize: 'var(--fs-small)', marginTop: 2 }}>
+                      <XCircle className="size-3.5" aria-hidden="true" /> {explicarErrorCarga(a.error)}
                     </span>
                   )}
                 </span>
@@ -202,6 +210,8 @@ export function SubirArchivos({
                 {a.envio === 'enviando' && <span className="transferencia" role="status">Subiendo{a.progreso===undefined?'…':` · ${a.progreso} %`}
                   <progress aria-label={`Progreso de ${a.file.name}`} max={100} value={a.progreso}/></span>}
                 {a.envio === 'error' && <span className="estado estado--error">No se subió</span>}
+                {a.envio === 'error' && !lectura && <button type="button" className="btn btn--secundario btn--sm"
+                  onClick={() => { reemplazar.current = a.id; open(); }}>Volver a subir</button>}
                 {(a.envio === 'sin_enviar' || a.envio === 'error') && (
                   <button type="button" className="btn btn--quieto btn--sm" onClick={() => setArchivos((x) => x.filter((y) => y.id !== a.id))}>
                     <Trash2 className="size-4" aria-hidden="true" /> Quitar

@@ -76,7 +76,8 @@ test('rechaza un .xlsm con mensaje para la usuaria', async ({ page }) => {
 
   await expect(page.getByText('reporte-con-macros.xlsm')).toBeVisible();
   await expect(page.getByText(/No se subió/)).toBeVisible();
-  await expect(page.getByText('Solo se aceptan .xlsx o .csv.')).toBeVisible();
+  await expect(page.getByText(/Guarda una copia como .xlsx sin macros/)).toBeVisible();
+  await expect(page.getByRole('button', { name: 'Volver a subir' })).toBeVisible();
 });
 
 test('rechaza un archivo de más de 10 MB con mensaje', async ({ page }) => {

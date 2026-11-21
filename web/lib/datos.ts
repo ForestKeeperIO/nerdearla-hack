@@ -232,7 +232,7 @@ function aTrabajo(id: string, h: Record<string, string>): Trabajo {
     id,
     mapeo,
     estado_clave: h.estado_clave,
-    estado: h.estado ?? 'pendiente',
+    estado: h.estado ?? '',
     nombre: h.nombre ?? '',
     programa: h.programa ?? '',
     unidad: h.unidad ?? '',
