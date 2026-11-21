@@ -6,8 +6,7 @@ import {
 } from '@/lib/datos';
 import { resolverCalidad, restituirFila } from '@/lib/acciones';
 import { MarcoInforme } from '@/components/marco';
-import { PieDePaso } from '@/components/pie-de-paso';
-import { MismaPersona } from '@/components/misma-persona';
+import { CalidadCliente } from '@/components/calidad-cliente';
 import { ComoSeCalculo } from '@/components/como';
 import { StarRating } from '@/components/ui/star-rating';
 import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from '@/components/ui/accordion';
@@ -158,22 +157,13 @@ export default async function PaginaCalidad({ params }: { params: Promise<{ alca
         </section>
       )}
 
-      <section aria-label="Decisiones pendientes" className="tarjeta">
-        <MismaPersona alcance={alcance} pares={paresPendientes} nombreFuente={nombreFuente} />
-      </section>
-
-      <PieDePaso estado={estado} paso="calidad">
-        <form action={resolverCalidad.bind(null, alcance)} style={{ textAlign: 'right' }}>
-          <button type="submit" className="btn btn--primario">
-            {paresPendientes.length > 0 ? `Continuar con ${paresPendientes.length} por decidir` : 'Continuar a Vista previa'}
-          </button>
-          {paresPendientes.length > 0 && (
-            <p className="etiqueta" style={{ marginTop: 'var(--sp-2)' }}>
-              Cada par sin decidir cuenta como una sola persona.
-            </p>
-          )}
-        </form>
-      </PieDePaso>
+      <CalidadCliente
+        alcance={alcance}
+        pares={paresPendientes}
+        nombreFuente={nombreFuente}
+        estado={estado}
+        accion={resolverCalidad.bind(null, alcance)}
+      />
     </MarcoInforme>
   );
 }
