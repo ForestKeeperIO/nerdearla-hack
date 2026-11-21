@@ -6,8 +6,9 @@ Reglas:
 - Mismo ID y nombre distinto: dos personas y un par pendiente para que una
   humana decida. rapidfuzz clasifica el motivo: variante de escritura o
   personas distintas.
-- Sin ID pero con nombre: persona por folio (certeza 'folio').
-- Sin ID ni nombre: persona_id nulo (cuenta en eira:sinid).
+- Sin ID de EIRA: la fila queda SIN persona identificada (persona_id nulo,
+  cuenta en eira:sinid). No se une solo por nombre: dos "María López" de
+  coordinaciones distintas no son forzosamente la misma.
 
 El nombre nunca se guarda: las claves son HMAC. Los nombres solo viven en
 memoria del proceso (_NOMBRES) para poder comparar variantes; si el proceso
@@ -89,17 +90,12 @@ def vincular(df: pd.DataFrame, existentes: pd.DataFrame,
     for idx, fila in df.iterrows():
         id_eira = fila.get("id_eira") or ""
         nombre_norm = fila.get("nombre_norm") or ""
-        if not id_eira and not nombre_norm:
-            continue  # sin identificador: queda persona_id nulo
+        if not id_eira:
+            continue  # sin ID no se une por nombre: registro sin persona
 
-        if id_eira:
-            clave = _h("id|" + id_eira)
-            certeza = "id"
-            nacimiento = _nac_del_id(id_eira)
-        else:
-            clave = _h("folio|" + nombre_norm)
-            certeza = "folio"
-            nacimiento = None
+        clave = _h("id|" + id_eira)
+        certeza = "id"
+        nacimiento = _nac_del_id(id_eira)
         nombre_clave = _h("nom|" + nombre_norm) if nombre_norm else clave
         if nombre_norm:
             _NOMBRES[nombre_clave] = nombre_norm

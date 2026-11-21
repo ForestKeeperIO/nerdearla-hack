@@ -23,7 +23,7 @@ import valkey
 
 from db import catalogo
 from db.crear import crear
-from . import escribir, huellas, leer, personas
+from . import escribir, huellas, leer, personas, reconstruir
 
 GRUPO = "procesadores"
 CONSUMIDOR = f"py-{os.getpid()}"
@@ -68,15 +68,18 @@ def encolar(v, contenido: bytes, nombre: str, programa: str, unidad: str,
 
 def _calidad(anomalias: list[dict], filas: int, omitidas: int, inasistencias: int,
              sin_id: int) -> tuple[int, float, list[str]]:
-    puntaje = 100.0 - sum(PESOS_ANOMALIA.get(a["regla"], 1) for a in anomalias)
+    # Una fila que ya estaba cargada (versión nueva del mismo archivo, o lo que
+    # otra coordinación ya registró) no es un defecto del archivo: no resta.
+    propias = [a for a in anomalias if a["regla"] != "fila_ya_cargada"]
+    puntaje = 100.0 - sum(PESOS_ANOMALIA.get(a["regla"], 1) for a in propias)
     puntaje = max(0.0, puntaje)
     estrellas = max(1, min(5, round(puntaje / 20)))
     motivos = []
     if sin_id:
-        motivos.append(f"{sin_id} registros sin ID de EIRA (persona por nombre)")
+        motivos.append(f"{sin_id} registros sin ID de EIRA (quedan sin identificar)")
     if omitidas:
         motivos.append(f"{omitidas} filas omitidas porque ya estaban registradas")
-    n = len(anomalias)
+    n = len(propias)
     if n:
         motivos.append(f"{n} anotaciones de calidad")
     if inasistencias:
@@ -84,6 +87,23 @@ def _calidad(anomalias: list[dict], filas: int, omitidas: int, inasistencias: in
     if not motivos:
         motivos.append("Datos completos y consistentes")
     return estrellas, puntaje, motivos
+
+
+def _reclamar_huellas(v, fid: str, primera: dict) -> dict:
+    """Reclama cada huella con HSETNX antes de contarla.
+
+    primera: {huella_fila: numero de la primera fila con esa huella}.
+    Devuelve {huella: "fid:fila"} solo de las que ya eran de OTRA fuente;
+    las que esta fuente ya habia reclamado (reintento tras caida) cuentan
+    como propias.
+    """
+    dueños = {}
+    for h, num in primera.items():
+        if not v.hsetnx(huellas.H_FILA, h, f"{fid}:{num}"):
+            actual = v.hget(huellas.H_FILA, h)
+            if actual and actual.split(":", 1)[0] != fid:
+                dueños[h] = actual
+    return dueños
 
 
 def _edad_inconsistente(fila) -> bool:
@@ -107,13 +127,21 @@ def procesar_trabajo(v, db: sqlite3.Connection, trabajo_id: str,
         if isinstance(contenido, str):
             contenido = contenido.encode("latin-1")
         if contenido is None:
-            raise RuntimeError("No encontré el archivo: expiró o no se subió.")
+            raise leer.ErrorVisible(
+                "No encontré el archivo: expiró o no se subió.")
 
         ini = catalogo.iniciativa(campos.get("programa", ""))
         if ini is None:
-            raise RuntimeError(
+            raise leer.ErrorVisible(
                 f"No reconozco el programa '{campos.get('programa', '')}': "
                 "no está en el catálogo de iniciativas.")
+        unidad_trabajo = campos.get("unidad", "") or ""
+        if (unidad_trabajo and unidad_trabajo != "segun_fila"
+                and unidad_trabajo not in ini["tipos_de_registro"]):
+            raise leer.ErrorVisible(
+                f"La unidad '{unidad_trabajo}' no es un tipo de registro "
+                f"válido para {ini['nombre']} "
+                f"({', '.join(ini['tipos_de_registro'])} o segun_fila).")
 
         df, anomalias = leer.leer_reporte(
             contenido, nombre, estado_clave=campos.get("estado_clave") or "14")
@@ -123,7 +151,6 @@ def procesar_trabajo(v, db: sqlite3.Connection, trabajo_id: str,
 
         # Tipo de registro y rol por fila: la columna Tipo decide cuando el
         # trabajo viene "segun_fila"; si no, manda la unidad del trabajo.
-        unidad_trabajo = campos.get("unidad", "") or ""
         tipos, roles = [], []
         for r in df.itertuples(index=False):
             tipo, seguro = catalogo.resolver_tipo(ini, r.tipo_texto or "",
@@ -141,7 +168,9 @@ def procesar_trabajo(v, db: sqlite3.Connection, trabajo_id: str,
         df["huella_fila"] = [huellas.huella_fila(r, clave)
                              for r in df.to_dict("records")]
         hb = huellas.huella_bytes(contenido)
-        veredicto = huellas.evaluar(v, hb, list(df["huella_fila"]))
+        fid = escribir.fuente_id_de(hb)
+        veredicto = huellas.evaluar(v, hb, list(df["huella_fila"]),
+                                    excluir_fuente=fid)
         veredicto["huella_bytes"] = hb
 
         if veredicto["nivel"] in ("identico", "mismo_contenido"):
@@ -150,10 +179,12 @@ def procesar_trabajo(v, db: sqlite3.Connection, trabajo_id: str,
             return v.hgetall(f"eira:trabajo:{trabajo_id}")
 
         # --- deduplicacion por fila: global (Valkey) y dentro del archivo -----
-        fid = escribir.fuente_id_de(hb)
-        unicas = list(dict.fromkeys(df["huella_fila"]))
-        dueños = ({h: d for h, d in zip(unicas, v.hmget(huellas.H_FILA, unicas)) if d}
-                  if unicas else {})
+        # Cada huella se reclama con HSETNX antes de contarla: dos archivos
+        # procesados a la vez no cuentan dos veces las filas compartidas.
+        primera: dict[str, int] = {}
+        for r in df.itertuples(index=False):
+            primera.setdefault(r.huella_fila, int(r.fila))
+        dueños = _reclamar_huellas(v, fid, primera)
         local: dict[str, int] = {}
         contados, omitidas_fuente, omitidas_fila = [], [], []
         for r in df.itertuples(index=False):
@@ -229,7 +260,9 @@ def procesar_trabajo(v, db: sqlite3.Connection, trabajo_id: str,
         filas_nuevas = int(df["contado"].sum())
         filas_omitidas = filas - filas_nuevas
         filas_repetidas = sum(1 for a in anomalias if a["regla"] == "fila_repetida")
-        inasistencias = int((df["asistio"] == False).sum())  # noqa: E712
+        # Solo filas contadas: una omitida con inasistencia ya esta en otra fuente.
+        inasistencias = int(((df["asistio"] == False)  # noqa: E712
+                             & (df["contado"] == 1)).sum())
         sin_id = int(((df["persona_id"].isna()) & (df["contado"] == 1)).sum())
         estrellas, puntaje, motivos = _calidad(anomalias, filas, filas_omitidas,
                                                inasistencias, sin_id)
@@ -245,22 +278,21 @@ def procesar_trabajo(v, db: sqlite3.Connection, trabajo_id: str,
         previa = db.execute("SELECT id FROM fuentes WHERE huella_bytes=?",
                             (hb,)).fetchone()
         if previa:
-            veredicto.update(nivel="identico", fuente_original=previa[0], mensaje=(
-                f"Este archivo ya se cargó antes como '{nombre}'. No se vuelve a cargar."))
-            escribir.registrar_duplicado(v, trabajo_id, veredicto, nombre,
-                                         filas, df.attrs.get("mapeo", []))
-            return v.hgetall(f"eira:trabajo:{trabajo_id}")
+            return _resolver_previa(v, db, trabajo_id, veredicto, nombre,
+                                    filas, df.attrs.get("mapeo", []), previa[0])
 
         try:
             escribir.guardar(db, v, fuente, df, anomalias, pares, veredicto, vinculacion)
         except sqlite3.IntegrityError:
-            # La fuente quedo a medias por una caida anterior: el hash UNIQUE la
-            # delata. Se reporta como identica en vez de reimportar.
-            veredicto.update(nivel="identico", fuente_original=fid, mensaje=(
-                f"Este archivo ya se cargó antes como '{nombre}'. No se vuelve a cargar."))
-            escribir.registrar_duplicado(v, trabajo_id, veredicto, nombre,
-                                         filas, df.attrs.get("mapeo", []))
-            return v.hgetall(f"eira:trabajo:{trabajo_id}")
+            # La fuente ya existia (carrera con otro worker o una caida a
+            # medias): el UNIQUE de huella_bytes la delata. Si su mitad de
+            # Valkey falta se re-emite; un IntegrityError de otra cosa es un
+            # error genuino y sube.
+            if db.execute("SELECT 1 FROM fuentes WHERE huella_bytes=?",
+                          (hb,)).fetchone() is None:
+                raise
+            return _resolver_previa(v, db, trabajo_id, veredicto, nombre,
+                                    filas, df.attrs.get("mapeo", []), fid)
 
         mensaje = veredicto["mensaje"]
         if filas_repetidas:
@@ -279,32 +311,115 @@ def procesar_trabajo(v, db: sqlite3.Connection, trabajo_id: str,
             "terminado_en": escribir.ahora()})
         v.publish("eira:eventos", json.dumps({"tipo": "trabajo", "id": trabajo_id}))
         return v.hgetall(f"eira:trabajo:{trabajo_id}")
-    except Exception as e:  # noqa: BLE001 - el estado del trabajo lo refleja
+    except leer.ErrorVisible as e:
+        # Error del archivo o del encargo: se le muestra tal cual y no se
+        # reintenta (volver a leerlo daria lo mismo).
         v.hset(f"eira:trabajo:{trabajo_id}", mapping={
-            "estado": "error", "mensaje": f"No pude procesarlo: {e}",
+            "estado": "error", "mensaje": str(e),
+            "terminado_en": escribir.ahora()})
+        v.publish("eira:eventos", json.dumps({"tipo": "trabajo", "id": trabajo_id}))
+        return v.hgetall(f"eira:trabajo:{trabajo_id}")
+    except Exception:  # noqa: BLE001 - el estado del trabajo lo refleja
+        # El detalle tecnico va a la bitacora del servidor; la persona ve un
+        # mensaje generico (la excepcion puede traer contenido de celdas).
+        import traceback
+        print(f"[worker] {trabajo_id} no se pudo procesar:", file=sys.stderr)
+        traceback.print_exc()
+        v.hset(f"eira:trabajo:{trabajo_id}", mapping={
+            "estado": "error",
+            "mensaje": "No pude procesarlo: algo falló de mi parte. "
+                       "Avísanos para revisarlo.",
             "terminado_en": escribir.ahora()})
         v.publish("eira:eventos", json.dumps({"tipo": "trabajo", "id": trabajo_id}))
         raise
 
 
+def _resolver_previa(v, db, trabajo_id: str, veredicto: dict, nombre: str,
+                     filas: int, mapeo: list, fid_prev: str) -> dict:
+    """La fuente ya esta en SQLite. Si su mitad de Valkey falta (EXEC
+    perdido tras una caida) se re-emite desde SQLite y el trabajo queda
+    listo; si esta completa es un duplicado normal."""
+    if not v.exists(f"eira:fuente:{fid_prev}"):
+        reconstruir.reconstruir_fuente(db, v, fid_prev)
+        v.hset(f"eira:trabajo:{trabajo_id}", mapping={
+            "estado": "listo",
+            "mensaje": "Este archivo ya estaba registrado; volví a publicar "
+                       "sus cifras en el tablero.",
+            "nivel_duplicado": "identico", "fuente": fid_prev,
+            "fuente_original": fid_prev, "filas": str(filas),
+            "filas_nuevas": "0", "filas_omitidas": str(filas),
+            "filas_repetidas": "0", "mapeo": json.dumps(
+                mapeo, ensure_ascii=False),
+            "terminado_en": escribir.ahora()})
+        v.xadd("eira:bitacora", {
+            "en": escribir.ahora(), "por": "motor", "tipo": "reconstruir",
+            "detalle": f"Se re-emitieron las claves de '{nombre}'"
+                       f" ({fid_prev}) desde SQLite."})
+        v.publish("eira:eventos", json.dumps({"tipo": "trabajo", "id": trabajo_id}))
+        return v.hgetall(f"eira:trabajo:{trabajo_id}")
+    veredicto.update(nivel="identico", fuente_original=fid_prev, mensaje=(
+        f"Este archivo ya se cargó antes como '{nombre}'. No se vuelve a cargar."))
+    escribir.registrar_duplicado(v, trabajo_id, veredicto, nombre, filas, mapeo)
+    return v.hgetall(f"eira:trabajo:{trabajo_id}")
+
+
 # --- Decisiones humanas ---------------------------------------------------------
+
+def _membresias(db, pid: str) -> set[str]:
+    """Claves eira:per:* donde una persona aparece por sus registros
+    contados (cantidad > 0)."""
+    impactados = catalogo.roles_impactados()
+    claves = {"eira:per:todas"}
+    for ini, ciu, per, ser, rol in db.execute(
+            "SELECT DISTINCT iniciativa_id, ciudad, periodo, servicio,"
+            " rol_persona FROM registros"
+            " WHERE persona_id=? AND contado=1 AND cantidad>0", (pid,)):
+        claves.add(f"eira:per:programa:{ini}")
+        if ciu:
+            claves.add(f"eira:per:ciudad:{ciu}")
+        if per:
+            claves.add(f"eira:per:periodo:{per}")
+        if ser:
+            claves.add(f"eira:per:servicio:{ser}")
+        if rol in impactados:
+            claves.add(f"eira:per:impactadas:{ini}")
+        if rol == "donante":
+            claves.add(f"eira:per:donantes:{ini}")
+    c = db.execute("SELECT certeza FROM personas WHERE id=?",
+                   (pid,)).fetchone()
+    if c:
+        claves.add(f"eira:per:certeza:{c[0]}")
+    return claves
+
 
 def _decidir_par(v, db, par: str, decision: str, por: str) -> None:
     fila = db.execute("SELECT * FROM pares_persona WHERE id=?", (par,)).fetchone()
-    if fila is None or fila[5] != "pendiente":  # columna estado
+    if fila is None:
         return
+    pendiente = fila[5] == "pendiente"  # columna estado
+    if not pendiente and fila[5] != decision:
+        return  # ya se decidio otra cosa: no se pisa
     en = escribir.ahora()
     a, b = fila[1], fila[2]
-    with db:
-        db.execute("UPDATE pares_persona SET estado=?, decidido_por=?, decidido_en=?"
-                   " WHERE id=?", (decision, por, en, par))
-        if decision == "misma":
-            db.execute("UPDATE registros SET persona_id=? WHERE persona_id=?", (a, b))
-            db.execute("DELETE FROM identidades WHERE persona_id=?", (b,))
-            db.execute("DELETE FROM personas WHERE id=?", (b,))
-        db.execute("INSERT INTO bitacora(en, por, tipo, detalle) VALUES (?,?,?,?)",
-                   (en, por or "presidencia", "decision",
-                    f"Par {par}: se marcó como '{decision}'."))
+    sets_b = _membresias(db, b)  # antes de mover registros
+    if pendiente:
+        with db:
+            db.execute("UPDATE pares_persona SET estado=?, decidido_por=?,"
+                       " decidido_en=? WHERE id=?", (decision, por, en, par))
+            if decision == "misma":
+                db.execute("UPDATE registros SET persona_id=?"
+                           " WHERE persona_id=?", (a, b))
+                # Reasignar identidades en vez de borrarlas: una carga
+                # posterior con ese ID y nombre cae en a. OR IGNORE por si
+                # la pareja (clave, nombre_clave) ya apunta a a.
+                db.execute("UPDATE OR IGNORE identidades SET persona_id=?"
+                           " WHERE persona_id=?", (a, b))
+                db.execute("DELETE FROM identidades WHERE persona_id=?", (b,))
+                db.execute("DELETE FROM personas WHERE id=?", (b,))
+            db.execute("INSERT INTO bitacora(en, por, tipo, detalle)"
+                       " VALUES (?,?,?,?)",
+                       (en, por or "presidencia", "decision",
+                        f"Par {par}: se marcó como '{decision}'."))
 
     crudo = v.hget("eira:pares", par)
     if crudo:
@@ -312,41 +427,25 @@ def _decidir_par(v, db, par: str, decision: str, por: str) -> None:
         d["estado"] = decision
         v.hset("eira:pares", par, json.dumps(d, ensure_ascii=False))
 
+    # Valkey es idempotente: reaplicar repara una caida a media decision.
+    pipe = v.pipeline()
     if decision == "misma":
-        # Mover membresias de b a a segun sus registros contados.
-        filas = db.execute(
-            "SELECT DISTINCT iniciativa_id, ciudad, periodo, servicio FROM registros"
-            " WHERE persona_id=? AND contado=1 AND cantidad>0", (a,)).fetchall()
-        pares_rol = db.execute(
-            "SELECT DISTINCT iniciativa_id, rol_persona FROM registros"
-            " WHERE persona_id=? AND contado=1 AND cantidad>0", (a,)).fetchall()
-        impactados = catalogo.roles_impactados()
-        pipe = v.pipeline()
-        pipe.srem("eira:per:todas", b)
-        for prog, ciu, per, ser in filas:
-            for clave in (f"eira:per:programa:{prog}",
-                          f"eira:per:ciudad:{ciu}" if ciu else None,
-                          f"eira:per:periodo:{per}" if per else None,
-                          f"eira:per:servicio:{ser}" if ser else None):
-                if clave:
-                    pipe.srem(clave, b)
-                    pipe.sadd(clave, a)
-        for prog, rol in pares_rol:
-            for clave in (f"eira:per:impactadas:{prog}" if rol in impactados else None,
-                          f"eira:per:donantes:{prog}" if rol == "donante" else None):
-                if clave:
-                    pipe.srem(clave, b)
-                    pipe.sadd(clave, a)
-        for nivel in ("folio", "id"):
-            pipe.srem(f"eira:per:certeza:{nivel}", b)
+        # b sale de los conjuntos; a la representa donde ella tenia filas.
+        for clave in sets_b:
+            pipe.srem(clave, b)
+            pipe.sadd(clave, a)
         nac_b = v.hget("eira:nac", b)
         pipe.hdel("eira:nac", b)
         if nac_b and not v.hget("eira:nac", a):
             pipe.hset("eira:nac", a, nac_b)
-        pipe.execute()
-    v.xadd("eira:bitacora", {"en": en, "por": por or "presidencia",
-                            "tipo": "decision",
-                            "detalle": f"Par {par}: '{decision}'."})
+    elif decision == "distinta":
+        # b vuelve a contar como persona propia donde tenga filas.
+        for clave in sets_b:
+            pipe.sadd(clave, b)
+    pipe.xadd("eira:bitacora", {"en": en, "por": por or "presidencia",
+                              "tipo": "decision",
+                              "detalle": f"Par {par}: '{decision}'."})
+    pipe.execute()
     v.publish("eira:eventos", json.dumps({"tipo": "persona", "id": par}))
 
 
@@ -358,10 +457,13 @@ def _restituir_fila(v, db, fuente_id: str, num_fila: int, por: str) -> None:
         return
     cols = [d[0] for d in db.execute("SELECT * FROM registros LIMIT 0").description]
     r = dict(zip(cols, reg))
+    cant = float(r["cantidad"] or 0)
     en = escribir.ahora()
     with db:
-        db.execute("UPDATE registros SET contado=1, cantidad=? WHERE id=?",
-                   (1.0, r["id"]))
+        # La cantidad real de la fila ya esta guardada; solo se marca contada.
+        db.execute("UPDATE registros SET contado=1 WHERE id=?", (r["id"],))
+        db.execute("UPDATE fuentes SET filas_omitidas=MAX(filas_omitidas-1,0),"
+                   " filas_nuevas=filas_nuevas+1 WHERE id=?", (fuente_id,))
         db.execute("INSERT INTO bitacora(en, por, tipo, detalle) VALUES (?,?,?,?)",
                    (en, por or "presidencia", "restituir_fila",
                     f"Fila {num_fila} de '{fuente_id}' se cuenta de todos modos."))
@@ -373,8 +475,11 @@ def _restituir_fila(v, db, fuente_id: str, num_fila: int, por: str) -> None:
     campo = escribir.campo_conteo(ini, r["ciudad"] or "",
                                   r["periodo"] or "", r["servicio"] or "")
     pipe = v.pipeline()
+    pipe.hincrby(f"eira:fuente:{fuente_id}", "filas_omitidas", -1)
+    pipe.hincrby(f"eira:fuente:{fuente_id}", "filas_nuevas", 1)
     if r["persona_id"]:
-        pipe.hincrby(f"eira:cnt:{r['tipo_registro']}", campo, 1)
+        if cant > 0:
+            escribir._incr(pipe, f"eira:cnt:{r['tipo_registro']}", campo, cant)
         rol = r["rol_persona"] or ""
         impactados = catalogo.roles_impactados()
         for clave in (f"eira:per:programa:{ini}",
@@ -386,8 +491,8 @@ def _restituir_fila(v, db, fuente_id: str, num_fila: int, por: str) -> None:
             if clave:
                 pipe.sadd(clave, r["persona_id"])
         pipe.sadd("eira:per:todas", r["persona_id"])
-    else:
-        pipe.hincrby("eira:sinid", campo, 1)
+    elif cant > 0:
+        escribir._incr(pipe, "eira:sinid", campo, cant)
     if r["municipio_clave"]:
         pipe.hincrby(f"eira:presencia:{ini}", r["municipio_clave"], 1)
         pipe.hincrby("eira:presencia:global", r["municipio_clave"], 1)
@@ -414,6 +519,14 @@ MAX_ENTREGAS = 3
 _ENTREGAS: dict[str, int] = {}
 
 
+def _borrar_archivo_crudo(v, vb, stream: str, campos: dict) -> None:
+    """El Excel subido trae nombres: se borra de Valkey en cuanto el trabajo
+    termina (bien o con error definitivo). Su caducidad de una hora queda solo
+    como red de seguridad por si este borrado no llega a ejecutarse."""
+    if stream == "eira:trabajos" and campos.get("id"):
+        (vb or v).delete(f"eira:archivo:{campos['id']}")
+
+
 def _manejar(v, db, stream: str, msg_id: str, campos: dict, vb=None) -> None:
     """Procesa un mensaje del grupo. XACK solo tras exito o tras
     MAX_ENTREGAS intentos (en ese caso el trabajo queda en error)."""
@@ -436,9 +549,11 @@ def _manejar(v, db, stream: str, msg_id: str, campos: dict, vb=None) -> None:
                 v.publish("eira:eventos", json.dumps(
                     {"tipo": "trabajo", "id": campos["id"]}))
             _ENTREGAS.pop(msg_id, None)
+            _borrar_archivo_crudo(v, vb, stream, campos)
             v.xack(stream, GRUPO, msg_id)
         return
     _ENTREGAS.pop(msg_id, None)
+    _borrar_archivo_crudo(v, vb, stream, campos)
     v.xack(stream, GRUPO, msg_id)
 
 

@@ -35,15 +35,16 @@ def test_roles_por_fila(motor):
     roles = dict(motor.db.execute(
         "select rol_persona, count(*) from registros group by rol_persona"))
     assert roles == {"donante": 60, "beneficiaria": 20}
-    # Conjuntos en Valkey: todas las del programa, impactadas y donantes.
-    assert motor.v.scard("eira:per:programa:melenas-en-movimiento") == 80
-    assert motor.v.scard("eira:per:impactadas:melenas-en-movimiento") == 20
-    assert motor.v.scard("eira:per:donantes:melenas-en-movimiento") == 60
+    # Conjuntos en Valkey: todas las del programa, impactadas y donantes
+    # (las 13 filas sin ID no entran: quedan sin persona identificada).
+    assert motor.v.scard("eira:per:programa:melenas-en-movimiento") == 67
+    assert motor.v.scard("eira:per:impactadas:melenas-en-movimiento") == 16
+    assert motor.v.scard("eira:per:donantes:melenas-en-movimiento") == 51
     # Las donantes no cuentan como personas impactadas en las vistas.
     fila = motor.db.execute(
         "select personas_impactadas, donantes from v_personas_por_programa"
         " where iniciativa='melenas-en-movimiento'").fetchone()
-    assert fila == (20, 60)
+    assert fila == (16, 51)
 
 
 def test_global_suma_sin_deduplicar(motor):
@@ -53,7 +54,9 @@ def test_global_suma_sin_deduplicar(motor):
     fila = motor.db.execute("select * from v_global").fetchone()
     assert fila[0] == g["impactadas"]["tamizaje-rosa"] + \
         g["impactadas"]["melenas-en-movimiento"]
-    assert fila[1] == g["cruce_tamizaje_melenas"]  # 15, solo informativo
+    # 15 cruzan de verdad + 5 pares pendientes que cuentan como una en
+    # ambos programas (mientras nadie decida).
+    assert fila[1] == g["cruce_con_pares_pendientes"]
     assert fila[2] == g["donantes"]["melenas-en-movimiento"]
 
 
@@ -247,10 +250,15 @@ def test_contrato(motor):
     r = subprocess.run(["npm", "run", "verificar"], cwd=REPO, capture_output=True,
                        text=True, env={**os.environ,
                                        "VALKEY_URL": "redis://127.0.0.1:6391/15",
-                                       "VERIFICAR_ATENCION": "130",
+                                       # 117 con ID: las filas sin ID de
+                                       # EIRA no cuentan como atenciones,
+                                       # van a eira:sinid (hallazgo 9).
+                                       "VERIFICAR_ATENCION": "117",
                                        "VERIFICAR_PROGRAMA_A": "tamizaje-rosa",
                                        "VERIFICAR_PROGRAMA_B": "melenas-en-movimiento",
-                                       "VERIFICAR_CRUCE": "15"})
+                                       # 15 cruzan de verdad + 5 pares pendientes
+                                       # que cuentan como una persona en ambos.
+                                       "VERIFICAR_CRUCE": "20"})
     assert r.returncode == 0, r.stdout + r.stderr
 
 
@@ -266,9 +274,10 @@ def test_decision_misma_persona_fusiona(motor):
     antes_cruce = motor.v.sintercard(2, cruce_keys)
     motor.decidir("persona", par=par[0], decision="misma")
     assert motor.sql("select estado from pares_persona where id=?", par[0]) == "misma"
-    assert motor.v.scard("eira:per:todas") == antes_todas - 1
-    # Tras fusionar, la persona aparece en ambos programas: el cruce sube a 16.
-    assert motor.v.sintercard(2, cruce_keys) == antes_cruce + 1
+    # El par ya contaba como UNA mientras estaba pendiente: las cifras no
+    # se mueven al confirmar "misma".
+    assert motor.v.scard("eira:per:todas") == antes_todas
+    assert motor.v.sintercard(2, cruce_keys) == antes_cruce
     # Los registros de persona_b pasan a persona_a, que sobrevive.
     assert motor.sql("select count(*) from registros where persona_id=?", par[2]) == 0
     assert motor.sql("select count(*) from registros where persona_id=?", par[1]) == 2
@@ -289,10 +298,13 @@ def test_restituir_fila(motor):
     motor.procesar("nutricion.xlsx")
     fid = motor.sql("select id from fuentes where nombre='nutricion.xlsx'")
     fila = motor.sql("select fila from registros where fuente_id=? and contado=0"
-                     " limit 1", fid)
+                     " and cantidad>0 limit 1", fid)
     antes = motor.sql("select sum(cantidad) from registros"
                       " where tipo_registro='atencion' and contado=1")
     motor.decidir("restituir_fila", fuente=fid, fila=str(fila))
     assert motor.sql("select sum(cantidad) from registros"
                      " where tipo_registro='atencion' and contado=1") == antes + 1
     assert motor.v.llen(f"eira:omitidas:{fid}") == 29
+    # filas_omitidas de la fuente baja en SQLite y en Valkey.
+    assert motor.sql("select filas_omitidas from fuentes where id=?", fid) == 29
+    assert motor.v.hget(f"eira:fuente:{fid}", "filas_omitidas") == "29"

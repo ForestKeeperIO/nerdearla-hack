@@ -66,12 +66,13 @@ def guardar(db, v, fuente: dict, df: pd.DataFrame, anomalias: list[dict],
         db.execute(
             "INSERT INTO fuentes(id, nombre, iniciativa_id, tipo_registro, fecha_corte,"
             " cargada_en, por, filas, filas_nuevas, filas_omitidas, inasistencias,"
-            " estrellas, puntaje, huella_bytes) VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?,?)",
+            " estrellas, puntaje, motivos, huella_bytes)"
+            " VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)",
             (fid, fuente["nombre"], ini, fuente["unidad"],
              fuente["fecha_corte"], en, fuente.get("por", ""),
              fuente["filas"], fuente["filas_nuevas"], fuente["filas_omitidas"],
              fuente["inasistencias"], fuente["estrellas"], fuente["puntaje"],
-             fuente["huella_bytes"]))
+             _json(fuente.get("motivos", [])), fuente["huella_bytes"]))
         if vinculacion is not None:
             db.executemany(
                 "INSERT OR IGNORE INTO personas(id, certeza, fecha_nacimiento, ciudad)"
@@ -94,7 +95,7 @@ def guardar(db, v, fuente: dict, df: pd.DataFrame, anomalias: list[dict],
               r.fecha or "", r.periodo or "", r.ciudad or "",
               r.estado_clave or "", r.estado or "",
               r.municipio_clave or "", r.municipio or "",
-              float(r.cantidad) if r.contado else 0.0, r.huella_fila, int(r.contado))
+              float(r.cantidad), r.huella_fila, int(r.contado))
              for r in df.itertuples(index=False)])
         db.executemany(
             "INSERT INTO anomalias(fuente_id, fila, regla, campo, detalle)"
@@ -131,13 +132,16 @@ def guardar(db, v, fuente: dict, df: pd.DataFrame, anomalias: list[dict],
                 {"fila": int(r.fila), "ya_en_fuente": r.ya_en_fuente,
                  "ya_en_fila": int(r.ya_en_fila)}))
 
-    sets_tocados: set[str] = set()
+    # Mientras un par este pendiente las dos identidades cuentan como UNA:
+    # en los conjuntos se usa el representante (persona_a) en vez de b.
+    rep = {p["persona_b"]: p["persona_a"] for p in pares}
     for r in df.itertuples(index=False):
         if not r.contado:
             continue
         campo = campo_conteo(ini, r.ciudad or "", r.periodo or "", r.servicio or "")
         if r.persona_id:
             if r.cantidad > 0:
+                pid = rep.get(r.persona_id, r.persona_id)
                 _incr(pipe, f"eira:cnt:{r.tipo_registro}", campo, r.cantidad)
                 claves = [f"eira:per:programa:{ini}",
                           f"eira:per:certeza:{r.certeza}"]
@@ -151,12 +155,11 @@ def guardar(db, v, fuente: dict, df: pd.DataFrame, anomalias: list[dict],
                     f"eira:per:servicio:{r.servicio}" if r.servicio else None]
                 for clave in claves:
                     if clave:
-                        pipe.sadd(clave, r.persona_id)
-                        sets_tocados.add(clave)
-                pipe.sadd("eira:per:todas", r.persona_id)
+                        pipe.sadd(clave, pid)
+                pipe.sadd("eira:per:todas", pid)
                 if r.nacimiento:
                     pipe.hset("eira:nac", r.persona_id, r.nacimiento)
-        else:
+        elif r.cantidad > 0:
             _incr(pipe, "eira:sinid", campo, r.cantidad)
         if r.municipio_clave:
             pipe.hincrby(f"eira:presencia:{ini}", r.municipio_clave, 1)
@@ -175,11 +178,9 @@ def guardar(db, v, fuente: dict, df: pd.DataFrame, anomalias: list[dict],
             "id": par_id(p["persona_a"], p["persona_b"]), "estado": "pendiente",
             "motivo": p["motivo"], "a": p["a"], "b": p["b"]}))
 
-    # Huellas AL FINAL: un archivo a medias no queda marcado.
+    # Huella de archivo AL FINAL: un archivo a medias no queda marcado.
+    # (Las huellas de fila ya se reclamaron con HSETNX en el worker.)
     pipe.hset(H_ARCHIVO, fuente["huella_bytes"], fid)
-    for r in df.itertuples(index=False):
-        if r.contado:
-            pipe.hset(H_FILA, r.huella_fila, f"{fid}:{int(r.fila)}")
     pipe.xadd("eira:bitacora", {"en": en, "por": "motor", "tipo": "carga",
                               "detalle": f"Se cargó '{fuente['nombre']}' "
                                          f"({fuente['filas_nuevas']} filas nuevas)."})

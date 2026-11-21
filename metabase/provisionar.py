@@ -35,9 +35,11 @@ import json
 import os
 import re
 import secrets
+import sqlite3
 import string
 import sys
 import time
+import uuid
 from pathlib import Path
 
 import requests
@@ -48,8 +50,74 @@ CREDENCIALES = DIR_METABASE / "credenciales.json"
 ENLACES = Path(__file__).resolve().parent / "enlaces.json"
 TABLEROS = Path(__file__).resolve().parent / "tableros.json"
 
+CATALOGO = RAIZ / "catalogos" / "iniciativas.json"
+URL_PUBLICA = DIR_METABASE / "url-publica"
+
 BASE = os.environ.get("METABASE_URL", "http://127.0.0.1:3200").rstrip("/")
-PUBLICA = os.environ.get("METABASE_URL_PUBLICA", BASE).rstrip("/")
+
+
+def url_publica() -> str:
+    """La del entorno; si no, la última guardada en .metabase/url-publica
+    (así reprovisionar sin la variable no devuelve los enlaces a 127.0.0.1)."""
+    url = os.environ.get("METABASE_URL_PUBLICA", "").strip()
+    if url:
+        DIR_METABASE.mkdir(exist_ok=True)
+        URL_PUBLICA.write_text(url.rstrip("/") + "\n")
+    elif URL_PUBLICA.exists():
+        url = URL_PUBLICA.read_text().strip()
+    return (url or BASE).rstrip("/")
+
+
+PUBLICA = url_publica()
+
+
+def sql_texto(valor: str) -> str:
+    return "'" + valor.replace("'", "''") + "'"
+
+
+MESES = ["ene", "feb", "mar", "abr", "may", "jun", "jul", "ago", "sep", "oct", "nov", "dic"]
+
+
+def valores(ruta_db: str, columna: str, publicas: str) -> list:
+    """Valores distintos de una columna para la lista de un filtro: periodo y
+    servicio salen de v_conteos; municipio, de v_presencia_municipios (nombre
+    oficial, no la ciudad tal como venía escrita en el archivo)."""
+    assert columna in ("periodo", "servicio", "municipio"), columna
+    vista = "v_presencia_municipios" if columna == "municipio" else "v_conteos"
+    con = sqlite3.connect(f"file:{ruta_db}?mode=ro", uri=True)
+    try:
+        vals = [r[0] for r in con.execute(
+            f"SELECT DISTINCT {columna} FROM {vista} WHERE {columna} <> ''"
+            f" AND iniciativa_id NOT IN ({publicas}) ORDER BY 1")]
+    finally:
+        con.close()
+    if columna == "periodo":  # «2026-02» se muestra como «feb 2026»
+        return [[v, f"{MESES[int(v[5:7]) - 1]} {v[:4]}"] for v in vals]
+    return vals
+
+
+def expandir(obj, catalogo: dict, ruta_db: str):
+    """Sustituye los marcadores de tableros.json con el catálogo de iniciativas."""
+    inis = catalogo["iniciativas"]
+    publicas = ", ".join(sql_texto(i["id"]) for i in inis
+                         if i.get("clase") == "fuente_publica") or "''"
+    if isinstance(obj, dict):
+        return {k: expandir(v, catalogo, ruta_db) for k, v in obj.items()}
+    if isinstance(obj, list):
+        return [expandir(v, catalogo, ruta_db) for v in obj]
+    if obj == "@PROGRAMAS_DEL_DEMO@":
+        return [[i["id"], i["nombre"]] for i in inis if i.get("en_demo")]
+    if isinstance(obj, str) and (m := re.fullmatch(r"@VALORES\((\w+)\)@", obj)):
+        return valores(ruta_db, m.group(1), publicas)
+    if isinstance(obj, str):
+        def caso(m):
+            col = m.group(1)
+            ramas = " ".join(f"WHEN {sql_texto(i['id'])} THEN {sql_texto(i['nombre'])}"
+                             for i in inis)
+            return f"CASE {col} {ramas} ELSE {col} END"
+        obj = re.sub(r"@PROGRAMA\((\w+)\)@", caso, obj)
+        return obj.replace("@PUBLICAS@", publicas)
+    return obj
 
 
 def nueva_contrasena(n: int = 24) -> str:
@@ -117,13 +185,15 @@ class Metabase:
         self.s.headers["X-Metabase-Session"] = sesion["id"]
 
 
-TAG_PROGRAMA = {
-    "id": "5f4d8a2e-9b3c-4e7f-a1b2-c3d4e5f6a7b8",
-    "name": "programa",
-    "display-name": "Programa",
-    "type": "text",
-    "required": False,
-}
+def etiquetas(sql: str) -> dict:
+    """Una variable de texto opcional por cada {{nombre}} de la consulta."""
+    return {
+        n: {"id": str(uuid.uuid5(uuid.NAMESPACE_URL, f"eira-metabase/{n}")),
+            "name": n, "display-name": n.capitalize(), "type": "text",
+            "required": False}
+        for n in dict.fromkeys(re.findall(r"\{\{(\w+)\}\}", sql))
+    }
+
 
 COLECCIONES = {"real": "Impacto EIRA · Real", "blanco": "Impacto EIRA · En blanco"}
 
@@ -192,8 +262,8 @@ def asegurar_base(mb: Metabase, nombre: str, ruta_db: str) -> int:
 
 def asegurar_pregunta(mb: Metabase, db_id: int, coleccion_id: int, p: dict) -> int:
     native = {"query": p["sql"]}
-    if "{{programa}}" in p["sql"]:
-        native["template_tags"] = {"programa": dict(TAG_PROGRAMA)}
+    if etiquetas(p["sql"]):
+        native["template_tags"] = etiquetas(p["sql"])
     cuerpo = {
         "name": p["nombre"],
         "collection_id": coleccion_id,
@@ -213,8 +283,30 @@ def asegurar_pregunta(mb: Metabase, db_id: int, coleccion_id: int, p: dict) -> i
     return mb.api("POST", "/card", json=cuerpo)["id"]
 
 
+def archivar_huerfanas(mb: Metabase, coleccion_id: int, vigentes: set[int]) -> int:
+    """Archiva las preguntas de la colección que ya no están en tableros.json
+    (renombradas o retiradas), para que no queden versiones viejas a la vista."""
+    n = 0
+    for card in mb.api("GET", "/card", params={"f": "all"}):
+        if (card.get("collection_id") == coleccion_id and not card.get("archived")
+                and card["id"] not in vigentes):
+            mb.api("PUT", f"/card/{card['id']}", json={"archived": True})
+            n += 1
+    return n
+
+
+def tarjeta_de_texto(t: dict) -> dict:
+    return {
+        "virtual_card": {"name": None, "display": t.get("display", "text"),
+                         "visualization_settings": {}, "dataset_query": {},
+                         "archived": False},
+        "text": t["texto"],
+    }
+
+
 def asegurar_tablero(mb: Metabase, nombre: str, coleccion_id: int,
-                     tarjetas: list[dict], parametros: list[dict] | None) -> int:
+                     tarjetas: list[dict], parametros: list[dict] | None,
+                     descripcion: str | None = None) -> int:
     """Crea el tablero si falta y deja su disposición como en tableros.json."""
     tablero_id = None
     for d in mb.api("GET", "/dashboard"):
@@ -227,25 +319,25 @@ def asegurar_tablero(mb: Metabase, nombre: str, coleccion_id: int,
         if parametros:
             cuerpo["parameters"] = parametros
         tablero_id = mb.api("POST", "/dashboard", json=cuerpo)["id"]
-    slug_programa = next((x["slug"] for x in parametros or [] if x["slug"] == "programa"), None)
+    slugs = [x["slug"] for x in parametros or []]
     dashcards = [
         {
             "id": -(i + 1),  # id negativo temporal: la API lo crea como tarjeta nueva
             "card_id": t["card_id"],
+            "visualization_settings": tarjeta_de_texto(t) if t.get("texto") else {},
             "row": t["row"], "col": t["col"],
             "size_x": t["size_x"], "size_y": t["size_y"],
-            "parameter_mappings": (
-                [{
-                    "parameter_id": slug_programa,
-                    "card_id": t["card_id"],
-                    "target": ["variable", ["template-tag", "programa"]],
-                }] if slug_programa and t["con_programa"] else []
-            ),
+            "parameter_mappings": [
+                {"parameter_id": slug, "card_id": t["card_id"],
+                 "target": ["variable", ["template-tag", slug]]}
+                for slug in slugs if slug in t.get("variables", ())
+            ],
             "series": [],
         }
         for i, t in enumerate(tarjetas)
     ]
-    cuerpo = {"dashcards": dashcards}
+    # Ancho completo: sin el tope de 1048 px del modo «fijo».
+    cuerpo = {"dashcards": dashcards, "width": "full", "description": descripcion}
     if parametros:
         cuerpo["parameters"] = parametros
     mb.api("PUT", f"/dashboard/{tablero_id}", json=cuerpo)
@@ -257,16 +349,24 @@ def enlace_publico(mb: Metabase, tablero_id: int) -> str:
     return f"{PUBLICA}/public/dashboard/{uuid}"
 
 
+def quitar_enlace_publico(mb: Metabase, tablero_id: int) -> None:
+    if mb.api("GET", f"/dashboard/{tablero_id}").get("public_uuid"):
+        mb.api("DELETE", f"/dashboard/{tablero_id}/public_link")
+
+
 def main() -> None:
     ap = argparse.ArgumentParser()
     ap.add_argument("--entorno", default="real", choices=["blanco", "real"],
                     help="cada entorno tiene su propia conexión y sus tableros")
     ap.add_argument("--db", default=os.environ.get("IMPACTO_DB", str(RAIZ / "data" / "impacto.sqlite")))
+    ap.add_argument("--principal", choices=["blanco", "real"], default=None,
+                    help="entorno cuyas direcciones van en las claves de primer nivel de"
+                         " enlaces.json (las que incrusta el frontend); se recuerda")
     args = ap.parse_args()
 
     ruta_db = str(Path(args.db).resolve())
     if not Path(ruta_db).exists():
-        raise SystemExit(f"No existe la base: {ruta_db} (créala con metabase/datos_prueba.py)")
+        raise SystemExit(f"No existe la base: {ruta_db} (créala con metabase/construir_demo.py)")
 
     mb = Metabase(BASE)
     mb.esperar()
@@ -287,30 +387,54 @@ def main() -> None:
     except RuntimeError:
         pass  # no fatal: el primer sync ya corre con auto_run_queries
 
-    spec = json.loads(TABLEROS.read_text())
+    spec = expandir(json.loads(TABLEROS.read_text()),
+                    json.loads(CATALOGO.read_text()), ruta_db)
     enlaces = json.loads(ENLACES.read_text()) if ENLACES.exists() else {}
     enlaces.setdefault("entornos", {})
+    # Un solo juego de enlaces públicos: el del entorno «principal» (el que lee
+    # la base de la aplicación en línea). Los demás entornos quedan sin enlace
+    # público para que nadie caiga en datos que no son los de la aplicación.
+    principal = args.principal or enlaces.get("principal") or "real"
+    es_principal = args.entorno == principal
+    ent = enlaces["entornos"][args.entorno] = {}
+    vigentes: set[int] = set()
     for t in spec["tableros"]:
+        if args.entorno not in t.get("entornos", [args.entorno]):
+            continue
         tarjetas = []
         for p in t["preguntas"]:
+            pos = {k: p[k] for k in ("row", "col", "size_x", "size_y")}
+            if p.get("texto"):
+                tarjetas.append({"card_id": None, "texto": p["texto"],
+                                 "display": p.get("display", "text"), **pos})
+                continue
             card_id = asegurar_pregunta(mb, db_id, coleccion_id, p)
-            tarjetas.append({"card_id": card_id, "row": p["row"], "col": p["col"],
-                             "size_x": p["size_x"], "size_y": p["size_y"],
-                             "con_programa": "{{programa}}" in p["sql"]})
+            vigentes.add(card_id)
+            tarjetas.append({"card_id": card_id, **pos,
+                             "variables": list(etiquetas(p["sql"]))})
         dash_id = asegurar_tablero(mb, t["nombre"], coleccion_id, tarjetas,
-                                   t.get("parametros"))
+                                   t.get("parametros"), t.get("descripcion"))
+        if not es_principal:
+            quitar_enlace_publico(mb, dash_id)
+            print(f"Tablero «{t['nombre']}» ({args.entorno}): sin enlace público (id {dash_id})")
+            continue
         url = enlace_publico(mb, dash_id)
-        ent = enlaces["entornos"].setdefault(args.entorno, {})
-        ent[t["nombre"].lower()] = url
+        clave = t.get("clave") or t["nombre"].lower()
+        ent[clave] = url
         if t.get("parametros"):
             # Plantilla: sustituir {programa} por el id de la iniciativa
             # (p. ej. tamizaje-rosa, melenas-en-movimiento).
-            ent[f"{t['nombre'].lower()}_por_programa"] = f"{url}?programa={{programa}}"
+            ent[f"{clave}_por_programa"] = f"{url}?programa={{programa}}"
         print(f"Tablero «{t['nombre']}» ({args.entorno}): {url}")
+    archivadas = archivar_huerfanas(mb, coleccion_id, vigentes)
+    if archivadas:
+        print(f"Preguntas viejas archivadas: {archivadas}")
 
-    # Claves de primer nivel para el frontend: el entorno real si existe.
-    pre = enlaces["entornos"].get("real") or enlaces["entornos"].get(args.entorno) or {}
-    enlaces.update(pre)
+    # Claves de primer nivel = las que incrusta el frontend: las del entorno
+    # «principal» (el que lee la base de la aplicación en línea).
+    enlaces["entornos"] = {e: v for e, v in enlaces["entornos"].items() if v}
+    pre = enlaces["entornos"].get(principal) or {}
+    enlaces = {"principal": principal, "entornos": enlaces["entornos"], **pre}
     ENLACES.write_text(json.dumps(enlaces, indent=2, ensure_ascii=False) + "\n")
     print(f"Enlaces escritos en {ENLACES}")
 

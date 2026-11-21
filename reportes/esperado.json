@@ -62,28 +62,31 @@
     }
   },
   "globales": {
-    "personas_identificadas": 163,
-    "registros_sin_identificar": 0,
+    "personas_identificadas": 137,
+    "registros_sin_identificar": 26,
+    "nota_sin_id": "Las filas sin ID de EIRA no se unen solo por nombre: quedan como registros sin persona identificada (eira:sinid), como dice la especificacion.",
     "cruce_tamizaje_melenas": 15,
+    "cruce_con_pares_pendientes": 20,
+    "nota_pares": "Mientras un par este pendiente cuenta como UNA persona: el cruce y las membresias muestran 20 y per:todas baja en 5 hasta que alguien decida.",
     "pares_mismo_id": 2,
     "variantes_de_nombre": 3,
     "filas_compartidas_nutricion": 30,
     "edad_promedio": 45.9,
     "impactadas": {
-      "tamizaje-rosa": 98,
-      "melenas-en-movimiento": 20
+      "tamizaje-rosa": 85,
+      "melenas-en-movimiento": 16
     },
     "donantes": {
-      "melenas-en-movimiento": 60
+      "melenas-en-movimiento": 51
     },
     "totales_finales": {
-      "atenciones": 128,
-      "donaciones": 60,
-      "pelucas": 20,
-      "personas": 171,
+      "atenciones": 124,
+      "donaciones": 51,
+      "pelucas": 16,
+      "personas": 149,
       "pares_pendientes": 5,
-      "personas_impactadas_global": 126,
-      "personas_en_mas_de_un_programa": 15
+      "personas_impactadas_global": 118,
+      "personas_en_mas_de_un_programa": 20
     }
   }
 }

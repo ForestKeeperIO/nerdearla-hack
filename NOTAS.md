@@ -195,24 +195,28 @@ iniciativa `salud-publica-jalisco`, tipo `registro_publico`).
 | defunciones_mujeres_jalisco_c50_c53_2024.csv | listo | distinto | Este reporte no trae identificador de persona: se cuenta por filas. Se agregaron 900 filas. |
 | egresos_hospitalarios_jalisco_c50_c53_2024.csv | listo | distinto | Este reporte no trae identificador de persona: se cuenta por filas. Se agregaron 1375 filas. 54 filas repetidas dentro del archivo: se cuentan una vez. |
 
-Vistas resultantes:
+Vistas resultantes (cifras re-verificadas en la tercera pasada; las filas
+sin ID ya no crean persona, ver más abajo):
 
 ```
 v_personas_por_programa            (iniciativa, personas_impactadas, donantes)
-  melenas-en-movimiento   20  60
-  tamizaje-rosa          106   0
+  comunidades-de-origen   10   0
+  melenas-en-movimiento   16  51
+  tamizaje-rosa           92   0
 
 v_objetos                          (iniciativa, tipo_registro, cantidad)
-  melenas-en-movimiento  donacion             60
-  melenas-en-movimiento  producto_entregado  20
+  melenas-en-movimiento  donacion             51
+  melenas-en-movimiento  producto_entregado  16
 
 v_global   (total_personas_impactadas, personas_en_mas_de_un_programa, donantes)
-  126   15   60
+  118   20   51
 ```
 
-Conteo extra en Valkey: `eira:per:todas` = 171 personas; cruce
-tamizaje ∩ melenas (`SINTERCARD`) = 15; `cnt:atencion` = 128,
-`cnt:donacion` = 60, `cnt:producto_entregado` = 20; `eira:pares` = 5;
+Conteo extra en Valkey: `eira:per:todas` = 149 personas; cruce
+tamizaje ∩ melenas (`SINTERCARD`) = 20 (15 personas reales + 5 pares
+pendientes que cuentan como una persona presente en ambos);
+`cnt:atencion` = 124, `cnt:donacion` = 51, `cnt:producto_entregado` = 16;
+`eira:pares` = 5; `eira:sinid` = 27 filas contadas sin identificador;
 `eira:presencia:global` = 98 municipios con actividad.
 
 `v_presencia` confirma `municipios_del_estado` = 125 para Jalisco en las
@@ -223,6 +227,70 @@ Las 54 "repetidas" de egresos son filas literalmente idénticas dentro del
 archivo oficial (mismo municipio, misma fecha, mismos campos): la
 deduplicación por contenido completo de fila las cuenta una sola vez.
 
+## Tercera pasada (correcciones de `docs/contexto/revision-motor.md`)
+
+- **Sin clave HMAC por defecto**: `IMPACTO_HMAC_KEY` es obligatoria; sin
+  ella `worker.main` sale con código 2 y mensaje claro, y `clave_hmac()`
+  lanza `RuntimeError`.
+- **Mensajes recuperables**: `_manejar` hace XACK solo tras éxito o tras
+  3 entregas; en la tercera el trabajo queda `estado=error` con mensaje
+  genérico (sin texto de excepción) y evento publicado.
+  `reclamar_pendientes` hace `XAUTOCLAIM` al arrancar y en el ciclo, para
+  que nada se quede "procesando" por siempre.
+- **Divergencia SQLite/Valkey**: si la fuente ya está en SQLite pero falta
+  `eira:fuente:<id>`, se re-emiten sus claves desde SQLite
+  (`reconstruir.reconstruir_fuente`) en vez de responder "idéntico".
+  Además `uv run python -m py.motor.reconstruir` rehace TODAS las claves
+  `eira:*` de resultados desde SQLite, sin tocar colas ni streams.
+- **Restituir fila**: `registros.cantidad` conserva la cantidad real aunque
+  `contado=0`; al restituir se suma esa cantidad y se actualiza
+  `filas_omitidas` en SQLite y en `eira:fuente:<id>`.
+- **Decisión "misma" duradera**: las identidades de `b` se reasignan a `a`
+  (no se borran), así una carga posterior con ese ID y nombre cae en `a`;
+  aplicarla dos veces no cambia nada.
+- **Pares pendientes = una persona**: mientras el par esté pendiente, en
+  los conjuntos `eira:per:*` solo figura `a` (la cifra no sube). En SQLite
+  las vistas usan la persona efectiva del par, por lo que cada pendiente
+  cuenta como UNA persona presente en ambas iniciativas; "distinta" la
+  separa (sube en 1) y "misma" la deja unida.
+- **Reclamo atómico de huellas**: cada huella de fila se reclama con
+  `HSETNX eira:huellas:fila <huella> <fuente>:<fila>` ANTES de contarla;
+  dos archivos procesados a la vez no cuentan dos veces la fila
+  compartida, y el reintento reconoce las huellas que ya eran suyas.
+- **Celdas combinadas**: relleno hacia abajo en las columnas mapeadas
+  excepto `id` y `nombre` (esas son por persona: rellenarlas fabricaba
+  IDs falsos y 36 pares espurios).
+- **CSV real**: detección de delimitador (coma, punto y coma, tabulador)
+  y de codificación (UTF-8 con/sin BOM, Latin-1).
+- **Filas sin ID**: no se unen por nombre; quedan `persona_id=NULL`, van a
+  `eira:sinid` y no entran a `eira:per:*` ni a `cnt:*`.
+- **Menores**: `v_calidad` usa `COUNT(a.id)`; inasistencias solo cuenta
+  filas con `contado=1`; `eira:sinid` no escribe campos en 0; el mensaje
+  visible no incluye la excepción (va al stderr del servidor); unidad o
+  tipo inválido se reporta como tal, no como "ya se cargó"; se rechazan
+  `.xlsm`, archivos >10 MB y >20,000 filas con mensaje claro.
+
+### Verificación final (tercera pasada)
+
+Valkey 6391 base 15, SQLite temporal, `IMPACTO_HMAC_KEY=eira-pruebas`.
+
+- **Suite completa**: `uv run pytest` → **58 passed** (18 en
+  `py/tests/test_motor.py`, 24 en `py/tests/test_tercera.py`, 11 en
+  `db/test_db.py`, 5 en `scripts/test_reportes.py`).
+- **Recorrido de los archivos de prueba de la segunda pasada**: la tabla
+  de arriba se recorrió de nuevo con el motor corregido — los siete
+  archivos producen los mismos estados (`distinto`, `identico`,
+  `mismo_contenido`, `version_nueva`) y los dos CSV públicos del INEGI
+  siguen entrando como `registro_publico` sin personas.
+- **Demostración de "¿y si se pierde Valkey?"**: cargados
+  `tamizaje-rosa.xlsx` y `melenas-en-movimiento.xlsx`, se borraron las 58
+  claves `eira:*` de resultados (colas y trabajos intactos) y se corrió
+  `uv run python -m py.motor.reconstruir` → "2 fuentes reconstruidas
+  desde SQLite". Cifras antes = después:
+  `per:todas`=132, `cnt:atencion`=107, `cnt:donacion`=51, `sinid`=26,
+  `pares`=5, `fuentes`=2 (SQLite: 2 fuentes, 137 personas, 206 filas
+  contadas).
+
 ## Pendientes
 
 - Las adiciones del contrato (iniciativa como `programa`, `segun_fila`,
@@ -231,57 +299,60 @@ deduplicación por contenido completo de fila las cuenta una sola vez.
   `docs/contrato-valkey.md`; avisar al frontend que lea la rama `motor`.
 - `edad_inconsistente` está implementada pero no se ejercita en los datos.
 - `posible_correccion` (fila casi igual con un campo distinto) está en las
-  reglas pero sin detección aún.
+  reglas pero sin detección aún. **No corregido en esta pasada.**
+- Splink queda en respaldo/inactivo: el emparejamiento difuso no se
+  reactivó; los pares se detectan por ID idéntico y variantes simples de
+  nombre. **No corregido en esta pasada.**
 - El ciclo `worker.servir` se ejercita solo por pruebas que llaman
-  `procesar_trabajo` directo; no hubo corrida del proceso largo contra el
-  stream en esta verificación (mismos code paths, distinto entry point).
+  `procesar_trabajo`/`_manejar` directo; no hubo corrida del proceso
+  largo contra el stream en esta verificación (mismos code paths,
+  distinto entry point).
 
 ---
 
-# NOTAS — Metabase (rama metabase, Tarea 4, segunda pasada)
+# NOTAS — Metabase (rama metabase, tercera pasada, 2026-11-21 ~14:10 CDMX)
 
-## Estado
+## Estado (comprobado, no heredado)
 
-- Metabase OSS **v0.65.6** corriendo en http://127.0.0.1:3200 (JAR en `.metabase/`,
-  base interna `.metabase/metabase.db.mv.db`, bitácora `.metabase/metabase.log`,
-  credenciales generadas en `.metabase/credenciales.json` — todo ignorado por git).
-- La base `data/impacto.sqlite` usa el **esquema real del motor**
-  (`db/esquema.sql`, ya en main); `metabase/esquema_prueba.sql` se retiró.
-- Tableros públicos, por entorno (colecciones «Impacto EIRA · Real» / «· En
-  blanco»; los títulos ya no llevan sufijo de entorno):
-  - Impacto: http://127.0.0.1:3200/public/dashboard/f62686a5-b630-4c72-948a-502228267c11
-    - Filtrado: `?programa=tamizaje-rosa` | `?programa=melenas-en-movimiento`
-  - Calidad: http://127.0.0.1:3200/public/dashboard/f0b06799-74ef-4c7a-8485-ee1f4840c4a9
-  - Entorno `blanco` y plantilla `impacto_por_programa` en
-    `metabase/enlaces.json` → `entornos.<entorno>`.
-- El filtro `programa` está conectado a las 6 preguntas de Impacto
-  (variable `{{programa}}` opcional). Verificado por la API pública: sin
-  filtro da 77 personas impactadas, con `tamizaje-rosa` da 60.
-- Paleta de EIRA en las series (vino/ciruela/pizarra), tarjetas a las 24
-  columnas, tabla «Presencia por municipio» al final (sin cobertura %).
-- **Iframe: permitido** (`frame-ancestors *`, sin `X-Frame-Options`).
-- Pruebas: `uv run --with requests,pytest pytest metabase/test_metabase.py` → 8/8.
-- Capturas: `docs/capturas/metabase-impacto{,-tamizaje,-melenas}.png` y
-  `metabase-calidad.png` (Playwright, chromium_headless_shell-1254).
+- Metabase OSS v0.65.6 en `:3200` (proceso desde este clon, `.metabase/`), con
+  túnel propio de cloudflared. La dirección pública vigente está en
+  `.metabase/url-publica` y en `metabase/enlaces.json`; el PID del túnel en
+  `.metabase/tunel.pid`. Si el túnel se reinicia cambia la dirección: volver a
+  correr `provisionar.py` con `METABASE_URL_PUBLICA=<nueva>`.
+- **Un solo juego de enlaces públicos** (sin inicio de sesión), el del entorno
+  «principal» = `blanco`, cuya conexión lee la base que escribe el motor de la
+  aplicación en línea: `/home/ian/projects/.demo-eira/datos/demo.sqlite`.
+  - Impacto: `<url>/public/dashboard/886327d0-b72a-4442-84bf-f1e55eaf9255`
+    (filtros por URL: `programa`, `mes` = AAAA-MM, `municipio`, `servicio`)
+  - Calidad: `<url>/public/dashboard/06ab8121-a7c5-499e-97f2-4d70fc4527b8`
+- El entorno `real` (colección «Impacto EIRA · Real», con el tablero «Contexto
+  público») sigue provisionado sobre `data/impacto.sqlite`, pero **sin enlace
+  público**: solo se ve con sesión de administración.
+- `data/impacto.sqlite` ya no son filas a mano: `metabase/construir_demo.py`
+  pasa `reportes/` y `reportes-reales/` por el motor real (Valkey base 11,
+  solo claves `eira:*`). `datos_prueba.py` se retiró.
+- La raíz de la dirección pública es el inicio de sesión de administración.
+  Credenciales: `~/.config/nerdearla/metabase.env` (claves
+  `METABASE_ADMIN_EMAIL`, `METABASE_ADMIN_PASSWORD`) y
+  `.metabase/credenciales.json` (claves `email`, `password`).
+- Pruebas: `uv run --with requests,pytest pytest metabase/test_metabase.py` → 9/9.
+- Capturas (instancia real, por la dirección pública, Chromium sin interfaz):
+  `docs/capturas/metabase-impacto{,-tamizaje,-melenas}.png`, `metabase-calidad.png`.
 
-## Detener / reiniciar
+## Avisos
 
-```bash
-pkill -f '.metabase/metabase.jar'
-bash metabase/arrancar.sh   # espera a /api/health; primera vez ~1-2 min
-```
-
-## Pendientes / avisos
-
-- La lista de valores del filtro «Programa» es ESTÁTICA
-  (`values_source_config.values` en `metabase/tableros.json`): si el catálogo
-  de iniciativas crece, hay que agregar el id ahí (la URL con otro id de
-  programa igual filtra, solo falta en el desplegable).
-- Metabase tarda ~90 s en arrancar la primera vez (migraciones Liquibase).
-- Al ponerlo detrás de un túnel: `METABASE_URL_PUBLICA=<url del túnel>` y
-  reprovisionar para que los enlaces públicos usen esa dirección.
-- `data/impacto.sqlite` sigue siendo ficticio: cuando el motor real escriba
-  la base, basta reconstruir y reprovisionar `--entorno real --db <ruta>`.
+- Los filtros de mes y tipo de servicio solo mueven las gráficas de actividad
+  (salen de `v_conteos`); el de municipio, las de presencia. Las cifras de
+  personas solo cambian con el programa y la edad promedio con ninguno:
+  `v_personas_por_programa` y `v_edad` no traen esas columnas. Arreglarlo
+  pide vistas nuevas en `db/esquema.sql` (del motor).
+- `v_conteos.ciudad` trae la ciudad como venía escrita («Cd. Guzmán»,
+  «Ciudad Guzmán», «San Ficticio»), no el municipio oficial.
+- El motor da 1 estrella y puntaje 0 a `tamizaje-rosa_v2.xlsx` porque cuenta
+  las 130 filas ya cargadas como problemas (`fila_ya_cargada`).
+- Colores del encabezado de las tablas (azul de Metabase): cambiarlos es
+  función de pago; las series sí usan la paleta de EIRA.
+- El frontend incrusta la clave `impacto` de `enlaces.json` sin `?programa=`.
 
 ---
 

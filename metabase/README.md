@@ -8,7 +8,7 @@ copia código suyo al repositorio) provisionado por su API con los tableros
 
 ```bash
 bash metabase/arrancar.sh                    # descarga el JAR si falta y arranca en :3200
-uv run metabase/datos_prueba.py              # SQLite ficticio en data/impacto.sqlite
+uv run python metabase/construir_demo.py     # data/impacto.sqlite, pasando los reportes por el motor real
 uv run --with requests metabase/provisionar.py --entorno real --db data/impacto.sqlite
 uv run --with requests,pytest pytest metabase/test_metabase.py
 ```
@@ -85,15 +85,24 @@ desde otro puerto: el tablero se renderiza dentro del iframe).
 
 ## Datos de demostración
 
-`datos_prueba.py` crea el SQLite con el esquema **real** del motor
-(`db/esquema.sql`) y los catálogos de `catalogos/iniciativas.json` y
-`publicos/municipios_mexico.json`, más filas **ficticias** de los dos
-programas del demo: tamizaje-rosa (atenciones y estudios, rol beneficiaria)
-y melenas-en-movimiento (donaciones de trenza con rol donante —no cuentan
-como personas impactadas— y pelucas entregadas, rol beneficiaria).
-Identificadores opacos (`p` + hex), sin nombres completos ni el ID de EIRA
-en claro; las etiquetas de pares son iniciales + municipio. `--vacia` crea
-solo esquema y catálogos, para el entorno en blanco.
+`construir_demo.py` crea el SQLite pasando `reportes/` (Tamizaje Rosa y su
+versión nueva, Melenas en Movimiento) y `reportes-reales/` (datos públicos de
+Jalisco) por el motor real (`py/motor/worker.py`), con una base de Valkey
+propia (la 11; solo borra claves `eira:*`). `--vacia` crea solo esquema y
+catálogos.
+
+## Un solo juego de enlaces públicos
+
+`provisionar.py --entorno E --db RUTA --principal E` deja con enlace público
+solo los tableros del entorno principal (se recuerda en `enlaces.json`); a
+los de cualquier otro entorno se les quita. Las claves de primer nivel de
+`enlaces.json` son las del principal. `--db` con otra ruta actualiza la
+conexión existente. La dirección pública se recuerda en
+`.metabase/url-publica`. Filtros del tablero Impacto por URL: `programa`,
+`mes` (AAAA-MM), `municipio`, `servicio`; las listas salen de la base y del
+catálogo al provisionar. `tableros.json` admite tarjetas de texto y los
+marcadores `@PROGRAMA(col)@`, `@PUBLICAS@`, `@PROGRAMAS_DEL_DEMO@` y
+`@VALORES(col)@`.
 
 ## Fuentes consultadas (verificado contra el código, no de memoria)
 
