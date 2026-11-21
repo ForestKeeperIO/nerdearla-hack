@@ -24,7 +24,12 @@ H_FILA = "eira:huellas:fila"
 
 
 def clave_hmac() -> bytes:
-    return os.environ.get("IMPACTO_HMAC_KEY", "eira-demo-hmac").encode()
+    clave = os.environ.get("IMPACTO_HMAC_KEY")
+    if not clave:
+        raise RuntimeError(
+            "Falta IMPACTO_HMAC_KEY: sin esa variable no puedo seudonimizar "
+            "personas ni huellas. Defínela en el entorno y vuelve a arrancar.")
+    return clave.encode()
 
 
 def huella_bytes(contenido: bytes) -> str:
