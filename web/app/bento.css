@@ -83,6 +83,8 @@ main.contenido:has(.archivo-eira) { max-width: 88rem; }
 .expediente-carga .banda-cifras > div { border: 0; border-radius: var(--bento-interno); background: var(--superficie); }
 .expediente-carga .banda-cifras > div:first-child { background: var(--vino-oscuro); }
 .expediente-carga .banda-cifras > div:first-child :is(.cifra,.rotulo-cifra,summary) { color: var(--superficie); }
+.expediente-carga .banda-cifras > div:first-child :focus-visible { outline-color: var(--papel); }
+.expediente-carga .selector-campo input { border-color:var(--tinta-suave); }
 .calidad-bento { display: grid; grid-template-columns: minmax(0,1.3fr) minmax(0,1fr); gap: var(--bento-gap); margin-bottom: var(--bento-gap); }
 .calidad-anillos { display: flex; gap: 1rem; align-items: start; justify-content: space-around; flex-wrap: wrap; }
 .calidad-anillos > * { flex: 1 1 8rem; text-align: center; min-width: 0; }
@@ -129,7 +131,7 @@ main.contenido:has(.archivo-eira) { max-width: 88rem; }
   .expediente-carga footer { flex-wrap: wrap; }
   .expediente-carga footer > * { max-width: 100%; }
 }
-@media (max-width: 360px) {
+@media (max-width: 380px) {
   .eira-mastil { flex-wrap: wrap; }
   .eira-mastil .eira-nav { flex-basis: 100%; justify-content: space-between; }
   .eira-nav a { white-space: nowrap; }

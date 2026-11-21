@@ -21,7 +21,7 @@ export async function informeSeleccion(query:QueryReporte):Promise<InformeSelecc
   const origenes = (await fuentesDe('global')).valor;
   const db=new DatabaseSync(process.env.IMPACTO_DB,{readOnly:true});
   try {
-    db.exec('BEGIN');
+    db.exec('PRAGMA busy_timeout=2500; BEGIN');
     const where=["r.contado=1","i.clase<>'fuente_publica'"];
     const args:string[]=[];
     for (const c of CAMPOS) if (f[c].length) { where.push(`r.${campos[c]} IN (SELECT value FROM json_each(?))`);args.push(JSON.stringify(f[c])); }

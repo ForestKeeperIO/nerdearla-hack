@@ -1,0 +1,28 @@
+render tier: 5 screenshots in .hallmark/shots (1280x800, 1440x900, 1920x1080 folds; 1440 and 375 full pages)
+web/app/globals.css
+  REFLEX 7b :16 pure #fff: --color-card: var(--superficie) (@theme) | fix: Tint the base toward the anchor hue
+  REFLEX 7b :18 pure #fff: --color-popover: var(--superficie) (@theme)
+  REFLEX 7b :21 pure #fff: --color-primary-foreground: var(--superficie) (@theme)
+  REFLEX 7b :29 pure #fff: --color-destructive-foreground: var(--superficie) (@theme)
+  REFLEX 7b :42 pure #fff: --color-sidebar: var(--superficie) (@theme)
+  REFLEX 7b :45 pure #fff: --color-sidebar-primary-foreground: var(--superficie) (@theme)
+  REFLEX 7b :69 pure #fff: background: var(--superficie) (.tarjeta)
+  REFLEX 7b :128 pure #fff: color: var(--superficie) (.pasos__item--hecho .pasos__num)
+  REFLEX 7b :150 pure #fff: color: var(--superficie) (.btn--primario)
+  REFLEX 7b :152 pure #fff: background: var(--superficie) (.btn--secundario)
+  REFLEX 7b :179 pure #fff: color: var(--superficie) (.filtro-pop__conteo)
+  REFLEX 7b :186 pure #fff: background: var(--superficie) (.filtro-pop__panel)
+  REFLEX 7b :223 pure #fff: background: var(--superficie) (.aviso-banda)
+  REFLEX 7b :247 pure #fff: background: var(--superficie) (body)
+  REFLEX 7b :272 pure #fff: background: var(--superficie) (.campo)
+web/app/tablero.css
+  REFLEX 7b :19 pure #fff: color: var(--superficie) (.mesa-boton)
+  REFLEX 7b :24 pure #fff: background: var(--superficie) (.mesa-indicadores)
+  REFLEX 7b :27 pure #fff: color: var(--superficie) (.mesa-dato:first-child)
+  REFLEX 7b :33 pure #fff: outline-color: var(--superficie) (.mesa-dato:first-child :focus-visible)
+  REFLEX 7b :35 pure #fff: background: var(--superficie) (.mesa-marco)
+  REFLEX 7b :62 pure #fff: color: var(--superficie) (.selector label span)
+  REFLEX 7b :64 pure #fff: background: var(--superficie) (.selector-campo input)
+  REFLEX 7b :67 pure #fff: background: var(--superficie) (.selector-lista)
+  WARN F6 :109 numeric selector .mesa-numero at display size without tabular figures | fix: Add font-variant-numeric: tabular-nums
+sloplint: 0 FAIL, 23 REFLEX, 1 WARN across 1 file(s) and 1 URL(s).
