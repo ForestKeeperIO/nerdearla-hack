@@ -72,13 +72,15 @@ export async function verificar(v: Valkey): Promise<Resultado[]> {
   const cruce = await v.sintercard(2, perPrograma(progA), perPrograma(progB));
   marca(`SINTERCARD ${progA} ∩ ${progB} = ${expCruce}`, cruce === expCruce, `cruce=${cruce}`);
 
-  // 5. Ningún valor contiene un nombre completo ficticio.
+  // 5. Ningún valor contiene un nombre completo ficticio. Se excluyen
+  // `eira:archivo:*`: son los bytes crudos del Excel subido (la vía de carga;
+  // caducan a los 3600 s), no datos derivados del motor.
   let cursor = '0';
   const clavesTodas: string[] = [];
   do {
     const [sig, ks] = await v.scan(cursor, 'MATCH', patronTodo(), 'COUNT', 500);
     cursor = sig;
-    clavesTodas.push(...ks);
+    clavesTodas.push(...ks.filter((k) => !k.startsWith('eira:archivo:')));
   } while (cursor !== '0');
   let conNombre: string[] = [];
   for (const k of clavesTodas) {

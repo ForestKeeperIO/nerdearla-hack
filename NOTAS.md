@@ -113,8 +113,9 @@ sembrados. La dependencia `splink` queda instalada para el piloto.
 
 - Huella de fila: HMAC(`id|nombre_norm|municipio_clave|servicio|fecha|asistio|cantidad`)
   con `IMPACTO_HMAC_KEY`. No incluye programa ni unidad: el traslape entre
-  coordinaciones se detecta. `eira:huellas:{archivo,contenido,fila}` (nuevas
-  claves; falta asentarlas en `docs/contrato-valkey.md`).
+  coordinaciones se detecta. En reportes sin persona la huella es el
+  contenido completo de la fila. Claves: `eira:huellas:{archivo,fila}`
+  (la de contenido se quitó en la segunda pasada).
 - Las huellas se registran al final del MULTI de Valkey y la fuente en SQLite
   lleva `huella_bytes UNIQUE`: una caída a media carga no marca el archivo y
   un reintento lo reporta como idéntico en vez de reimportar.
