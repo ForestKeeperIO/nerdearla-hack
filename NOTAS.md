@@ -51,3 +51,32 @@ desplegable, `:focus-visible`, `prefers-reduced-motion`, impresión). Ver secci�
 - El benchmark de 21st.dev/details.so (`…/devin2/out/c.md`) todavía no existe a esta hora
   (solo `c.tmp`; el proceso que lo genera está atorado en permisos). Se revisó de nuevo
   al terminar el paso 3: sigue sin existir.
+
+## Rehecho de la capa visual (segunda sesión, misma fecha)
+
+- El dueño no aprobó el tema Coral de Hallmark. Nueva dirección: recrear los
+  componentes del benchmark (`docs/contexto/benchmark-ui.md`, traído con
+  `git merge origin/main`) con aspecto sobrio: fondo stone-50, tarjetas blancas
+  con borde 1 px, radio 10 px, sombra casi nula, rosa `#be185d` solo como acento,
+  Inter + IBM Plex Mono, cifras tabulares.
+- La lógica no cambió: `web/lib/` (claves, valkey, datos, acciones, rol, folio),
+  rutas API y el flujo Subir → Calidad → Vista previa → Exportar se conservan.
+- Componentes: sidebar oficial shadcn **copiado tal cual** del registro (MIT) con
+  sheet/tooltip/use-mobile (radix-ui); stepper, stat-card, star-rating,
+  comparison, bar-list, alert-banner y file-upload **reimplementados** (el código
+  de 21st.dev no es visible sin API key y varios declaran `no-license`/`unknown`
+  o dan 404). Empty y sonner: fuente oficial shadcn (MIT). Tabla completa con
+  licencias en `web/TERCEROS.md`.
+- Dependencias nuevas: radix-ui, sonner, next-themes, react-dropzone,
+  @tanstack/react-table (fijada en 8.x: la v9 trae otra API y rompe el patrón
+  shadcn data-table).
+- Se eliminaron `components/barras.tsx` (Recharts sustituida por BarList) y
+  `components/cabecera.tsx` (sustituida por sidebar + stepper).
+- Auditoría Hallmark (sloplint, scope app): 3 FAIL propios corregidos (guión en
+  copia, literal de color fuera de tokens, "VS" con tracking). Quedan 4 FAIL 10a
+  dentro de `components/ui/sidebar.tsx`: son clases del código upstream copiado
+  tal cual (transiciones deliberadas del sidebar); se reportan, no se tocan.
+  Gate 20 (stamp Hallmark) reportado: esta iteración no salió de un scaffold
+  Hallmark, poner el sello sería atribución falsa.
+- Ojo: `next start` sirve el build de cuando arrancó; tras `npm run build` hay
+  que reiniciarlo o las capturas salen sin CSS.

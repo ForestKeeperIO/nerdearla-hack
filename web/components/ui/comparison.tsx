@@ -57,7 +57,7 @@ export function Comparison({
         <Lado lado={a} />
         <span
           aria-hidden="true"
-          className="absolute left-1/2 top-1/2 hidden size-8 -translate-x-1/2 -translate-y-1/2 items-center justify-center rounded-full border border-border bg-background text-[0.65rem] font-bold tracking-wider text-muted-foreground sm:flex"
+          className="absolute left-1/2 top-1/2 hidden size-8 -translate-x-1/2 -translate-y-1/2 items-center justify-center rounded-full border border-border bg-background text-xs font-semibold text-muted-foreground sm:flex"
         >
           VS
         </span>

@@ -1,7 +1,8 @@
 *, *::before, *::after { box-sizing: border-box; }
 html, body { overflow-x: clip; }
 body { margin: 0; background: var(--color-paper); color: var(--color-ink); font-family: var(--font-body); font-size: var(--text-md); line-height: 1.55; -webkit-font-smoothing: antialiased; caret-color: var(--color-accent-2); }
-::selection { background: #fce7f3; color: var(--color-ink); }
+::selection { background: var(--color-selection); color: var(--color-ink); }
+html { scrollbar-color: var(--color-rule-2) var(--color-paper); }
 :focus-visible { outline: 2px solid var(--color-focus); outline-offset: 2px; }
 a { color: inherit; text-decoration-thickness: 1px; text-underline-offset: 0.16em; }
 h1, h2, h3 { margin: 0; font-family: var(--font-body); font-weight: 600; font-synthesis: none; letter-spacing: -0.02em; line-height: 1.15; overflow-wrap: break-word; min-width: 0; text-wrap: balance; }

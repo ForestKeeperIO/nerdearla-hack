@@ -16,7 +16,7 @@ const columnas: ColumnDef<Fila, unknown>[] = [
   {
     accessorKey: 'campo',
     header: 'Campo',
-    cell: ({ getValue }) => String(getValue() ?? '') || <span className="text-muted-foreground">—</span>,
+    cell: ({ getValue }) => String(getValue() ?? '') || <span className="text-muted-foreground">(fila completa)</span>,
   },
   { accessorKey: 'detalle', header: 'Detalle' },
 ];

@@ -125,8 +125,8 @@ export function SubirArchivos({ programas, por }: { programas: string[]; por: st
         </p>
         <p className="text-muted-foreground">
           o{' '}
-          <button type="button" onClick={open} className="min-h-11 font-medium text-primary underline underline-offset-4">
-            elige archivos desde tu equipo
+          <button type="button" onClick={open} className="min-h-11 whitespace-nowrap font-medium text-primary underline underline-offset-4">
+            elige archivos
           </button>{' '}
           (máximo 10 MB cada uno)
         </p>

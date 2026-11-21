@@ -25,6 +25,7 @@
 
   /* Rosa EIRA: acento único (botón primario, estrellas, barra activa). */
   --color-accent: #fdf2f8;     /* rosa-50, fondos de acento */
+  --color-selection: #fce7f3;  /* rosa-100, texto seleccionado */
   --color-accent-ink: #9d174d; /* rosa-800, texto sobre rosa-50 */
   --color-accent-2: #be185d;   /* rosa-700, acción primaria */
   --color-accent-3: #9d174d;   /* rosa-800, hover de la acción */
