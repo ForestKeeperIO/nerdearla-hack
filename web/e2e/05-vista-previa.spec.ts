@@ -48,8 +48,8 @@ test('Global muestra la suma de los programas y personas en más de uno', async 
   // Cada programa por separado, con su leyenda de suma.
   await expect(page.getByText('Cada programa por separado')).toBeVisible();
   await expect(page.getByText('suma de las personas impactadas de cada programa')).toBeVisible();
-  await expect(page.getByText('Tamizaje Rosa')).toBeVisible();
-  await expect(page.getByText('Melenas en Movimiento')).toBeVisible();
+  await expect(page.getByRole('heading', { name: 'Tamizaje Rosa' })).toBeVisible();
+  await expect(page.getByRole('heading', { name: 'Melenas en Movimiento' })).toBeVisible();
 
   await page.getByRole('button', { name: 'Las cifras son correctas' }).click();
   await expect(page).toHaveURL(/\/informe\/global\/exportar/);

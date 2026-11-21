@@ -15,8 +15,8 @@ test('portada con base vacía: programas sin empezar y Global bloqueado', async 
   // Los informes del catálogo (en_demo) más el Global.
   const items = page.getByRole('listitem');
   await expect(items).toHaveCount(3);
-  await expect(page.getByText('Tamizaje Rosa')).toBeVisible();
-  await expect(page.getByText('Melenas en Movimiento')).toBeVisible();
+  await expect(page.getByText('Tamizaje Rosa', { exact: true })).toBeVisible();
+  await expect(page.getByText('Melenas en Movimiento', { exact: true })).toBeVisible();
   await expect(page.getByText('Global · todos los programas')).toBeVisible();
 
   // Los dos programas aparecen "Sin empezar" con acción "Empezar".

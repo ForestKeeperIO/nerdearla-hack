@@ -25,7 +25,7 @@ test('subir un .xlsx por la interfaz encola el trabajo en Valkey', async ({ page
   await expect(page.getByText('atenciones-tamizaje.xlsx')).toBeVisible();
 
   await page.getByRole('button', { name: /Subir 1 archivo/ }).click();
-  await expect(page.getByText('Recibido')).toBeVisible();
+  await expect(page.getByText('Recibido', { exact: true })).toBeVisible();
 
   // El trabajo existe en Valkey: hash pendiente, bytes del archivo y mensaje en el Stream.
   const v = valkey();
@@ -76,7 +76,7 @@ test('rechaza un .xlsm con mensaje para la usuaria', async ({ page }) => {
 
   await expect(page.getByText('reporte-con-macros.xlsm')).toBeVisible();
   await expect(page.getByText(/No se subió/)).toBeVisible();
-  await expect(page.getByText(/xlsm|\.xlsx o \.csv|no se aceptan/i)).toBeVisible();
+  await expect(page.getByText('Solo se aceptan .xlsx o .csv.')).toBeVisible();
 });
 
 test('rechaza un archivo de más de 10 MB con mensaje', async ({ page }) => {
