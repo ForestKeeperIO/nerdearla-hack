@@ -159,10 +159,13 @@ arrancar_uno() {
     echo "  web: npm ci en $E_WEB"
     (cd "$E_WEB" && npm ci --no-audit --no-fund >>"$E_DIR/npm.log" 2>&1)
   fi
+  # Se arranca Next directo con node (sin npm): el PID registrado es el servidor
+  # y next-server queda en el mismo grupo de proceso, así `detener` lo alcanza.
+  local NEXT="$E_WEB/node_modules/next/dist/bin/next"
   if [ "${DEMO_DEV:-0}" = "1" ]; then
     lanzar web env VALKEY_URL="$E_VALKEY" IMPACTO_DB="$E_DB" \
       IMPACTO_HMAC_KEY="$CLAVE" NOMBRE_ENTORNO="$E_NOMBRE" PORT="$E_PUERTO" \
-      npm --prefix "$E_WEB" run dev -- -p "$E_PUERTO"
+      sh -c 'cd "$1" && exec node "$2" dev -p "$3"' _ "$E_WEB" "$NEXT" "$E_PUERTO"
   else
     if [ ! -f "$E_WEB/.next/BUILD_ID" ]; then
       echo "  web: npm run build en $E_WEB"
@@ -170,7 +173,7 @@ arrancar_uno() {
     fi
     lanzar web env VALKEY_URL="$E_VALKEY" IMPACTO_DB="$E_DB" \
       IMPACTO_HMAC_KEY="$CLAVE" NOMBRE_ENTORNO="$E_NOMBRE" PORT="$E_PUERTO" \
-      npm --prefix "$E_WEB" run start -- -p "$E_PUERTO"
+      sh -c 'cd "$1" && exec node "$2" start -p "$3"' _ "$E_WEB" "$NEXT" "$E_PUERTO"
   fi
 
   # Espera a que el frontend responda antes de abrir el túnel.
