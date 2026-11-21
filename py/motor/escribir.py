@@ -13,8 +13,9 @@ import unicodedata
 
 import pandas as pd
 
+from db import catalogo
+
 H_ARCHIVO = "eira:huellas:archivo"
-H_CONTENIDO = "eira:huellas:contenido"
 H_FILA = "eira:huellas:fila"
 
 MESES = ("ene", "feb", "mar", "abr", "may", "jun",
@@ -34,8 +35,8 @@ def fuente_id_de(huella_b: str) -> str:
     return "f-" + huella_b[:12]
 
 
-def campo_conteo(programa: str, ciudad: str, periodo: str, servicio: str) -> str:
-    return f"{programa}|{ciudad}|{periodo}|{servicio}"
+def campo_conteo(iniciativa: str, ciudad: str, periodo: str, servicio: str) -> str:
+    return f"{iniciativa}|{ciudad}|{periodo}|{servicio}"
 
 
 def par_id(a: str, b: str) -> str:
@@ -46,22 +47,31 @@ def _json(d) -> str:
     return json.dumps(d, ensure_ascii=False)
 
 
+def _incr(pipe, clave: str, campo: str, cantidad) -> None:
+    if cantidad == int(cantidad):
+        pipe.hincrby(clave, campo, int(cantidad))
+    else:
+        pipe.hincrbyfloat(clave, campo, cantidad)
+
+
 def guardar(db, v, fuente: dict, df: pd.DataFrame, anomalias: list[dict],
             pares: list[dict], veredicto: dict, vinculacion=None) -> None:
     fid = fuente["id"]
+    ini = fuente["iniciativa_id"]
     en = ahora()
+    impactados = catalogo.roles_impactados()
 
     # --- 1. SQLite: una transaccion -------------------------------------------
     with db:
         db.execute(
-            "INSERT INTO fuentes(id, nombre, programa, unidad, fecha_corte, cargada_en, por,"
-            " filas, filas_nuevas, filas_omitidas, inasistencias, estrellas, puntaje,"
-            " huella_bytes, huella_contenido) VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)",
-            (fid, fuente["nombre"], fuente["programa"], fuente["unidad"],
+            "INSERT INTO fuentes(id, nombre, iniciativa_id, tipo_registro, fecha_corte,"
+            " cargada_en, por, filas, filas_nuevas, filas_omitidas, inasistencias,"
+            " estrellas, puntaje, huella_bytes) VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?,?)",
+            (fid, fuente["nombre"], ini, fuente["unidad"],
              fuente["fecha_corte"], en, fuente.get("por", ""),
              fuente["filas"], fuente["filas_nuevas"], fuente["filas_omitidas"],
              fuente["inasistencias"], fuente["estrellas"], fuente["puntaje"],
-             fuente["huella_bytes"], fuente["huella_contenido"]))
+             fuente["huella_bytes"]))
         if vinculacion is not None:
             db.executemany(
                 "INSERT OR IGNORE INTO personas(id, certeza, fecha_nacimiento, ciudad)"
@@ -75,12 +85,15 @@ def guardar(db, v, fuente: dict, df: pd.DataFrame, anomalias: list[dict],
                   i["fuente"], i["fila"], i["nacimiento"])
                  for i in vinculacion.identidades_nuevas])
         db.executemany(
-            "INSERT INTO registros(id, fuente_id, fila, persona_id, programa, unidad,"
-            " servicio, fecha, periodo, ciudad, municipio_clave, cantidad, huella_fila,"
-            " contado) VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?,?)",
+            "INSERT INTO registros(id, fuente_id, fila, persona_id, iniciativa_id,"
+            " tipo_registro, rol_persona, servicio, fecha, periodo, ciudad,"
+            " estado_clave, estado, municipio_clave, municipio, cantidad,"
+            " huella_fila, contado) VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)",
             [(f"{fid}:{int(r.fila)}", fid, int(r.fila), r.persona_id,
-              fuente["programa"], fuente["unidad"], r.servicio or "", r.fecha or "",
-              r.periodo or "", r.ciudad or "", r.municipio_clave or "",
+              ini, r.tipo_registro, r.rol_persona or None, r.servicio or "",
+              r.fecha or "", r.periodo or "", r.ciudad or "",
+              r.estado_clave or "", r.estado or "",
+              r.municipio_clave or "", r.municipio or "",
               float(r.cantidad) if r.contado else 0.0, r.huella_fila, int(r.contado))
              for r in df.itertuples(index=False)])
         db.executemany(
@@ -102,7 +115,7 @@ def guardar(db, v, fuente: dict, df: pd.DataFrame, anomalias: list[dict],
     pipe = v.pipeline(transaction=True)
     pipe.zadd("eira:fuentes", {fid: int(time.time())})
     pipe.hset(f"eira:fuente:{fid}", mapping={
-        "nombre": fuente["nombre"], "programa": fuente["programa"],
+        "nombre": fuente["nombre"], "programa": ini,
         "unidad": fuente["unidad"], "fecha_corte": fuente["fecha_corte"],
         "cargada_en": en, "por": fuente.get("por", ""),
         "filas": str(fuente["filas"]), "filas_nuevas": str(fuente["filas_nuevas"]),
@@ -118,25 +131,25 @@ def guardar(db, v, fuente: dict, df: pd.DataFrame, anomalias: list[dict],
                 {"fila": int(r.fila), "ya_en_fuente": r.ya_en_fuente,
                  "ya_en_fila": int(r.ya_en_fila)}))
 
-    unidad = fuente["unidad"]
     sets_tocados: set[str] = set()
     for r in df.itertuples(index=False):
         if not r.contado:
             continue
-        campo = campo_conteo(fuente["programa"], r.ciudad or "", r.periodo or "",
-                             r.servicio or "")
-        cant = int(r.cantidad) if float(r.cantidad) == int(r.cantidad) else float(r.cantidad)
+        campo = campo_conteo(ini, r.ciudad or "", r.periodo or "", r.servicio or "")
         if r.persona_id:
             if r.cantidad > 0:
-                if isinstance(cant, int):
-                    pipe.hincrby(f"eira:cnt:{unidad}", campo, cant)
-                else:
-                    pipe.hincrbyfloat(f"eira:cnt:{unidad}", campo, cant)
-                for clave in (f"eira:per:programa:{fuente['programa']}",
-                              f"eira:per:ciudad:{r.ciudad}" if r.ciudad else None,
-                              f"eira:per:periodo:{r.periodo}" if r.periodo else None,
-                              f"eira:per:servicio:{r.servicio}" if r.servicio else None,
-                              f"eira:per:certeza:{r.certeza}"):
+                _incr(pipe, f"eira:cnt:{r.tipo_registro}", campo, r.cantidad)
+                claves = [f"eira:per:programa:{ini}",
+                          f"eira:per:certeza:{r.certeza}"]
+                if r.rol_persona in impactados:
+                    claves.append(f"eira:per:impactadas:{ini}")
+                if r.rol_persona == "donante":
+                    claves.append(f"eira:per:donantes:{ini}")
+                claves += [
+                    f"eira:per:ciudad:{r.ciudad}" if r.ciudad else None,
+                    f"eira:per:periodo:{r.periodo}" if r.periodo else None,
+                    f"eira:per:servicio:{r.servicio}" if r.servicio else None]
+                for clave in claves:
                     if clave:
                         pipe.sadd(clave, r.persona_id)
                         sets_tocados.add(clave)
@@ -144,15 +157,16 @@ def guardar(db, v, fuente: dict, df: pd.DataFrame, anomalias: list[dict],
                 if r.nacimiento:
                     pipe.hset("eira:nac", r.persona_id, r.nacimiento)
         else:
-            if isinstance(cant, int):
-                pipe.hincrby("eira:sinid", campo, cant)
-            else:
-                pipe.hincrbyfloat("eira:sinid", campo, cant)
+            _incr(pipe, "eira:sinid", campo, r.cantidad)
+        if r.municipio_clave:
+            pipe.hincrby(f"eira:presencia:{ini}", r.municipio_clave, 1)
+            pipe.hincrby("eira:presencia:global", r.municipio_clave, 1)
     for dimension, valores in (
-            ("programa", {fuente["programa"]}),
+            ("programa", {ini}),
             ("ciudad", {r.ciudad for r in df.itertuples(index=False) if r.ciudad}),
             ("periodo", {r.periodo for r in df.itertuples(index=False) if r.periodo}),
-            ("servicio", {r.servicio for r in df.itertuples(index=False) if r.servicio})):
+            ("servicio", {r.servicio for r in df.itertuples(index=False) if r.servicio}),
+            ("estado", {r.estado for r in df.itertuples(index=False) if r.estado})):
         for valor in valores:
             pipe.sadd(f"eira:valores:{dimension}", valor)
 
@@ -163,7 +177,6 @@ def guardar(db, v, fuente: dict, df: pd.DataFrame, anomalias: list[dict],
 
     # Huellas AL FINAL: un archivo a medias no queda marcado.
     pipe.hset(H_ARCHIVO, fuente["huella_bytes"], fid)
-    pipe.hset(H_CONTENIDO, fuente["huella_contenido"], fid)
     for r in df.itertuples(index=False):
         if r.contado:
             pipe.hset(H_FILA, r.huella_fila, f"{fid}:{int(r.fila)}")

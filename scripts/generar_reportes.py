@@ -23,8 +23,9 @@ CIUDADES = [
 ]
 
 SERVICIOS_TAMIZAJE = ["Papanicolaou", "Ultrasonido de mama", "Exploración clínica"]
-SERVICIO_SALUD = "Taller de salud"
 SERVICIO_NUTRICION = "Valoración nutricional"
+TIPO_DONACION = "Donación de trenza"
+TIPO_PELUCA = "Entrega de peluca"
 
 NOMBRES = ["María", "Ana", "Juana", "Rosa", "Leticia", "Carmen", "Silvia", "Paola",
            "Teresa", "Elena", "Beatriz", "Dolores", "Gloria", "Hilda", "Irene",
@@ -93,7 +94,7 @@ def construir():
                                       con_id, id_forzado)
         return personas[clave]
 
-    tamizaje, salud, nutricion, v2_extra = [], [], [], []
+    tamizaje, melenas, nutricion, v2_extra = [], [], [], []
     esperado_arch = {}
 
     # --- tamizaje-rosa.xlsx -----------------------------------------------------
@@ -148,21 +149,31 @@ def construir():
     tamizaje[54]["id_malo"] = "ABC123"           # id_invalido
     tamizaje[55]["id_malo"] = "ZZZ19921340"      # id_invalido
 
-    # --- salud-que-florece.xlsx -------------------------------------------------
-    # 15 compartidas, 2 colisiones (mismo ID, otra persona), 3 variantes,
-    # 53 nuevas con ID, 12 sin ID; luego 4 inasistencias.
-    salud_ids = []
-    for i in range(15):
-        p = personas[f"T{i}"]
-        salud.append(dict(p=p, servicio=SERVICIO_SALUD, fecha=fecha(i + 100), asistio="Sí"))
-        salud_ids.append(p.id)
+    # --- melenas-en-movimiento.xlsx ---------------------------------------------
+    # 80 filas: 60 donaciones de trenza (rol donante) y 20 entregas de peluca
+    # (rol beneficiaria). 15 personas compartidas con tamizaje, 12 sin ID,
+    # 2 fechas futuras, 2 colisiones y 3 variantes (entre las entregas).
+    def don(p, i):
+        return dict(p=p, tipo=TIPO_DONACION, largo=25 + (i % 15),
+                    fecha=fecha(i + 100), asistio="Sí")
+
+    def peluca(p, i):
+        return dict(p=p, tipo=TIPO_PELUCA, largo=None,
+                    fecha=fecha(i + 150), asistio="Sí")
+
+    for i in range(15):  # T0..T14 donaron cabello (cruce de 15)
+        melenas.append(don(personas[f"T{i}"], i))
+    for i in range(37):
+        melenas.append(don(per(f"M{i}"), 15 + i))
+    for i in range(8):
+        melenas.append(don(per(f"F3_{i}", con_id=False), 52 + i))
     colisiones = [
         ("D1b", "Mónica Esther Luna", date(1984, 3, 12), "D1a"),
         ("D2b", "Alberta María Sánchez", date(1971, 7, 25), "D2a"),
     ]
     for clave, nombre, nac, otro in colisiones:
         p = per(clave, nombre=nombre, nac=nac, id_forzado=ids_especiales[otro])
-        salud.append(dict(p=p, servicio=SERVICIO_SALUD, fecha=fecha(len(salud) + 100), asistio="Sí"))
+        melenas.append(peluca(p, len(melenas)))
     variantes = [
         ("V1b", "Carmen Alisia Vega", "V1a"),
         ("V2b", "Rosa Izela Mora", "V2a"),
@@ -171,19 +182,18 @@ def construir():
     for clave, nombre, otro in variantes:
         p_orig = personas[otro]
         p = per(clave, nombre=nombre, nac=p_orig.nac, id_forzado=p_orig.id)
-        salud.append(dict(p=p, servicio=SERVICIO_SALUD, fecha=fecha(len(salud) + 100), asistio="Sí"))
-    for i in range(48):
-        p = per(f"S{i}")
-        salud.append(dict(p=p, servicio=SERVICIO_SALUD, fecha=fecha(len(salud) + 100), asistio="Sí"))
-    for i in range(12):
-        p = per(f"F2_{i}", con_id=False)
-        salud.append(dict(p=p, servicio=SERVICIO_SALUD, fecha=fecha(i + 130), asistio="Sí"))
+        melenas.append(peluca(p, len(melenas)))
+    for i in range(11):
+        melenas.append(peluca(per(f"E{i}"), 65 + i))
     for i in range(4):
-        p = personas[f"T{i}"]
-        salud.append(dict(p=p, servicio=SERVICIO_SALUD, fecha=fecha(i + 160), asistio="No"))
+        melenas.append(peluca(per(f"F4_{i}", con_id=False), 76 + i))
+    # Algunas donantes escriben su ciudad con alias (Ciudad Guzman / Cd. Guzman
+    # -> Zapotlan el Grande, 14023).
+    melenas[16]["ciudad"] = "Ciudad Guzmán"
+    melenas[20]["ciudad"] = "Cd. Guzmán"
     # 2 fechas futuras (despues del corte 2026-09-30).
-    salud[65]["fecha"] = date(2026, 12, 5)
-    salud[66]["fecha"] = date(2027, 1, 15)
+    melenas[61]["fecha"] = date(2026, 12, 5)
+    melenas[70]["fecha"] = date(2027, 1, 15)
 
     # --- nutricion.xlsx ---------------------------------------------------------
     for i in range(30):
@@ -200,7 +210,8 @@ def construir():
     # --- Esperado (calculado al construir, no al leer) ---------------------------
     def conteos(filas):
         def llave(f):
-            return (f["p"].id, f["p"].nombre, f["servicio"], f.get("ciudad", f["p"].ciudad),
+            return (f["p"].id, f["p"].nombre, f.get("servicio") or f.get("tipo"),
+                    f.get("ciudad", f["p"].ciudad),
                     str(f["fecha"]), f["asistio"], f.get("id_malo", ""))
         vistas, repetidas = set(), 0
         for f in filas:
@@ -218,8 +229,11 @@ def construir():
 
     esperado_arch["tamizaje-rosa.xlsx"] = conteos(tamizaje)
     esperado_arch["tamizaje-rosa.xlsx"].update(anomalias=20)
-    esperado_arch["salud-que-florece.xlsx"] = conteos(salud)
-    esperado_arch["salud-que-florece.xlsx"].update(anomalias=14)
+    esperado_arch["melenas-en-movimiento.xlsx"] = conteos(melenas)
+    esperado_arch["melenas-en-movimiento.xlsx"].update(
+        anomalias=14, fechas_futuras=2,
+        donaciones=sum(1 for f in melenas if f["tipo"] == TIPO_DONACION),
+        entregas=sum(1 for f in melenas if f["tipo"] == TIPO_PELUCA))
     esperado_arch["nutricion.xlsx"] = conteos(nutricion)
     esperado_arch["nutricion.xlsx"].update(anomalias=30)
     v2 = tamizaje + v2_extra
@@ -232,15 +246,19 @@ def construir():
     globales = dict(
         personas_identificadas=163,
         registros_sin_identificar=0,
-        cruce_tamizaje_florece=15,
+        cruce_tamizaje_melenas=15,
         pares_mismo_id=2,
         variantes_de_nombre=3,
         filas_compartidas_nutricion=30,
         edad_promedio=round(sum(edades) / len(edades), 1),
-        totales_finales=dict(atenciones=138, participaciones=80, personas=181,
-                             pares_pendientes=5),
+        impactadas={"tamizaje-rosa": 98, "melenas-en-movimiento": 20},
+        donantes={"melenas-en-movimiento": 60},
+        totales_finales=dict(atenciones=128, donaciones=60, pelucas=20,
+                             personas=171, pares_pendientes=5,
+                             personas_impactadas_global=126,
+                             personas_en_mas_de_un_programa=15),
     )
-    return tamizaje, salud, nutricion, v2_extra, personas, {
+    return tamizaje, melenas, nutricion, v2_extra, personas, {
         "archivos": esperado_arch, "globales": globales,
     }
 
@@ -263,16 +281,16 @@ def escribir_tamizaje(filas, ruta: Path, orden=None, extra=()):
     wb.save(ruta)
 
 
-def escribir_salud(filas, ruta: Path):
+def escribir_melenas(filas, ruta: Path):
     wb = Workbook()
     ws = wb.active
-    ws.append(["Salud que Florece — registro de talleres (ficticio)"])
+    ws.append(["Melenas en Movimiento — registro de donaciones y entregas (ficticio)"])
     ws.append([])
-    ws.append(["Id usuario", "NOMBRE COMPLETO", "Taller", "EDAD", "Ciudad",
-               "Asistió", "fecha_evento"])
+    ws.append(["ID", "Nombre", "Edad", "Ciudad", "Fecha", "Tipo", "Largo (cm)"])
     for f in filas:
-        ws.append([f["p"].id, f["p"].nombre, f["servicio"], edad_en(f["p"].nac, HOY),
-                   f["p"].ciudad, f["asistio"], f["fecha"]])
+        ws.append([f["p"].id, f["p"].nombre, edad_en(f["p"].nac, HOY),
+                   f.get("ciudad", f["p"].ciudad), f["fecha"], f["tipo"],
+                   f["largo"] if f["largo"] is not None else ""])
     ws.append(["TOTAL", "", "", "", "", "", len(filas)])
     wb.save(ruta)
 
@@ -302,10 +320,10 @@ def escribir_csv(filas, ruta: Path):
 def generar(directorio: str | Path = "reportes") -> dict:
     directorio = Path(directorio)
     directorio.mkdir(parents=True, exist_ok=True)
-    tamizaje, salud, nutricion, v2_extra, _personas, esperado = construir()
+    tamizaje, melenas, nutricion, v2_extra, _personas, esperado = construir()
 
     escribir_tamizaje(tamizaje, directorio / "tamizaje-rosa.xlsx")
-    escribir_salud(salud, directorio / "salud-que-florece.xlsx")
+    escribir_melenas(melenas, directorio / "melenas-en-movimiento.xlsx")
     escribir_nutricion(nutricion, directorio / "nutricion.xlsx")
     shutil.copyfile(directorio / "tamizaje-rosa.xlsx", directorio / "reporte_final_2.xlsx")
     escribir_tamizaje(tamizaje, directorio / "tamizaje-rosa-reguardado.xlsx",
