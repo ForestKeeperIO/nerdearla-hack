@@ -105,6 +105,30 @@ Reglas:
 
 Vistas que lee Metabase: `v_conteos`, `v_personas_por_ciudad`, `v_personas_por_programa`, `v_cruce_programas`, `v_edad`, `v_cobertura`, `v_calidad`. El SQL completo de tablas y la definición de cada vista están en la Tarea 1 de [`superpowers/plans/2026-11-21-demo-integrado.md`](superpowers/plans/2026-11-21-demo-integrado.md).
 
+## Programas e iniciativas (actualización 13:00)
+
+EIRA no tiene solo "programas" de atención: tiene iniciativas de otra naturaleza, como la recolección de cabello (Melenas en Movimiento) o "Me cuidan mientras aprendo". No todas producen atenciones ni todas tienen beneficiarias en el mismo sentido. La base lo modela con catálogos en lugar de una lista fija:
+
+| Tabla nueva | Columnas | Para qué |
+|---|---|---|
+| `iniciativas` | `id`, `nombre`, `clase` (`programa` o `iniciativa`), `descripcion`, `rol_por_defecto`, `estado` (`confirmado` o `por_confirmar`) | Cada programa o iniciativa de EIRA |
+| `tipos_de_registro` | `clave`, `etiqueta`, `plural`, `se_cuenta` (`eventos` u `objetos`), `cuenta_personas` (0 o 1) | Qué clase de cosa es una fila: atención, estudio, participación, entrega de insumo, donación recibida, producto entregado |
+| `iniciativa_tipo` | `iniciativa_id`, `tipo_clave` | Qué tipos de registro admite cada iniciativa |
+
+Cambios en tablas existentes:
+
+- `fuentes.programa` pasa a ser `fuentes.iniciativa_id` (llave a `iniciativas`).
+- `registros.programa` pasa a ser `registros.iniciativa_id`; `registros.unidad` pasa a ser `registros.tipo_registro` (llave a `tipos_de_registro`, ya no una lista cerrada de cuatro valores).
+- `registros.rol_persona` nuevo: `beneficiaria`, `participante`, `donante` o `voluntaria`.
+
+Por qué importa el rol: quien dona una trenza no es una persona "impactada"; quien recibe una peluca sí. Si se contaran igual, el número de personas impactadas del informe saldría inflado. Las vistas de personas (`v_personas_por_ciudad`, `v_personas_por_programa`, `v_edad`, `v_cobertura`) cuentan solo los roles `beneficiaria` y `participante`; las donantes y voluntarias se reportan aparte.
+
+El catálogo inicial está en [`catalogos/iniciativas.json`](../catalogos/iniciativas.json) y es la única fuente para el frontend y el motor. "Me cuidan mientras aprendo" está marcada `por_confirmar`: sabemos que existe porque lo dijo el equipo, pero no qué registra.
+
+En Valkey el campo `<programa>` de las claves pasa a llevar el `id` de la iniciativa (`eira:per:programa:<id>`, primer segmento de `eira:cnt:<tipo>`); el nombre de la clave no cambia para no romper lo ya construido.
+
+> El diagrama de arriba todavía muestra el modelo anterior (columna `programa` y cuatro unidades fijas).
+
 ## Valkey
 
 Las claves del contrato v1 están en [`contrato-valkey.md`](contrato-valkey.md). **Propuesta de tres claves nuevas**, que el contrato aún no tiene y que el motor necesita para omitir duplicados:
