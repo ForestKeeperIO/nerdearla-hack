@@ -11,9 +11,9 @@ function resalta(texto: string, q: string) {
   return <>{texto.slice(0,i)}<mark>{texto.slice(i,i+q.length)}</mark>{texto.slice(i+q.length)}</>;
 }
 
-export function Selector({ label, opciones, elegidos, cambiar, unico = false, atajos = [], placeholder }: {
+export function Selector({ label, opciones, elegidos, cambiar, unico = false, atajos = [], placeholder, resumenCerrado }: {
   label: string; opciones: Opcion[]; elegidos: string[]; cambiar: (vs: string[]) => void;
-  unico?: boolean; atajos?: Atajo[]; placeholder?: string;
+  unico?: boolean; atajos?: Atajo[]; placeholder?: string; resumenCerrado?: string;
 }) {
   const id = useId();
   const input = useRef<HTMLInputElement>(null);
@@ -52,11 +52,11 @@ export function Selector({ label, opciones, elegidos, cambiar, unico = false, at
   const resumen = unico ? opciones.find(o => o.valor === elegidos[0])?.texto
     : elegidos.length === 1 ? opciones.find(o => o.valor === elegidos[0])?.texto : elegidos.length ? 'Varios' : undefined;
   return <div className="selector" onBlur={e => { if (!e.currentTarget.contains(e.relatedTarget)) cerrar(); }}>
-    <label htmlFor={id}>{label}{!unico && elegidos.length > 0 && <span aria-hidden>{elegidos.length}</span>}</label>
+    <label htmlFor={id}>{label}{!resumenCerrado && !unico && elegidos.length > 0 && <span aria-hidden>{elegidos.length}</span>}</label>
     <div className="selector-campo" onClick={() => { abrir(true); input.current?.focus(); }}>
       <input ref={input} id={id} autoComplete="off" role="combobox" aria-expanded={abierto}
         aria-controls={`${id}-lista`} aria-autocomplete="list" aria-activedescendant={abierto && actual >= 0 ? visible(actual) : undefined}
-        value={abierto ? busca : resumen ?? ''} placeholder={abierto ? 'Buscar…' : placeholder ?? 'Todos'}
+        value={abierto ? busca : resumenCerrado ?? resumen ?? ''} placeholder={abierto ? 'Buscar…' : placeholder ?? 'Todos'}
         onClick={() => abrir(true)}
         onChange={e => { buscar(e.target.value); abrir(true); apuntar(0); mover(false); }}
         onKeyDown={e => {
