@@ -36,7 +36,7 @@ function Periodo({ f, corte, cambiar }: { f: Seleccion; corte: string; cambiar: 
       <form onSubmit={e => {e.preventDefault(); aplicar(a,b);}}>
         <label>Desde<input type="month" value={a} max={b || undefined} onChange={e => desde(e.target.value)} /></label>
         <label>Hasta<input type="month" value={b} min={a || undefined} onChange={e => hasta(e.target.value)} /></label>
-        <button className="atlas-accion" type="submit"><CalendarDays size={15} aria-hidden />Aplicar periodo</button>
+        <button className="btn btn--primario" type="submit"><CalendarDays size={15} aria-hidden />Aplicar periodo</button>
       </form>
     </div>
   </details>;
@@ -67,7 +67,7 @@ export function FiltrosAtlas({ seleccion, opciones, personas, corte }: { selecci
     <button className="atlas-abrir" onClick={() => hoja.current?.showModal()}><SlidersHorizontal size={17} aria-hidden />Filtros ({activos})</button>
     <dialog className="atlas-hoja" ref={hoja} aria-label="Filtros">
       <header><h2>Filtros</h2><button autoFocus aria-label="Cerrar filtros" onClick={() => hoja.current?.close()}><X size={20}/></button></header>
-      {controles()}<form method="dialog"><button className="atlas-accion">Ver resultados</button></form>
+      {controles()}<form method="dialog"><button className="btn btn--primario">Ver resultados</button></form>
     </dialog>
     <div className="atlas-resumen"><p role="status">{pendiente ? 'Actualizando selección…' : `Mostrando ${resumen}`}</p>
       {activos > 0 && <button onClick={() => navegar(VACIA)}>Limpiar</button>}</div>

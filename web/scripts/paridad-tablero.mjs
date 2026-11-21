@@ -9,7 +9,7 @@ const api = `${process.env.METABASE_URL || enlace.origin}/api${enlace.pathname}`
 const dashboard = await (await fetch(api)).json();
 
 async function tarjeta(nombre, filtros) {
-  const card = dashboard.dashcards.find(c => c.card?.name.startsWith(nombre));
+  const card = dashboard.dashcards.find(c => c.card?.name?.startsWith(nombre));
   assert.ok(card, `Falta pregunta pública: ${nombre}`);
   const parametros = Object.entries(filtros).map(([id,valor]) => {
     const m = card.parameter_mappings.find(x => x.parameter_id === id);
@@ -58,6 +58,8 @@ try {
   const mes = '2026-09';
   const [[nombre,n]] = await tarjeta('Servicios más frecuentes',{programa,mes,servicio});
   const csvMes = await (await fetch(`${app}/tablero/cifras.csv?`+new URLSearchParams({programa,desde:mes,hasta:mes,servicio}))).text();
-  assert.ok(csvMes.includes(`"Servicio","${nombre}","${n}","registros"`));
-  console.log('Metabase público = CSV (programa + mes + servicio)',{mes,nombre,n});
+  // La pregunta pública suma v_conteos.total (cantidad), no las filas de la hoja.
+  assert.equal(nombre,servicio);
+  assert.ok(csvMes.includes(`"Servicio por unidad","${nombre}","${n}","atenciones"`));
+  console.log('Metabase público = atenciones del CSV (programa + mes + servicio)',{mes,nombre,n});
 } finally { db.close(); }

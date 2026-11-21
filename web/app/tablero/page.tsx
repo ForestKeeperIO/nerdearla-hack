@@ -1,5 +1,6 @@
 import Link from 'next/link';
-import { ArrowDown, ArrowRight, ArrowUp, ArrowUpRight, CalendarDays, CircleHelp } from 'lucide-react';
+import { ArrowDown, ArrowRight, ArrowUp, ArrowUpRight, CalendarDays, CircleHelp, HeartPulse, MapPin, UsersRound } from 'lucide-react';
+import { AccionesTablero } from '@/components/acciones-tablero';
 import { FiltrosAtlas } from '@/components/filtros-atlas';
 import { AtlasTerritorial } from '@/components/atlas-territorial';
 import { Distribucion } from '@/components/desgloses-atlas';
@@ -20,15 +21,16 @@ function Cifra({ titulo, valor, unidad, corte, regla, id, previo, referencia }: 
 }) {
   const delta = previo == null || valor == null ? null : Math.round((valor-previo)*10)/10;
   const Cambio = delta===0 ? ArrowRight : delta!==null && delta<0 ? ArrowDown : ArrowUp;
-  return <article className="atlas-cifra"><div><h2>{titulo}</h2>
-    <button type="button" popoverTarget={`regla-${id}`} aria-label={`Cómo se calculó: ${titulo}`} title="Cómo se calculó"><ArrowUpRight size={18} strokeWidth={1.5} aria-hidden /></button>
+  const Icono = id==='personas' ? UsersRound : id==='edad' ? CalendarDays : id==='municipios' ? MapPin : HeartPulse;
+  return <div className={id==='personas' ? 'respuesta' : 'dato-bento'}><span><Icono aria-hidden/>{titulo}
+    <button type="button" popoverTarget={`regla-${id}`} aria-label={`Cómo se calculó: ${titulo}`} title="Cómo se calculó"><ArrowUpRight aria-hidden /></button></span>
+    <strong data-kpi={id}>{valor == null ? '—' : valor.toLocaleString('es-MX')}</strong>
+    <p>{unidad} · {corte ? `Corte ${fechaEs(corte)}` : 'Sin corte'}</p>
+    <small>{delta===null ? 'Sin periodo previo' :
+      <><Cambio aria-hidden/>{delta>0 ? '+' : ''}{delta.toLocaleString('es-MX')} vs. anterior</>}</small>
     <div className="atlas-regla" id={`regla-${id}`} popover="auto"><strong>Cómo se calculó</strong><p>{regla}</p>
       {delta!==null && <p>Periodo anterior: {referencia} ({previo}).</p>}</div>
-    </div><p><b data-kpi={id}>{valor == null ? '—' : valor.toLocaleString('es-MX')}</b><span>{unidad}</span></p>
-    <div className="bento-contexto"><span className="bento-cambio">{delta===null ? 'Sin periodo previo' :
-      <><Cambio aria-hidden size={12}/>{delta>0 ? '+' : ''}{delta.toLocaleString('es-MX')} vs. anterior</>}</span>
-      <small>{corte ? `Corte ${fechaEs(corte)}` : 'Sin corte'}</small></div>
-  </article>;
+  </div>;
 }
 
 export default async function Tablero({ searchParams }: PageProps<'/tablero'>) {
@@ -36,12 +38,12 @@ export default async function Tablero({ searchParams }: PageProps<'/tablero'>) {
   const corte = d.corte || '';
   const referencia = d.anterior ? periodoTexto(d.anterior) : '';
   const avanzado = impactoPublico();
-  return <div className="atlas">
-    <header className="atlas-titulo"><h1>Tablero de impacto</h1>
+  return <div className="archivo-eira atlas">
+    <header className="apertura atlas-titulo"><div><h1>Tablero de impacto</h1>
       {corte && <time dateTime={corte}><CalendarDays size={16} aria-hidden />Corte al {new Intl.DateTimeFormat('es-MX',
-        { day:'numeric',month:'long',year:'numeric',timeZone:'UTC' }).format(new Date(corte+'T12:00:00Z'))}</time>}</header>
+        { day:'numeric',month:'long',year:'numeric',timeZone:'UTC' }).format(new Date(corte+'T12:00:00Z'))}</time>}</div><AccionesTablero /></header>
     <FiltrosAtlas seleccion={f} opciones={d.opciones} personas={d.personas} corte={corte || new Date().toISOString().slice(0,10)} />
-    <section className="atlas-kpis" aria-label="Indicadores">
+    <section className="hoja" aria-label="Indicadores"><div className="resumen-bento atlas-kpis">
       <Cifra titulo="Personas impactadas" id="personas" valor={d.personas} unidad={f.programa.length===1 ? 'personas' : 'por programa'} corte={corte} previo={d.comparacion?.personas} referencia={referencia}
         regla="En la selección, cada beneficiaria o participante identificada cuenta una vez por programa, aunque tenga varios registros." />
       <Cifra titulo="Edad promedio" id="edad" valor={d.edad} unidad="años" corte={corte} previo={d.comparacion?.edad} referencia={referencia}
@@ -50,7 +52,7 @@ export default async function Tablero({ searchParams }: PageProps<'/tablero'>) {
         regla="Se cuenta una sola vez cada municipio con clave oficial y al menos un registro en la selección." />
       {d.conDonantes && <Cifra titulo="Donantes de cabello" id="donantes" valor={d.donantes} unidad="personas" corte={corte} previo={d.comparacion?.donantes} referencia={referencia}
         regla="Se cuenta una vez por programa a cada persona identificada con una donación en la selección." />}
-    </section>
+    </div></section>
     <div className="atlas-rejilla">
       <AtlasTerritorial lugares={d.lugares} f={f} nacional={q.mapa === 'mx'} />
       <MesesBento key={`${f.desde}:${f.hasta}`} serie={d.meses} desde={f.desde} hasta={f.hasta} />
