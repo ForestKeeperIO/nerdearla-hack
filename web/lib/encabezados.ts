@@ -1,4 +1,5 @@
 import alias from './alias-encabezados.json';
+import { sugerirPrograma } from './sugerir-programa';
 
 export type Columna = { encabezado: string; campo?: string; probabilidad?: number };
 
@@ -50,9 +51,9 @@ export function mapear(encabezados: string[]): Columna[] {
   return columnas;
 }
 
-export type Revision = { columnas: Columna[]; faltan: number };
+export type Revision = { columnas: Columna[]; faltan: number; programaSugerido?: string };
 
-export async function revisarArchivo(archivo: File): Promise<Revision> {
+export async function revisarArchivo(archivo: File, programas: Parameters<typeof sugerirPrograma>[1] = []): Promise<Revision> {
   const { read, utils } = await import('xlsx');
   const bytes = new Uint8Array(await archivo.arrayBuffer());
   const csv = archivo.name.toLowerCase().endsWith('.csv');
@@ -67,12 +68,12 @@ export async function revisarArchivo(archivo: File): Promise<Revision> {
   } else if (bytes[0] !== 0x50 || bytes[1] !== 0x4b) {
     throw new Error('Formato de Excel no válido');
   }
-  const libro = read(entrada, { type: csv ? 'string' : 'array', FS: separador, sheets: 0, sheetRows: 1, raw: true });
+  const libro = read(entrada, { type: csv ? 'string' : 'array', FS: separador, sheets: 0, sheetRows: 32, raw: true });
   const hoja = libro.Sheets[libro.SheetNames[0]];
-  const rango = hoja?.['!ref'] && utils.decode_range(hoja['!ref']);
-  const primera = rango && rango.s.r === 0
-    ? Array.from({ length: rango.e.c + 1 }, (_, c) => String(hoja[utils.encode_cell({ r: 0, c })]?.v ?? ''))
-    : [];
-  const columnas = mapear(primera);
-  return { columnas, faltan: Math.max(0, 2 - columnas.filter(c => c.campo).length) };
+  const filas = hoja ? utils.sheet_to_json<unknown[]>(hoja, { header: 1, defval: '', blankrows: true }) : [];
+  // El Excel de Melenas empieza con un título y una fila vacía, antes de sus columnas.
+  const primera = filas.slice(0, 25).findIndex(f => f.filter(c => String(c).trim()).length >= 2);
+  const muestra = filas.slice(Math.max(0, primera));
+  const columnas = mapear((muestra[0] ?? []).map(c => String(c ?? '')));
+  return { columnas, faltan: Math.max(0, 2 - columnas.filter(c => c.campo).length), programaSugerido: sugerirPrograma(muestra, programas) };
 }

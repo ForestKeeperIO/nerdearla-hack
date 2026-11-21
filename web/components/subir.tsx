@@ -11,6 +11,8 @@ import { RevisionEncabezados } from './tabla-encabezados';
 import { revisarArchivo, type Revision } from '@/lib/encabezados';
 import { resolverNombre, SIN_ALTA } from '@/lib/programa-libre';
 import { explicarErrorCarga } from '@/lib/error-carga';
+import { prepararTraslado, useRecibirTraslado } from '@/lib/traslado-carga';
+import { AvisoPrograma } from './aviso-programa';
 
 const MAX_BYTES = 10 * 1024 * 1024;
 
@@ -27,6 +29,7 @@ type ArchivoLocal = {
   error?: string;
   revision?: Revision;
   errorRevision?: string;
+  conservarPrograma?: boolean;
 };
 
 function textoError(r: FileRejection): string {
@@ -81,12 +84,12 @@ export function SubirArchivos({
   const elegido = libre ? resolverNombre(nombreLibre, programas) : programas.find(p => p.id === alcance);
   const libreValido = elegido?.tipos_de_registro.includes(unidadLibre) && !!corteLibre;
 
-  const agregar = useCallback((aceptados: File[], rechazados: FileRejection[]) => {
-    const nuevos: ArchivoLocal[] = aceptados.map((f) => ({
+  const agregar = useCallback((aceptados: File[], rechazados: FileRejection[], estadosPrevios?: string[]) => {
+    const nuevos: ArchivoLocal[] = aceptados.map((f, i) => ({
       id: siguiente.current++,
       file: f,
       unidad: tipos[0]?.clave ?? '',
-      estado: '14',
+      estado: estadosPrevios?.[i] ?? '14',
       envio: 'sin_enviar',
     }));
     for (const r of rechazados) {
@@ -105,13 +108,15 @@ export function SubirArchivos({
       setArchivos((a) => [...a.filter(x => x.id !== id), ...nuevos]);
     }
     if (revisarEncabezados) for (const a of nuevos.filter(a => a.envio === 'sin_enviar')) {
-      revisarArchivo(a.file).then(revision => cambiar(a.id, { revision })).catch(() =>
+      revisarArchivo(a.file, programas).then(revision => cambiar(a.id, { revision })).catch(() =>
         cambiar(a.id, { errorRevision: 'No se pudo leer la primera fila. Guarda una copia como .xlsx sin contraseña o CSV y vuelve a elegirla.' }));
     }
-  }, [tipos, revisarEncabezados]);
+  }, [tipos, revisarEncabezados, programas]);
+
+  useRecibirTraslado(alcance, agregar);
 
   const { getRootProps, getInputProps, isDragActive, open } = useDropzone({
-    onDrop: agregar,
+    onDrop: (aceptados, rechazados) => agregar(aceptados, rechazados),
     onFileDialogCancel: () => { reemplazar.current = null; },
     disabled: lectura || (libre && !confirmado),
     accept: {
@@ -129,7 +134,7 @@ export function SubirArchivos({
 
   async function enviar() {
     const pendientes = archivos.filter((a) => a.envio === 'sin_enviar' && a.unidad);
-    if (!pendientes.length || bloqueadoPorEncabezados || enviando || lectura || (libre && !libreValido)) return;
+    if (!pendientes.length || bloqueadoPorEncabezados || porConfirmar || enviando || lectura || (libre && !libreValido)) return;
     setEnviando(true);
     let bien = 0;
     let mal = 0;
@@ -161,6 +166,15 @@ export function SubirArchivos({
 
   const enviables = archivos.filter((a) => a.envio === 'sin_enviar' && a.unidad).length;
   const bloqueadoPorEncabezados = revisarEncabezados && archivos.some(a => a.envio === 'sin_enviar' && a.revision?.faltan !== 0);
+  function sugerido(a: ArchivoLocal) {
+    if (a.envio !== 'sin_enviar' || a.conservarPrograma || a.revision?.programaSugerido === elegido?.id) return;
+    return programas.find(p => p.id === a.revision?.programaSugerido);
+  }
+  const porConfirmar = archivos.some(a => sugerido(a));
+  function trasladar(destino: string) {
+    prepararTraslado(destino, archivos.filter(a => a.envio === 'sin_enviar'));
+    router.push(`/informe/${destino}/subir`);
+  }
 
   return (
     <section aria-label="Subir archivos">
@@ -230,6 +244,8 @@ export function SubirArchivos({
                 )}
               </span>
               </div>
+              {sugerido(a) && <AvisoPrograma actual={elegido!.nombre} sugerido={sugerido(a)!.nombre} cantidad={enviables}
+                cambiar={() => trasladar(sugerido(a)!.id)} conservar={() => cambiar(a.id, { conservarPrograma: true })} />}
               {revisarEncabezados && a.envio === 'sin_enviar' && <RevisionEncabezados
                 revision={a.revision} error={a.errorRevision} nombre={a.file.name} />}
             </li>
@@ -239,7 +255,7 @@ export function SubirArchivos({
 
       {archivos.some((a) => a.envio === 'sin_enviar') && (
         <div className="mt-4">
-          <button type="button" className="btn btn--primario" onClick={enviar} disabled={bloqueadoPorEncabezados || lectura || enviando || enviables === 0 || (libre && !libreValido)}>
+          <button type="button" className="btn btn--primario" onClick={enviar} disabled={porConfirmar || bloqueadoPorEncabezados || lectura || enviando || enviables === 0 || (libre && !libreValido)}>
             {enviando ? 'Enviando…' : `Subir ${enviables} archivo${enviables > 1 ? 's' : ''}`}
           </button>
         </div>
