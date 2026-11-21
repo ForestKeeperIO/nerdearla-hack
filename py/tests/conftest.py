@@ -18,16 +18,16 @@ sys.path.insert(0, str(REPO))
 REPORTES = REPO / "reportes"
 URL_TEST = "redis://127.0.0.1:6391/15"
 
-# archivo -> (programa, unidad, fecha_corte)
+# archivo -> (programa=id de iniciativa, unidad, fecha_corte)
 TRABAJOS = {
-    "tamizaje-rosa.xlsx": ("Tamizaje Rosa", "atencion", "2026-09-30"),
-    "salud-que-florece.xlsx": ("Salud que Florece", "participacion", "2026-09-30"),
-    "nutricion.xlsx": ("Nutrición", "atencion", "2026-08-31"),
-    "reporte_final_2.xlsx": ("Tamizaje Rosa", "atencion", "2026-09-30"),
-    "tamizaje-rosa-reguardado.xlsx": ("Tamizaje Rosa", "atencion", "2026-09-30"),
-    "tamizaje-rosa.csv": ("Tamizaje Rosa", "atencion", "2026-09-30"),
-    "tamizaje-rosa_v2.xlsx": ("Tamizaje Rosa", "atencion", "2026-10-31"),
-    "agregado_publico.csv": ("Datos abiertos", "estudio", "2026-09-30"),
+    "tamizaje-rosa.xlsx": ("tamizaje-rosa", "atencion", "2026-09-30"),
+    "melenas-en-movimiento.xlsx": ("melenas-en-movimiento", "segun_fila", "2026-09-30"),
+    "nutricion.xlsx": ("comunidades-de-origen", "atencion", "2026-08-31"),
+    "reporte_final_2.xlsx": ("tamizaje-rosa", "atencion", "2026-09-30"),
+    "tamizaje-rosa-reguardado.xlsx": ("tamizaje-rosa", "atencion", "2026-09-30"),
+    "tamizaje-rosa.csv": ("tamizaje-rosa", "atencion", "2026-09-30"),
+    "tamizaje-rosa_v2.xlsx": ("tamizaje-rosa", "atencion", "2026-10-31"),
+    "agregado_publico.csv": ("salud-publica-jalisco", "registro_publico", "2026-09-30"),
 }
 
 
@@ -54,13 +54,15 @@ class Motor:
     def __init__(self, v, vb, db):
         self.v, self.vb, self.db = v, vb, db
 
-    def procesar(self, nombre, programa=None, unidad=None, fecha_corte=None):
+    def procesar(self, nombre, programa=None, unidad=None, fecha_corte=None,
+                 estado_clave="14"):
         from py.motor import worker
         programa, unidad, fecha_corte = (
             programa or TRABAJOS[nombre][0], unidad or TRABAJOS[nombre][1],
             fecha_corte or TRABAJOS[nombre][2])
         tid = worker.encolar(self.v, (REPORTES / nombre).read_bytes(), nombre,
-                             programa, unidad, fecha_corte, por="pruebas")
+                             programa, unidad, fecha_corte, por="pruebas",
+                             estado_clave=estado_clave)
         worker.procesar_trabajo(self.v, self.db, tid, vb=self.vb)
         return self.v.hgetall(f"eira:trabajo:{tid}")
 
